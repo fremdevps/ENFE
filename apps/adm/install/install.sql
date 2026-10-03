@@ -41,9 +41,12 @@ prompt == Paquetes (especificaciones)
 @@../database/packages/adm_aud_login_ctr.pks
 @@../database/packages/adm_aud_error_ctr.pks
 @@../database/packages/adm_gen_mensaje_error_ctr.pks
+@@../database/packages/adm_seg_rol_ctr.pks
+@@../database/packages/adm_seg_rol_permiso_ctr.pks
 @@../database/packages/adm_seg_seguridad_reg.pks
 @@../database/packages/adm_seg_usuario_reg.pks
 @@../database/packages/adm_seg_usuario_api.pks
+@@../database/packages/adm_seg_rol_api.pks
 @@../database/packages/adm_gen_error_api.pks
 
 prompt == Paquetes (cuerpos)
@@ -53,9 +56,12 @@ prompt == Paquetes (cuerpos)
 @@../database/packages/adm_aud_login_ctr.pkb
 @@../database/packages/adm_aud_error_ctr.pkb
 @@../database/packages/adm_gen_mensaje_error_ctr.pkb
+@@../database/packages/adm_seg_rol_ctr.pkb
+@@../database/packages/adm_seg_rol_permiso_ctr.pkb
 @@../database/packages/adm_seg_seguridad_reg.pkb
 @@../database/packages/adm_seg_usuario_reg.pkb
 @@../database/packages/adm_seg_usuario_api.pkb
+@@../database/packages/adm_seg_rol_api.pkb
 @@../database/packages/adm_gen_error_api.pkb
 
 prompt == Datos iniciales
