@@ -27,6 +27,11 @@ export default defineConfig({
     actionTimeout: 15_000,
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // Segundo plano (por defecto): Chrome instalado, sin ventana
+    { name: 'chrome', use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: true } },
+    // En vivo: Chrome visible y en cámara lenta para seguir cada paso
+    { name: 'en-vivo', use: { ...devices['Desktop Chrome'], channel: 'chrome', headless: false,
+                              viewport: { width: 1440, height: 900 },
+                              launchOptions: { slowMo: 400 } } },
   ],
 });

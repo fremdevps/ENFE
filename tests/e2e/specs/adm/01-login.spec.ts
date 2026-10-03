@@ -2,14 +2,35 @@ import { test, expect } from '@playwright/test';
 import { env, login, waitForApex, apexError } from '../../support/apex';
 
 test.describe('ADM · Login central', () => {
-  test('muestra la página de login', async ({ page }) => {
+  test('muestra la página de login @publico', async ({ page }) => {
     await page.goto(`${env('APEX_BASE_URL')}/adm/login`);
     await waitForApex(page);
     await expect(page.locator('#P9999_USERNAME')).toBeVisible();
     await expect(page.locator('#P9999_PASSWORD')).toBeVisible();
   });
 
-  test('rechaza un usuario inexistente', async ({ page }) => {
+  test('el ERP también muestra su página de login @publico', async ({ page }) => {
+    await page.goto(`${env('APEX_BASE_URL')}/erp/login`);
+    await waitForApex(page);
+    await expect(page.locator('#P9999_USERNAME')).toBeVisible();
+    await expect(page.locator('#P9999_PASSWORD')).toBeVisible();
+  });
+
+  test('exige usuario y contraseña @publico', async ({ page }) => {
+    await page.goto(`${env('APEX_BASE_URL')}/adm/login`);
+    await waitForApex(page);
+    await page.getByRole('button', { name: /sign in|iniciar|ingresar/i }).click();
+    await expect(page).toHaveURL(/\/login/i);
+    await expect(apexError(page)).toBeVisible();
+  });
+
+  test('una página protegida sin sesión manda al login @publico', async ({ page }) => {
+    await page.goto(`${env('APEX_BASE_URL')}/adm/usuarios`);
+    await waitForApex(page);
+    await expect(page).toHaveURL(/\/login/i);
+  });
+
+  test('rechaza un usuario inexistente @publico', async ({ page }) => {
     await login(page, 'adm', 'QA_NO_EXISTE', 'ClaveInvalida123');
     await expect(page).toHaveURL(/\/login/i);
     await expect(apexError(page)).toBeVisible();

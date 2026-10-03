@@ -1,4 +1,4 @@
-import { test, expect, gotoPage, uniq, waitForApex } from '../../support/apex';
+import { test, expect, gotoPage, uniq, waitForApex, igBuscar, igCelda } from '../../support/apex';
 
 /** Alta/baja vía el modelo del Interactive Grid: estable frente a cambios de layout. */
 async function igSave(page: import('@playwright/test').Page) {
@@ -21,7 +21,8 @@ test.describe('ADM · Empresas (Interactive Grid)', () => {
     await igSave(page);
 
     await gotoPage(page, 'adm', 'empresas');
-    await expect(page.locator('#empresas').getByText(codigo)).toBeVisible();
+    await igBuscar(page, 'empresas', codigo);
+    await expect(igCelda(page, 'empresas', codigo)).toBeVisible();
 
     await page.evaluate((cod) => {
       const view = (window as any).apex.region('empresas').call('getViews', 'grid');
@@ -32,6 +33,7 @@ test.describe('ADM · Empresas (Interactive Grid)', () => {
     await igSave(page);
 
     await gotoPage(page, 'adm', 'empresas');
-    await expect(page.locator('#empresas').getByText(codigo)).toHaveCount(0);
+    await igBuscar(page, 'empresas', codigo);
+    await expect(igCelda(page, 'empresas', codigo)).toHaveCount(0);
   });
 });

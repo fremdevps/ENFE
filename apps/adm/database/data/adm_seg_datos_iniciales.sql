@@ -43,7 +43,9 @@ using (select m.modulo_id, p.codigo, p.nombre, p.tipo
                select 'SEG',        'ADM_SEG_ROL_GESTIONAR',             'Gestionar roles y permisos',         'ACCION'      from dual union all
                select 'SEG',        'ADM_SEG_APLICACION_GESTIONAR',      'Gestionar aplicaciones y módulos',   'ACCION'      from dual union all
                select 'GEN',        'ADM_GEN_EMPRESA_GESTIONAR',         'Gestionar empresas',                 'ACCION'      from dual union all
-               select 'AUD',        'ADM_AUD_LOGIN_VER',                 'Ver bitácora de accesos',            'REPORTE'     from dual) p
+               select 'GEN',        'ADM_GEN_MENSAJE_GESTIONAR',         'Gestionar mensajes de error',        'ACCION'      from dual union all
+               select 'AUD',        'ADM_AUD_LOGIN_VER',                 'Ver bitácora de accesos',            'REPORTE'     from dual union all
+               select 'AUD',        'ADM_AUD_ERROR_VER',                 'Ver bitácora de errores',            'REPORTE'     from dual) p
            on p.modulo = m.codigo) s
    on (t.codigo = s.codigo)
  when not matched then

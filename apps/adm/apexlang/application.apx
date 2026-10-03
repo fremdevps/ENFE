@@ -1,5 +1,5 @@
 app ADM (
-    name: ENFE Administracion Central
+    name: Administración Central
     logo {
         type: text
         text: &APP_TITLE.
@@ -16,8 +16,7 @@ app ADM (
         listTemplate: @/side-navigation-menu
         templateOptions: [
             #DEFAULT#
-            js-defaultCollapsed
-            js-navCollapsed--hidden
+            js-navCollapsed--default
             t-TreeNav--styleA
         ]
         list: @navigation-menu
@@ -38,7 +37,7 @@ app ADM (
         timestampTimeZone: DS
     }
     authentication {
-        scheme: @enfe-login-central
+        scheme: @login-central
     }
     authorization {
         scheme: @acceso-app
@@ -46,6 +45,10 @@ app ADM (
     }
     sessionStateProtection {
         checksumSalt: BE8E26C19CF3511FBFEB1A6F9F79DA741A84B7ED70299369E025F6E56E2FFF65
+    }
+    errorHandling {
+        defaultDisplayLocation: inlineWithFieldAndInNotification
+        errorHandlingFunctionName: adm_gen_error_api.manejar_error_apex
     }
     runtime {
         allowFeedback: true

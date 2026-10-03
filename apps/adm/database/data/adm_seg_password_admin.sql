@@ -1,22 +1,19 @@
 -- =============================================================================
 -- Fija la contraseña del superadmin ADMIN (post-deploy o recuperación).
--- Ejecutar a mano conectado al esquema del workspace (o como DBA con prefijo).
+-- Ejecutar a mano conectado al esquema del workspace.
 -- La contraseña se pide por consola y NO queda en el repositorio.
--- ADMIN deberá cambiarla en su primer ingreso.
+-- ADMIN deberá cambiarla en su primer ingreso; queda desbloqueado.
 -- =============================================================================
 set verify off
 accept v_password char prompt 'Nueva contraseña para ADMIN (min 8, letras y números): ' hide
 
 declare
-    V_USUARIO_ID  number;
+    v_usuario_id  adm_seg_usuario.usuario_id%type;
 begin
-    select usuario_id into V_USUARIO_ID from adm_seg_usuario where username = 'ADMIN';
-    adm_usuario_ctr.P_CAMBIAR_PASSWORD(
-        I_USUARIO_ID     => V_USUARIO_ID,
-        I_PASSWORD_NUEVO => '&v_password',
-        I_DEBE_CAMBIAR   => 'S');
-    adm_usuario_ctr.P_DESBLOQUEAR(I_USUARIO_ID => V_USUARIO_ID);
-    update adm_seg_usuario set estado = 'A' where usuario_id = V_USUARIO_ID;
+    select usuario_id into v_usuario_id from adm_seg_usuario where username = 'ADMIN';
+    adm_seg_usuario_api.resetear_password(
+        i_usuario_id     => v_usuario_id,
+        i_password_nuevo => '&v_password');
     commit;
     dbms_output.put_line('Contraseña de ADMIN actualizada. Deberá cambiarla al ingresar.');
 end;

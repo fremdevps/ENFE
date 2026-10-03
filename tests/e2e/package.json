@@ -1,13 +1,14 @@
 {
-  "name": "enfe-e2e",
+  "name": "apex-e2e",
   "private": true,
-  "description": "Pruebas end-to-end (Playwright) de las apps APEX de ENFE",
+  "description": "Pruebas end-to-end (Playwright) de las apps APEX",
   "scripts": {
-    "test": "playwright test",
-    "test:ui": "playwright test --ui-host=127.0.0.1 --ui-port=9323",
-    "test:headed": "playwright test --headed",
+    "test": "playwright test --project=chrome",
+    "test:live": "playwright test --project=en-vivo",
+    "test:ui": "playwright test --project=chrome --ui-host=127.0.0.1 --ui-port=9323",
+    "test:publico": "playwright test --project=chrome --grep @publico",
     "report": "playwright show-report reports/html --host 127.0.0.1 --port 9324",
-    "install:browsers": "playwright install chromium"
+    "install:browsers": "playwright install ffmpeg"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",

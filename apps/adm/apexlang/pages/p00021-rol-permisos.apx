@@ -14,6 +14,33 @@ page 21 (
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
+    help {
+        helpText:
+            ```
+            Asigne permisos a cada rol.
+            Cada fila otorga un permiso a un rol; los cambios aplican en el próximo inicio de sesión de los usuarios.
+            ```
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
 
     region rol-permisos (
         name: Permisos por rol
@@ -31,7 +58,7 @@ page 21 (
                 ```
         }
         layout {
-            sequence: 10
+            sequence: 20
             slot: BODY
         }
         appearance {
@@ -67,6 +94,12 @@ page 21 (
                 csv
                 excel
             ]
+        }
+        comments {
+            comments:
+                ```
+                Mantenimiento de adm_seg_rol_permiso (N:M).
+                ```
         }
 
         savedReport PRIMARY (
@@ -121,6 +154,18 @@ page 21 (
                 type: sharedComponent
                 lov: @roles
             }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Rol. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
+            }
         )
 
         column PERMISO_ID (
@@ -141,6 +186,18 @@ page 21 (
             lov {
                 type: sharedComponent
                 lov: @permisos
+            }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Permiso. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )

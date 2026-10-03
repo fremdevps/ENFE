@@ -14,6 +14,33 @@ page 40 (
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
+    help {
+        helpText:
+            ```
+            Catálogo de aplicaciones controladas por la seguridad central.
+            Registre aquí cada app APEX nueva con su ID fijo; sus módulos y permisos se definen en las páginas siguientes.
+            ```
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
 
     region aplicaciones (
         name: Aplicaciones
@@ -31,7 +58,7 @@ page 40 (
                 ```
         }
         layout {
-            sequence: 10
+            sequence: 20
             slot: BODY
         }
         appearance {
@@ -67,6 +94,12 @@ page 40 (
                 csv
                 excel
             ]
+        }
+        comments {
+            comments:
+                ```
+                Mantenimiento de adm_seg_aplicacion.
+                ```
         }
 
         savedReport PRIMARY (
@@ -117,6 +150,18 @@ page 40 (
                 databaseColumn: CODIGO
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Summary: Prefijo de todos los objetos de la app (adm, erp…). Display Label: Código. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
+            }
         )
 
         column NOMBRE (
@@ -134,6 +179,18 @@ page 40 (
                 databaseColumn: NOMBRE
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+            }
         )
 
         column DESCRIPCION (
@@ -147,6 +204,18 @@ page 40 (
             source {
                 databaseColumn: DESCRIPCION
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Descripción. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -162,6 +231,18 @@ page 40 (
                 databaseColumn: APEX_APP_ID
                 dataType: number
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Summary: Bloques de 100: ADM 100, ERP 200. Display Label: ID App APEX. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+            }
         )
 
         column ICONO (
@@ -175,6 +256,18 @@ page 40 (
             source {
                 databaseColumn: ICONO
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Icono. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -192,6 +285,18 @@ page 40 (
             source {
                 databaseColumn: ORDEN
                 dataType: number
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Orden. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -213,6 +318,18 @@ page 40 (
             lov {
                 type: sharedComponent
                 lov: @estado-ai
+            }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )
