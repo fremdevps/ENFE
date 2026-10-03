@@ -1,5 +1,7 @@
 # ENFE — guía para Claude
 
+> Leer también **`AGENTS.md`** (flujo, definición de terminado y errores aprendidos que no hay que repetir).
+
 Plataforma multi-aplicación en **Oracle APEX 26.1+** (APEXlang). Debe funcionar
 en **OCI Autonomous Database y on-premise**: no usar paquetes exclusivos de la
 nube (DBMS_CLOUD, etc.) sin alternativa on-prem.

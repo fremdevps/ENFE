@@ -30,6 +30,22 @@ fondo y, al terminar, abrir `npm run report`.
 git). Claude NO ingresa credenciales en sitios que no sean `localhost`: si el ambiente es remoto
 (OCI/on-prem), Claude corre solo `@publico` y el dev lanza el resto con los comandos de arriba.
 
+## Después de CADA cambio (obligatorio)
+
+Ningún cambio de pantalla, proceso o consulta se da por terminado sin esta secuencia
+(ver "Definición de terminado" en `AGENTS.md`):
+
+1. `apex validate -input apps/<app>/apexlang`
+2. `apex import -input apps/<app>/apexlang -id <ID>` en DEV
+3. `@tools/apex/verificar_consultas.sql <ID> QA_ADMIN` → debe decir `0 con error`
+   (ejecuta todas las consultas de regiones, gráficos y LOVs en una sesión APEX real)
+4. `npm run test:publico` (Claude lo corre siempre)
+5. Suite completa con login (`npm test` o `npm run test:live`): la lanza el dev en ambientes
+   remotos; Claude la corre solo en `localhost`.
+6. Si la pantalla cambió: actualizar o crear su spec en el mismo commit.
+
+Reportar el resultado real de cada paso. "Valida" no significa "funciona".
+
 ## Estructura
 
 ```
