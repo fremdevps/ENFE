@@ -340,4 +340,40 @@ list navigation-menu (
         }
     )
 
+    entry mensajes-error (
+        label: Mensajes de error
+        icon {
+            imageIconCssClasses: fa-comment-o
+        }
+        layout {
+            sequence: 45
+        }
+        link {
+            target: {
+                page: 51
+            }
+        }
+        security {
+            authorizationScheme: @adm-gen-mensaje-gestionar
+        }
+    )
+
+    entry bitacora-errores (
+        label: Bitácora de errores
+        icon {
+            imageIconCssClasses: fa-bug
+        }
+        layout {
+            sequence: 55
+        }
+        link {
+            target: {
+                page: 61
+            }
+        }
+        security {
+            authorizationScheme: @adm-aud-error-ver
+        }
+    )
+
 )

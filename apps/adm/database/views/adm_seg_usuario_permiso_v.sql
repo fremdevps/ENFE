@@ -28,7 +28,7 @@ select u.usuario_id,
   join adm_seg_aplicacion  a  on a.aplicacion_id = m.aplicacion_id and a.estado = 'A'
  where u.estado = 'A'
    and r.estado = 'A'
-   and trunc(sysdate) between ur.fecha_desde and coalesce(ur.fecha_hasta, trunc(sysdate))
+   and trunc(current_date) between ur.fecha_desde and coalesce(ur.fecha_hasta, trunc(current_date))
    and (   r.es_superadmin = 'S'
         or exists (select 1
                      from adm_seg_rol_permiso rp

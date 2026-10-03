@@ -1,33 +1,33 @@
 -- =============================================================================
 -- Superadmin permanente: garantiza que en TODA instalación exista el usuario
 -- ADMIN con rol SUPERADMIN (acceso total a todas las apps).
--- - Idempotente: si ya existe, solo asegura el rol y que esté activo.
--- - Se crea con una contraseña ALEATORIA que nadie conoce y debe_cambiar = 'S'.
+-- - Idempotente: si ya existe, solo asegura que esté activo y con el rol.
+-- - Se crea con una contraseña ALEATORIA que nadie conoce y debe cambiarla.
 --   Quien hace el deploy fija la contraseña inicial con
 --   apps/adm/database/data/adm_seg_password_admin.sql
 -- =============================================================================
 declare
-    C_USERNAME  constant varchar2(30) := 'ADMIN';
-    V_USUARIO_ID  adm_seg_usuario.usuario_id%type;
-    V_ROL_ID      adm_seg_rol.rol_id%type;
+    c_username    constant varchar2(30) := 'ADMIN';
+    v_usuario_id  adm_seg_usuario.usuario_id%type;
+    v_rol_id      adm_seg_rol.rol_id%type;
 begin
-    select rol_id into V_ROL_ID from adm_seg_rol where codigo = 'SUPERADMIN';
+    select rol_id into v_rol_id from adm_seg_rol where codigo = 'SUPERADMIN';
 
     begin
-        select usuario_id into V_USUARIO_ID from adm_seg_usuario where username = C_USERNAME;
-        update adm_seg_usuario set estado = 'A' where usuario_id = V_USUARIO_ID and estado <> 'A';
+        select usuario_id into v_usuario_id from adm_seg_usuario where username = c_username;
+        adm_seg_usuario_api.desbloquear(i_usuario_id => v_usuario_id);
     exception
         when no_data_found then
-            adm_usuario_ctr.P_INSERTAR(
-                I_USERNAME   => C_USERNAME,
-                I_EMAIL      => 'admin@localhost',
-                I_NOMBRES    => 'Super',
-                I_APELLIDOS  => 'Administrador',
-                I_PASSWORD   => 'Aa1' || dbms_random.string('x', 29),
-                O_USUARIO_ID => V_USUARIO_ID);
+            adm_seg_usuario_api.crear(
+                i_username   => c_username,
+                i_email      => 'admin@localhost',
+                i_nombres    => 'Super',
+                i_apellidos  => 'Administrador',
+                i_password   => 'Aa1' || dbms_random.string('x', 29),
+                o_usuario_id => v_usuario_id);
     end;
 
-    adm_usuario_ctr.P_ASIGNAR_ROL(I_USUARIO_ID => V_USUARIO_ID, I_ROL_ID => V_ROL_ID);
+    adm_seg_usuario_api.asignar_rol(i_usuario_id => v_usuario_id, i_rol_id => v_rol_id);
     commit;
 end;
 /

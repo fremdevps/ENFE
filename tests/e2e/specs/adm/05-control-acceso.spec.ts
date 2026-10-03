@@ -1,5 +1,5 @@
 import { test, expect, gotoPage, uniq, login, apexError } from '../../support/apex';
-import { crearUsuario } from '../../support/adm';
+import { crearUsuario, filaBitacora } from '../../support/adm';
 
 test.describe('ADM · Control de acceso centralizado', () => {
   test('un usuario sin roles no puede entrar a ADM ni al ERP', async ({ admPage: page, browser }) => {
@@ -18,7 +18,6 @@ test.describe('ADM · Control de acceso centralizado', () => {
     await ctx.close();
 
     // Queda registrado en la bitácora con resultado SIN_ACCESO
-    await gotoPage(page, 'adm', 'bitacora-login');
-    await expect(page.locator('#bitacora-login').getByText(user).first()).toBeVisible();
+    await expect(await filaBitacora(page, user, 'SIN_ACCESO')).toBeVisible();
   });
 });

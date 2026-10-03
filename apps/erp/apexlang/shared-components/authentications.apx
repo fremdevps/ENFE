@@ -1,8 +1,8 @@
-authentication enfe-login-central (
-    name: ENFE Login Central
+authentication login-central (
+    name: Login Central
     type: custom
     settings {
-        authFunctionName: adm_seguridad_reg.f_autenticar
+        authFunctionName: adm_seg_seguridad_reg.autenticar
     }
     sessionSharing {
         type: workspaceSharing

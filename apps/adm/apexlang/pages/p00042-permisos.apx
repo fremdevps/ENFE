@@ -14,6 +14,33 @@ page 42 (
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
+    help {
+        helpText:
+            ```
+            Permisos atómicos de cada módulo.
+            El código debe coincidir con el authorization scheme de la app APEX que lo usa.
+            ```
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
 
     region permisos (
         name: Permisos
@@ -31,7 +58,7 @@ page 42 (
                 ```
         }
         layout {
-            sequence: 10
+            sequence: 20
             slot: BODY
         }
         appearance {
@@ -68,6 +95,12 @@ page 42 (
                 excel
             ]
         }
+        comments {
+            comments:
+                ```
+                Mantenimiento de adm_seg_permiso.
+                ```
+        }
 
         savedReport PRIMARY (
             visibility: primary
@@ -102,13 +135,42 @@ page 42 (
             }
         )
 
+        column CODIGO (
+            type: textField
+            heading {
+                heading: Código
+            }
+            layout {
+                sequence: 40
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: CODIGO
+                dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Summary: APP_MOD_ENTIDAD_ACCION = nombre del authorization scheme. Display Label: Código. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
+            }
+        )
+
         column MODULO_ID (
             type: selectList
             heading {
                 heading: Módulo
             }
             layout {
-                sequence: 40
+                sequence: 50
             }
             validation {
                 valueRequired: true
@@ -121,22 +183,17 @@ page 42 (
                 type: sharedComponent
                 lov: @modulos
             }
-        )
-
-        column CODIGO (
-            type: textField
-            heading {
-                heading: Código
+            columnFilter {
+                enabled: true
+                lovType: useLov
             }
-            layout {
-                sequence: 50
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
-            validation {
-                valueRequired: true
-            }
-            source {
-                databaseColumn: CODIGO
-                dataType: varchar2
+            comments {
+                comments: Display Label: Módulo. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -154,6 +211,18 @@ page 42 (
             source {
                 databaseColumn: NOMBRE
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -176,6 +245,18 @@ page 42 (
                 type: sharedComponent
                 lov: @tipo-permiso
             }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Tipo. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+            }
         )
 
         column APEX_PAGINA_ID (
@@ -189,6 +270,18 @@ page 42 (
             source {
                 databaseColumn: APEX_PAGINA_ID
                 dataType: number
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Summary: Obligatoria si el tipo es Página. Display Label: Página APEX. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -210,6 +303,18 @@ page 42 (
             lov {
                 type: sharedComponent
                 lov: @estado-ai
+            }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )

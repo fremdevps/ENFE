@@ -11,7 +11,9 @@ const PAGINAS: Array<[alias: string, titulo: RegExp]> = [
   ['modulos',          /Módulos/],
   ['permisos',         /Permisos/],
   ['empresas',         /Empresas/],
+  ['mensajes-error',   /Mensajes de error/],
   ['bitacora-login',   /Bitácora de accesos/],
+  ['bitacora-errores', /Bitácora de errores/],
   ['cambiar-password', /Cambiar mi contraseña/],
 ];
 

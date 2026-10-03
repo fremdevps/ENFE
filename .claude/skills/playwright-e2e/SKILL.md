@@ -1,27 +1,34 @@
 ---
 name: playwright-e2e
-description: Pruebas end-to-end con Playwright de las apps APEX de ENFE (ADM, ERP, …). Usar al crear, ejecutar, depurar o revisar pruebas automatizadas de pantallas APEX, ver el reporte HTML o el modo UI en localhost, o cuando se agregue una pantalla nueva que necesite cobertura.
+description: Pruebas end-to-end con Playwright de las apps APEX (ADM, ERP, …). Usar cuando el dev pida correr las pruebas (en vivo viendo Chrome, en segundo plano, o una sola), ver el reporte o el modo UI en localhost, crear/depurar pruebas, o cuando se agregue una pantalla nueva que necesite cobertura.
 ---
 
-# Pruebas E2E con Playwright (ENFE)
+# Pruebas E2E con Playwright
 
 Suite en `tests/e2e/`. Corre contra el ambiente APEX indicado en `.env.test`
 (raíz del repo, **ignorado por git**). Nunca escribir credenciales en specs.
 
-## Ejecutar
+## Ejecutar — según lo que pida el dev
 
-```
-cd tests/e2e
-npm install                 # primera vez
-npm run install:browsers    # primera vez (Chromium)
-npm test                    # toda la suite (headless) + reporte en reports/html
-npm run test:ui             # modo UI interactivo  -> http://127.0.0.1:9323
-npm run report              # reporte HTML         -> http://127.0.0.1:9324
-npx playwright test specs/adm/03-empresas.spec.ts --headed   # una sola, viendo el navegador
-```
+Requisitos (una vez): Node.js LTS y `npm install` en `tests/e2e`. Usa el **Google Chrome
+instalado** (`channel: 'chrome'`), no hace falta descargar navegadores.
 
-`.env.test` requiere: `APEX_BASE_URL` (…/ords/r/<workspace>), `TEST_ADMIN_USER`,
-`TEST_ADMIN_PASSWORD` (superadmin de pruebas, p.ej. QA_ADMIN).
+| El dev dice… | Comando (desde `tests/e2e`) | Qué pasa |
+|---|---|---|
+| "en vivo", "quiero verlo", "con Chrome" | `npm run test:live` | Chrome visible, cámara lenta (400 ms por acción) |
+| "en segundo plano", "en background", "corre las pruebas" | `npm test` | Sin ventana; al final, reporte HTML |
+| "modo interactivo", "elegir pruebas" | `npm run test:ui` | UI de Playwright en **http://127.0.0.1:9323** |
+| "ver el reporte", "qué falló" | `npm run report` | Reporte en **http://127.0.0.1:9324** (trace, video, capturas) |
+| "solo una prueba / una pantalla" | `npx playwright test specs/adm/03-empresas.spec.ts --project=en-vivo` | Una sola, en vivo |
+| "paso a paso", "depurar" | `npx playwright test <spec> --project=en-vivo --debug` | Inspector de Playwright |
+| "sin login" (smoke) | `npm run test:publico` | Solo pruebas marcadas `@publico` |
+
+Para dejar corriendo en segundo plano y seguir trabajando: lanzar `npm test` como proceso de
+fondo y, al terminar, abrir `npm run report`.
+
+**Credenciales:** las pruebas que inician sesión leen `.env.test` (raíz del repo, ignorado por
+git). Claude NO ingresa credenciales en sitios que no sean `localhost`: si el ambiente es remoto
+(OCI/on-prem), Claude corre solo `@publico` y el dev lanza el resto con los comandos de arriba.
 
 ## Estructura
 

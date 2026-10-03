@@ -14,12 +14,39 @@ page 31 (
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
+    help {
+        helpText:
+            ```
+            Cree un usuario para cualquiera de las aplicaciones.
+            Los usuarios locales reciben una contraseña inicial que deberán cambiar en su primer ingreso. Después asígnele roles en Roles por usuario.
+            ```
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
 
     region datos (
         name: Nuevo usuario
         type: staticContent
         layout {
-            sequence: 10
+            sequence: 20
             slot: BODY
         }
         appearance {
@@ -45,6 +72,10 @@ page 31 (
         validation {
             valueRequired: true
         }
+        help {
+            inlineHelpText: Se guarda en mayúsculas
+            helpText: Nombre con el que iniciará sesión. Debe ser único.
+        }
     )
 
     pageItem P31_EMAIL (
@@ -63,6 +94,10 @@ page 31 (
         }
         validation {
             valueRequired: true
+        }
+        help {
+            inlineHelpText: Correo único
+            helpText: Correo electrónico de contacto; no puede repetirse.
         }
     )
 
@@ -83,6 +118,10 @@ page 31 (
         validation {
             valueRequired: true
         }
+        help {
+            inlineHelpText: Nombres de la persona
+            helpText: Nombres tal como se mostrarán en las aplicaciones.
+        }
     )
 
     pageItem P31_APELLIDOS (
@@ -99,7 +138,10 @@ page 31 (
             template: @/optional-floating
             templateOptions: #DEFAULT#
         }
-
+        help {
+            inlineHelpText: Apellidos (opcional)
+            helpText: Apellidos de la persona.
+        }
     )
 
     pageItem P31_TIPO_AUTENTICACION (
@@ -118,9 +160,14 @@ page 31 (
         }
         validation {
             valueRequired: true
-        }        lov {
+        }
+        lov {
             type: sharedComponent
             lov: @tipo-autenticacion
+        }
+        help {
+            inlineHelpText: Local o SSO
+            helpText: Local: usa contraseña propia. SSO: se autentica con un proveedor externo.
         }
     )
 
@@ -138,7 +185,10 @@ page 31 (
             template: @/optional-floating
             templateOptions: #DEFAULT#
         }
-
+        help {
+            inlineHelpText: Mín. 8, letras y números
+            helpText: Contraseña temporal; el sistema obligará a cambiarla en el primer ingreso.
+        }
     )
 
     pageItem P31_EMPRESA_ID (
@@ -159,6 +209,30 @@ page 31 (
             type: sharedComponent
             lov: @empresas
         }
+        help {
+            inlineHelpText: Empresa habitual
+            helpText: Empresa con la que el usuario trabaja por defecto.
+        }
+    )
+
+    button cancelar (
+        buttonName: CANCELAR
+        label: Cancelar
+        layout {
+            sequence: 5
+            region: @datos
+            slot: CLOSE
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 30
+            }
+        }
     )
 
     button crear (
@@ -167,7 +241,7 @@ page 31 (
         layout {
             sequence: 10
             region: @datos
-            slot: CREATE
+            slot: NEXT
         }
         appearance {
             buttonTemplate: @/text
@@ -176,24 +250,24 @@ page 31 (
         }
     )
 
-    process crear-usuario (
+    process crear-proceso (
         name: Crear usuario
         type: executeCode
         source {
             plsqlCode:
                 ```plsql
                 declare
-                    V_USUARIO_ID number;
+                    v_usuario_id  number;
                 begin
-                    adm_usuario_ctr.P_INSERTAR(
-                        I_USERNAME           => :P31_USERNAME,
-                        I_EMAIL              => :P31_EMAIL,
-                        I_NOMBRES            => :P31_NOMBRES,
-                        I_APELLIDOS          => :P31_APELLIDOS,
-                        I_TIPO_AUTENTICACION => :P31_TIPO_AUTENTICACION,
-                        I_PASSWORD           => :P31_PASSWORD,
-                        I_EMPRESA_ID_DEFECTO => :P31_EMPRESA_ID,
-                        O_USUARIO_ID         => V_USUARIO_ID);
+                    adm_seg_usuario_api.crear(
+                        i_username           => :P31_USERNAME,
+                        i_email              => :P31_EMAIL,
+                        i_nombres            => :P31_NOMBRES,
+                        i_apellidos          => :P31_APELLIDOS,
+                        i_tipo_autenticacion => :P31_TIPO_AUTENTICACION,
+                        i_password           => :P31_PASSWORD,
+                        i_empresa_id_defecto => :P31_EMPRESA_ID,
+                        o_usuario_id         => v_usuario_id);
                 end;
                 ```
         }
@@ -204,7 +278,7 @@ page 31 (
             whenButtonPressed: @crear
         }
         successMessage {
-            successMessage: Usuario creado. Debe cambiar la contraseña en su primer ingreso.
+            successMessage: Usuario creado. Deberá cambiar la contraseña en su primer ingreso.
         }
     )
 

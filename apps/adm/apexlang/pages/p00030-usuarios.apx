@@ -14,6 +14,33 @@ page 30 (
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
+    help {
+        helpText:
+            ```
+            Consulte y edite los usuarios de todas las aplicaciones.
+            Para crear usuarios use Nuevo usuario; para contraseñas, Resetear contraseña. Cambiar el estado de Bloqueado a Activo desbloquea al usuario.
+            ```
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
 
     region usuarios (
         name: Usuarios
@@ -32,7 +59,7 @@ page 30 (
                 ```
         }
         layout {
-            sequence: 10
+            sequence: 20
             slot: BODY
         }
         appearance {
@@ -66,6 +93,12 @@ page 30 (
                 csv
                 excel
             ]
+        }
+        comments {
+            comments:
+                ```
+                Edición de adm_seg_usuario (solo update). El alta y la contraseña van por adm_seg_usuario_api.
+                ```
         }
 
         savedReport PRIMARY (
@@ -116,6 +149,18 @@ page 30 (
                 databaseColumn: USERNAME
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Usuario. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
+            }
         )
 
         column EMAIL (
@@ -132,6 +177,18 @@ page 30 (
             source {
                 databaseColumn: EMAIL
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Email. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -150,6 +207,18 @@ page 30 (
                 databaseColumn: NOMBRES
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Nombres. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+            }
         )
 
         column APELLIDOS (
@@ -163,6 +232,18 @@ page 30 (
             source {
                 databaseColumn: APELLIDOS
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Apellidos. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -185,6 +266,18 @@ page 30 (
                 type: sharedComponent
                 lov: @tipo-autenticacion
             }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Autenticación. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+            }
         )
 
         column EMPRESA_ID_DEFECTO (
@@ -202,6 +295,18 @@ page 30 (
             lov {
                 type: sharedComponent
                 lov: @empresas
+            }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Empresa por defecto. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -224,6 +329,18 @@ page 30 (
                 type: sharedComponent
                 lov: @estado-usuario
             }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Summary: Pasar de Bloqueado a Activo reinicia los intentos. Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+            }
         )
 
         column INTENTOS_FALLIDOS (
@@ -240,6 +357,18 @@ page 30 (
             source {
                 databaseColumn: INTENTOS_FALLIDOS
                 dataType: number
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Intentos fallidos. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -261,6 +390,18 @@ page 30 (
             lov {
                 type: sharedComponent
                 lov: @si-no
+            }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
+            comments {
+                comments: Display Label: Debe cambiar contraseña. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )
