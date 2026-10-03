@@ -13,3 +13,5 @@ Usadas en constraints, índices, triggers y secuencias (`<tipo>_adm_<abrev>_...`
 | adm_seg_usuario | usu |
 | adm_seg_usuario_rol | usro |
 | adm_aud_login | log |
+| adm_aud_error | err |
+| adm_gen_mensaje_error | mse |

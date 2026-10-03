@@ -2,6 +2,9 @@
 -- DESINSTALACIÓN de objetos ADM. ¡Borra TODOS los usuarios, roles y permisos!
 -- Solo para desarrollo. Las demás apps dependen de estos objetos.
 -- =============================================================================
+drop package adm_gen_error_api;
+drop package adm_gen_mensaje_error_ctr;
+drop package adm_aud_error_ctr;
 drop package adm_seg_usuario_api;
 drop package adm_seg_usuario_reg;
 drop package adm_seg_seguridad_reg;
@@ -10,6 +13,8 @@ drop package adm_seg_usuario_rol_ctr;
 drop package adm_seg_usuario_ctr;
 drop package adm_seg_password_utl;
 drop view    adm_seg_usuario_permiso_v;
+drop table   adm_gen_mensaje_error purge;
+drop table   adm_aud_error purge;
 drop table   adm_aud_login purge;
 drop table   adm_seg_usuario_rol purge;
 drop table   adm_seg_usuario purge;
