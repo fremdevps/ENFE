@@ -1,0 +1,204 @@
+page 91 (
+    name: Cambio de contraseña obligatorio
+    alias: CAMBIO-OBLIGATORIO
+    title: &APP_TITLE. - Cambiar contraseña
+    appearance {
+        pageTemplate: @/login
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        warnOnUnsavedChanges: false
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Por seguridad debe definir una contraseña nueva antes de continuar.
+            Use al menos 8 caracteres con letras y números. Si no desea hacerlo ahora, salga del sistema.
+            ```
+    }
+
+    region cambio (
+        name: Cambiar contraseña
+        title: Cambie su contraseña
+        type: staticContent
+        source {
+            htmlCode: <p class="u-textCenter">Por seguridad debe definir una contraseña nueva para continuar.</p>
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/login
+            templateOptions: #DEFAULT#
+        }
+        image {
+            fileUrl: #APP_FILES#icons/app-icon-512.png
+        }
+    )
+
+    pageItem P91_PASSWORD_ACTUAL (
+        type: password
+        label {
+            label: Contraseña actual o temporal
+        }
+        layout {
+            sequence: 10
+            region: @cambio
+            slot: regionBody
+        }
+        appearance {
+            template: @/hidden
+            templateOptions: #DEFAULT#
+            icon: fa-key
+            width: 40
+            valuePlaceholder: Contraseña actual o temporal
+        }
+        validation {
+            valueRequired: true
+            maxLength: 100
+        }
+        advanced {
+            customAttributes: autocomplete="current-password"
+        }
+        sessionState {
+            storage: request
+        }
+    )
+
+    pageItem P91_PASSWORD_NUEVO (
+        type: password
+        label {
+            label: Nueva contraseña (mín. 8, letras y números)
+        }
+        layout {
+            sequence: 20
+            region: @cambio
+            slot: regionBody
+        }
+        appearance {
+            template: @/hidden
+            templateOptions: #DEFAULT#
+            icon: fa-lock
+            width: 40
+            valuePlaceholder: Nueva contraseña (mín. 8, letras y números)
+        }
+        validation {
+            valueRequired: true
+            maxLength: 100
+        }
+        advanced {
+            customAttributes: autocomplete="new-password"
+        }
+        sessionState {
+            storage: request
+        }
+    )
+
+    pageItem P91_PASSWORD_CONFIRMA (
+        type: password
+        label {
+            label: Repita la nueva contraseña
+        }
+        layout {
+            sequence: 30
+            region: @cambio
+            slot: regionBody
+        }
+        appearance {
+            template: @/hidden
+            templateOptions: #DEFAULT#
+            icon: fa-lock
+            width: 40
+            valuePlaceholder: Repita la nueva contraseña
+        }
+        validation {
+            valueRequired: true
+            maxLength: 100
+        }
+        advanced {
+            customAttributes: autocomplete="new-password"
+        }
+        sessionState {
+            storage: request
+        }
+    )
+
+    button cambiar (
+        buttonName: CAMBIAR
+        label: Cambiar contraseña y continuar
+        layout {
+            sequence: 40
+            region: @cambio
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+        }
+    )
+
+    button salir (
+        buttonName: SALIR
+        label: Salir
+        layout {
+            sequence: 50
+            region: @cambio
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectUrl
+            targetUrl: &LOGOUT_URL.
+        }
+    )
+
+    process cambiar-password (
+        name: Cambiar contraseña
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                adm_seg_usuario_api.cambiar_password(
+                    i_username          => :APP_USER,
+                    i_password_actual   => :P91_PASSWORD_ACTUAL,
+                    i_password_nuevo    => :P91_PASSWORD_NUEVO,
+                    i_password_confirma => :P91_PASSWORD_CONFIRMA);
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        serverSideCondition {
+            whenButtonPressed: @cambiar
+        }
+        successMessage {
+            successMessage: Contraseña actualizada. ¡Bienvenido!
+        }
+    )
+
+    branch ir-a-inicio (
+        name: Ir al inicio
+        execution {
+            sequence: 10
+            point: afterProcessing
+        }
+        behavior {
+            type: pageOrUrl
+            target: {
+                page: 1
+            }
+        }
+    )
+)
