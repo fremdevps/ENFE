@@ -424,19 +424,26 @@ def region_grafico(rid, titulo, tipo, sql, seq, nueva_fila, columnas=6):
 def pagina_inicio():
     o = cabecera(1, 'Inicio', 'HOME', None,
                  "Punto de partida de la Administración Central.\nElija un área en las tarjetas o revise el estado actual en los indicadores y gráficos.")
-    kpis = ("select 1 id, 'Usuarios activos' titulo, to_char(count(*)) valor, 'De ' || (select count(*) from adm_seg_usuario) || ' registrados' detalle\n"
-            "  from adm_seg_usuario where estado = 'A'\n"
+    # Cada indicador sale de su propia subconsulta escalar (sin mezclar agregados con columnas sueltas).
+    kpis = ("select 1 id, 'Usuarios activos' titulo,\n"
+            "       to_char((select count(*) from adm_seg_usuario where estado = 'A')) valor,\n"
+            "       'De ' || (select count(*) from adm_seg_usuario) || ' registrados' detalle\n"
+            "  from dual\n"
             "union all\n"
-            "select 2, 'Usuarios bloqueados', to_char(count(*)), 'Por intentos fallidos' from adm_seg_usuario where estado = 'B'\n"
+            "select 2, 'Usuarios bloqueados', to_char((select count(*) from adm_seg_usuario where estado = 'B')),\n"
+            "       'Por intentos fallidos' from dual\n"
             "union all\n"
-            "select 3, 'Ingresos hoy', to_char(count(*)), 'Inicios de sesión exitosos'\n"
-            "  from adm_aud_login where resultado = 'OK' and fecha >= trunc(current_date)\n"
+            "select 3, 'Ingresos hoy',\n"
+            "       to_char((select count(*) from adm_aud_login where resultado = 'OK' and fecha >= trunc(current_date))),\n"
+            "       'Inicios de sesión exitosos' from dual\n"
             "union all\n"
-            "select 4, 'Accesos rechazados hoy', to_char(count(*)), 'Contraseña, bloqueo o sin acceso'\n"
-            "  from adm_aud_login where resultado <> 'OK' and fecha >= trunc(current_date)\n"
+            "select 4, 'Accesos rechazados hoy',\n"
+            "       to_char((select count(*) from adm_aud_login where resultado <> 'OK' and fecha >= trunc(current_date))),\n"
+            "       'Contraseña, bloqueo o sin acceso' from dual\n"
             "union all\n"
-            "select 5, 'Incidentes (7 días)', to_char(count(*)), 'Errores inesperados'\n"
-            "  from adm_aud_error where fecha >= trunc(current_date) - 7")
+            "select 5, 'Incidentes (7 días)',\n"
+            "       to_char((select count(*) from adm_aud_error where fecha >= trunc(current_date) - 7)),\n"
+            "       'Errores inesperados' from dual")
     o += ["", "    region accesos (", "        name: ¿Qué desea hacer?", "        type: list", "        source {", "            list: @accesos",
           "        }", "        layout {", "            sequence: 20", "            slot: BODY", "        }", "        appearance {",
           "            template: @/standard", "            templateOptions: #DEFAULT#", "        }", "        componentAppearance {",

@@ -76,19 +76,25 @@ page 1 (
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select 1 id, 'Usuarios activos' titulo, to_char(count(*)) valor, 'De ' || (select count(*) from adm_seg_usuario) || ' registrados' detalle
-                  from adm_seg_usuario where estado = 'A'
+                select 1 id, 'Usuarios activos' titulo,
+                       to_char((select count(*) from adm_seg_usuario where estado = 'A')) valor,
+                       'De ' || (select count(*) from adm_seg_usuario) || ' registrados' detalle
+                  from dual
                 union all
-                select 2, 'Usuarios bloqueados', to_char(count(*)), 'Por intentos fallidos' from adm_seg_usuario where estado = 'B'
+                select 2, 'Usuarios bloqueados', to_char((select count(*) from adm_seg_usuario where estado = 'B')),
+                       'Por intentos fallidos' from dual
                 union all
-                select 3, 'Ingresos hoy', to_char(count(*)), 'Inicios de sesión exitosos'
-                  from adm_aud_login where resultado = 'OK' and fecha >= trunc(current_date)
+                select 3, 'Ingresos hoy',
+                       to_char((select count(*) from adm_aud_login where resultado = 'OK' and fecha >= trunc(current_date))),
+                       'Inicios de sesión exitosos' from dual
                 union all
-                select 4, 'Accesos rechazados hoy', to_char(count(*)), 'Contraseña, bloqueo o sin acceso'
-                  from adm_aud_login where resultado <> 'OK' and fecha >= trunc(current_date)
+                select 4, 'Accesos rechazados hoy',
+                       to_char((select count(*) from adm_aud_login where resultado <> 'OK' and fecha >= trunc(current_date))),
+                       'Contraseña, bloqueo o sin acceso' from dual
                 union all
-                select 5, 'Incidentes (7 días)', to_char(count(*)), 'Errores inesperados'
-                  from adm_aud_error where fecha >= trunc(current_date) - 7
+                select 5, 'Incidentes (7 días)',
+                       to_char((select count(*) from adm_aud_error where fecha >= trunc(current_date) - 7)),
+                       'Errores inesperados' from dual
                 ```
         }
         layout {
