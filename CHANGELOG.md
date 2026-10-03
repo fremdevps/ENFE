@@ -2,6 +2,27 @@
 
 Formato: [SemVer](https://semver.org/lang/es/). Ver `.claude/skills/git-flujo/SKILL.md`.
 
+## [v0.3.0] - 2026-10-03
+### Cambiado
+- ADM rediseñado con el patrón recomendado por APEX para usuarios no técnicos: **listado (Interactive Report) + formulario en panel lateral**; modales para acciones puntuales.
+- Usuarios y roles vía capa `api` (`adm_seg_usuario_api`, nuevo `adm_seg_rol_api`); catálogos simples con guardado automático (excepción documentada en el estándar).
+- Inicio tipo **hub**: tarjetas por área, indicadores y gráficos del estado actual.
+- Menú agrupado (Seguridad, Catálogo, Auditoría) y colapsado; breadcrumb con el nombre de cada página.
+- Apps y login en **español**.
+- Botones ordenados: Cancelar a la izquierda, acción principal a la derecha, abajo del formulario.
+### Agregado
+- **Cambio de contraseña obligatorio** con diseño de login (página 91, sin menú) y opción Salir.
+- Rol del usuario gestionado desde su formulario (modal Asignar o quitar rol) y permisos del rol en shuttle; rol SUPERADMIN protegido.
+- `tools/apexlang/adm_paginas.py`: generador de las pantallas de ADM.
+- `tools/apex/verificar_consultas.sql`: ejecuta todas las consultas (regiones, gráficos, LOVs) de una app en una sesión real.
+- `AGENTS.md` (instrucciones para cualquier LLM, definición de terminado y puntos de mejora) y `docs/PROMPT-INICIAL.md`.
+- Skills con verificación obligatoria después de cada cambio.
+### Corregido
+- Indicadores del inicio (ORA-00937).
+- Con cambio de contraseña pendiente, el login podía devolver a la pág. 90 en lugar de la 91.
+### Problemas conocidos
+- La suite Playwright **con login** apunta todavía a las pantallas anteriores (grids); debe adaptarse al nuevo diseño. Las pruebas públicas pasan (4/4).
+
 ## [v0.2.0] - 2026-10-03
 ### Cambiado
 - Estándar técnico **V3** (`docs/ESTANDAR.md`) aplicado a ADM: abreviaturas de tabla, constraints/índices/triggers `<tipo>_adm_<abrev>`, paquetes por capas `utl → ctr → reg → api` con `accessible by`, rutinas sin prefijo F_/P_, código en minúsculas.
@@ -17,7 +38,7 @@ Formato: [SemVer](https://semver.org/lang/es/). Ver `.claude/skills/git-flujo/SK
 - Dependencia circular entre paquetes de seguridad.
 - Login enviado sin usuario fallaba con ORA-01400.
 ### Problemas conocidos
-- La búsqueda de la barra de los Interactive Grid falla (ORA-00936). Se resuelve en v0.3.0 al reemplazar los grids por reporte + formulario.
+- La búsqueda de la barra de los Interactive Grid falla (ORA-00936). **Resuelto en v0.3.0** (se reemplazaron los grids).
 - Suite E2E con login pendiente de ejecución completa contra DEV.
 
 ## [v0.1.0] - 2026-10-03
