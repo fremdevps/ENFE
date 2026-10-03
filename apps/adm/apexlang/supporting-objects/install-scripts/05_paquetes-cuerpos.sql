@@ -282,7 +282,7 @@ as
         end;
 
         insert into adm_aud_login (username, resultado, apex_app_id, ip_cliente)
-        values (substr(i_username, 1, 100),
+        values (coalesce(substr(i_username, 1, 100), '(VACIO)'),   -- login enviado sin usuario
                 i_resultado,
                 to_number(sys_context('APEX$SESSION', 'APP_ID')),
                 v_ip);

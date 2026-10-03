@@ -16,8 +16,7 @@ app ADM (
         listTemplate: @/side-navigation-menu
         templateOptions: [
             #DEFAULT#
-            js-defaultCollapsed
-            js-navCollapsed--hidden
+            js-navCollapsed--default
             t-TreeNav--styleA
         ]
         list: @navigation-menu
