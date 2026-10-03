@@ -1,5 +1,5 @@
-app ADM (
-    name: ENFE Administracion Central
+app ERP (
+    name: ENFE ERP
     logo {
         type: text
         text: &APP_TITLE.

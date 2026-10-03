@@ -1,3 +1,14 @@
+authorization acceso-app (
+    name: ACCESO_APP
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seguridad_reg.f_tiene_acceso_app(:APP_USER, :APP_ID);
+    }
+    error {
+        errorMessage: No tiene acceso a esta aplicación. Solicítelo al administrador.
+    }
+)
+
 authorization es-superadmin (
     name: ES_SUPERADMIN
     type: plSqlFunctionBody
