@@ -54,6 +54,79 @@ export const test = base.extend<{ admPage: Page }>({
 
 export { expect };
 
+type Fila = Record<string, string | null>;
+
+/** Inserta filas en un Interactive Grid vía su modelo JS (sin guardar). */
+export async function igInsertar(page: Page, region: string, filas: Fila[]) {
+  await page.evaluate(([reg, fs]) => {
+    const model = (window as any).apex.region(reg).call('getViews', 'grid').model;
+    for (const f of fs) {
+      const rec = model.getRecord(model.insertNewRecord());
+      for (const [col, val] of Object.entries(f)) model.setValue(rec, col, val ?? '');
+    }
+  }, [region, filas] as const);
+}
+
+/** Modifica las filas del IG cuyo valor en `col` es `valor` (sin guardar). Devuelve cuántas tocó. */
+export async function igModificar(page: Page, region: string, col: string, valor: string, cambios: Fila) {
+  return page.evaluate(([reg, c, v, cam]) => {
+    const model = (window as any).apex.region(reg).call('getViews', 'grid').model;
+    let n = 0;
+    model.forEach((r: any) => {
+      if (model.getValue(r, c) === v) {
+        for (const [k, val] of Object.entries(cam)) model.setValue(r, k, val ?? '');
+        n++;
+      }
+    });
+    return n;
+  }, [region, col, valor, cambios] as const);
+}
+
+/** Elimina las filas del IG cuyo valor en `col` es `valor` (sin guardar). */
+export async function igEliminar(page: Page, region: string, col: string, valor: string) {
+  return page.evaluate(([reg, c, v]) => {
+    const model = (window as any).apex.region(reg).call('getViews', 'grid').model;
+    const recs: any[] = [];
+    model.forEach((r: any) => { if (model.getValue(r, c) === v) recs.push(r); });
+    model.deleteRecords(recs);
+    return recs.length;
+  }, [region, col, valor] as const);
+}
+
+/** Filtra el IG con su campo de búsqueda (así la fila buscada queda cargada en el modelo). */
+export async function igBuscar(page: Page, region: string, texto: string) {
+  const campo = page.locator(`#${region}_ig_toolbar_search_field`);
+  await campo.fill(texto);
+  await campo.press('Enter');
+  await waitForApex(page);
+}
+
+/** Clic en Guardar de la barra del IG y espera a que APEX termine. */
+export async function igGuardar(page: Page) {
+  await page.getByRole('button', { name: /^(Save|Guardar)$/ }).click();
+  await waitForApex(page);
+}
+
+/** Busca en los <select> de un contenedor (o en un <select> por id) la opción cuyo texto cumple `texto` y devuelve su valor. */
+export async function valorLov(page: Page, contenedor: string, texto: RegExp): Promise<string> {
+  const valor = await page.evaluate(([sel, src, flags]) => {
+    const re = new RegExp(src, flags);
+    const opt = Array.from(document.querySelectorAll<HTMLOptionElement>(`${sel} option`))
+      .find(o => re.test(o.text));
+    return opt?.value ?? null;
+  }, [contenedor, texto.source, texto.flags] as const);
+  if (!valor) throw new Error(`No hay opción ${texto} en ${contenedor}`);
+  return valor;
+}
+
+/** Fecha de hoy en el formato de fecha de la app (para columnas datePicker del IG). */
+export async function hoyApex(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const apex = (window as any).apex;
+    return apex.date.format(new Date(), apex.locale.getDateFormat());
+  });
+}
+
 /** Sufijo único para datos de prueba (QA_E2E_...). */
 export function uniq(prefix = 'QA_E2E'): string {
   return `${prefix}_${Date.now().toString(36).toUpperCase()}`;
