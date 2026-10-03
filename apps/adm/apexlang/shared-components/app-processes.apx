@@ -6,7 +6,7 @@ appProcess forzar-cambio-password (
             ```plsql
             -- Usuarios con debe_cambiar_password = 'S' (nuevos, reseteados, ADMIN inicial)
             -- van a la página 91 de ADM (diseño de login, sin menú) hasta cambiar su contraseña.
-            if not (:APP_ID = 100 and :APP_PAGE_ID in (90, 91, 9999))
+            if not (:APP_ID = 100 and :APP_PAGE_ID in (91, 9999))
                and adm_seg_seguridad_reg.debe_cambiar_password(:APP_USER)
             then
                 apex_util.redirect_url(
