@@ -1,0 +1,1 @@
+﻿Origen: https://github.com/oracle/skills @ 1b08cca (UPL 1.0)
