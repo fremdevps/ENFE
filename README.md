@@ -6,6 +6,7 @@ Plataforma multi-aplicación (ADM, ERP, CRM, …) sobre **Oracle APEX 26.1+** co
 - Workspace APEX: `DEV` (esquema `WKSP_DEV`)
 - Estándar de nomenclatura: [docs/Estandar_Tecnico_Nomenclatura_DB_PLSQL_V2.docx](docs/Estandar_Tecnico_Nomenclatura_DB_PLSQL_V2.docx)
 - Arquitectura de seguridad: [docs/arquitectura-seguridad.md](docs/arquitectura-seguridad.md)
+- **¿Trabajas con un asistente de IA?** Lee [AGENTS.md](AGENTS.md) y usa el [prompt inicial](docs/PROMPT-INICIAL.md).
 
 ## Estructura
 

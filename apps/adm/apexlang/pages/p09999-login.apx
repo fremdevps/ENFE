@@ -1,7 +1,7 @@
 page 9999 (
-    name: Login Page
+    name: Iniciar sesión
     alias: LOGIN
-    title: &APP_TITLE. - Log In
+    title: &APP_TITLE. - Iniciar sesión
     appearance {
         pageTemplate: @/login
         templateOptions: #DEFAULT#
@@ -35,7 +35,7 @@ page 9999 (
     pageItem P9999_PASSWORD (
         type: password
         label {
-            label: Password
+            label: Contraseña
             alignment: right
         }
         layout {
@@ -49,7 +49,7 @@ page 9999 (
             templateOptions: #DEFAULT#
             icon: fa-key
             width: 40
-            valuePlaceholder: Password
+            valuePlaceholder: Contraseña
         }
         validation {
             maxLength: 100
@@ -65,7 +65,7 @@ page 9999 (
     pageItem P9999_REMEMBER (
         type: checkbox
         label {
-            label: Remember username
+            label: Recordar usuario
             alignment: right
         }
         layout {
@@ -87,7 +87,7 @@ page 9999 (
     pageItem P9999_USERNAME (
         type: textField
         label {
-            label: Username
+            label: Usuario
             alignment: right
         }
         layout {
@@ -101,7 +101,7 @@ page 9999 (
             templateOptions: #DEFAULT#
             icon: fa-user
             width: 40
-            valuePlaceholder: Username
+            valuePlaceholder: Usuario
         }
         validation {
             maxLength: 100
@@ -116,7 +116,7 @@ page 9999 (
 
     button login (
         buttonName: LOGIN
-        label: Sign In
+        label: Ingresar
         layout {
             sequence: 40
             region: @app-name

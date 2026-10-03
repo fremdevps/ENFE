@@ -30,82 +30,18 @@ breadcrumb breadcrumb (
         }
     )
 
-    entry nuevo-usuario (
-        name: Nuevo usuario
-        pageNumber: 31
+    entry roles (
+        name: Roles y permisos
+        pageNumber: 20
         appearance {
-            parentEntry: @usuarios
+            parentEntry: @home
         }
         execution {
             sequence: 30
         }
         link {
             target: {
-                page: 31
-            }
-        }
-    )
-
-    entry reset-password (
-        name: Resetear contraseña
-        pageNumber: 32
-        appearance {
-            parentEntry: @usuarios
-        }
-        execution {
-            sequence: 40
-        }
-        link {
-            target: {
-                page: 32
-            }
-        }
-    )
-
-    entry usuario-roles (
-        name: Roles por usuario
-        pageNumber: 33
-        appearance {
-            parentEntry: @usuarios
-        }
-        execution {
-            sequence: 50
-        }
-        link {
-            target: {
-                page: 33
-            }
-        }
-    )
-
-    entry roles (
-        name: Roles
-        pageNumber: 20
-        appearance {
-            parentEntry: @home
-        }
-        execution {
-            sequence: 60
-        }
-        link {
-            target: {
                 page: 20
-            }
-        }
-    )
-
-    entry rol-permisos (
-        name: Permisos por rol
-        pageNumber: 21
-        appearance {
-            parentEntry: @roles
-        }
-        execution {
-            sequence: 70
-        }
-        link {
-            target: {
-                page: 21
             }
         }
     )
@@ -117,7 +53,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 80
+            sequence: 40
         }
         link {
             target: {
@@ -128,32 +64,32 @@ breadcrumb breadcrumb (
 
     entry modulos (
         name: Módulos
-        pageNumber: 41
+        pageNumber: 42
         appearance {
-            parentEntry: @aplicaciones
+            parentEntry: @home
         }
         execution {
-            sequence: 90
+            sequence: 50
         }
         link {
             target: {
-                page: 41
+                page: 42
             }
         }
     )
 
     entry permisos (
         name: Permisos
-        pageNumber: 42
+        pageNumber: 44
         appearance {
-            parentEntry: @aplicaciones
+            parentEntry: @home
         }
         execution {
-            sequence: 100
+            sequence: 60
         }
         link {
             target: {
-                page: 42
+                page: 44
             }
         }
     )
@@ -165,7 +101,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 110
+            sequence: 70
         }
         link {
             target: {
@@ -176,16 +112,16 @@ breadcrumb breadcrumb (
 
     entry mensajes-error (
         name: Mensajes de error
-        pageNumber: 51
+        pageNumber: 52
         appearance {
             parentEntry: @home
         }
         execution {
-            sequence: 120
+            sequence: 80
         }
         link {
             target: {
-                page: 51
+                page: 52
             }
         }
     )
@@ -197,7 +133,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 130
+            sequence: 90
         }
         link {
             target: {
@@ -213,7 +149,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 140
+            sequence: 100
         }
         link {
             target: {
@@ -229,7 +165,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 150
+            sequence: 110
         }
         link {
             target: {

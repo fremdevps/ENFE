@@ -1,0 +1,508 @@
+page 21 (
+    name: Rol
+    alias: ROL
+    title: Rol
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/drawer
+        templateOptions: [
+            #DEFAULT#
+            js-dialog-class-t-Drawer--pullOutEnd
+        ]
+    }
+    dialog {
+        chained: false
+    }
+    security {
+        authorizationScheme: @adm-seg-rol-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Alta y edición de roles.
+            Elija los permisos del rol en la lista de la derecha y guarde.
+            ```
+    }
+
+    region botones (
+        name: Botones
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: REGION_POSITION_03
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region formulario (
+        name: Rol
+        type: form
+        source {
+            location: localDatabase
+            tableName: ADM_SEG_ROL
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+        }
+    )
+
+    pageItem P21_ROL_ID (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @formulario
+            slot: regionBody
+        }
+        source {
+            formRegion: @formulario
+            column: ROL_ID
+            dataType: number
+            queryOnly: true
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P21_CODIGO (
+        type: textField
+        label {
+            label: Código
+        }
+        layout {
+            sequence: 20
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @formulario
+            column: CODIGO
+            dataType: varchar2
+        }
+        help {
+            inlineHelpText: <APP>_<NOMBRE> en mayúsculas
+            helpText: Código único del rol, por ejemplo ERP_CONTADOR.
+        }
+    )
+
+    pageItem P21_NOMBRE (
+        type: textField
+        label {
+            label: Nombre
+        }
+        layout {
+            sequence: 30
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @formulario
+            column: NOMBRE
+            dataType: varchar2
+        }
+        help {
+            inlineHelpText: Nombre visible
+            helpText: Nombre que verán los administradores.
+        }
+    )
+
+    pageItem P21_APLICACION_ID (
+        type: selectList
+        label {
+            label: Aplicación
+        }
+        layout {
+            sequence: 40
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        lov {
+            type: sharedComponent
+            lov: @aplicaciones
+            displayNullValue: true
+            nullDisplayValue: Global (todas)
+        }
+        source {
+            formRegion: @formulario
+            column: APLICACION_ID
+            dataType: number
+        }
+        help {
+            inlineHelpText: Vacío = rol global
+            helpText: Aplicación a la que pertenece el rol. Los roles globales aplican a todas.
+        }
+    )
+
+    pageItem P21_DESCRIPCION (
+        type: textarea
+        label {
+            label: Descripción
+        }
+        layout {
+            sequence: 50
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @formulario
+            column: DESCRIPCION
+            dataType: varchar2
+        }
+        help {
+            inlineHelpText: Responsabilidades
+            helpText: Qué tareas cubre este rol.
+        }
+    )
+
+    pageItem P21_ES_SUPERADMIN (
+        type: selectList
+        label {
+            label: Superadmin
+        }
+        layout {
+            sequence: 60
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @si-no
+        }
+        source {
+            formRegion: @formulario
+            column: ES_SUPERADMIN
+            dataType: varchar2
+        }
+        help {
+            inlineHelpText: Sí = acceso total
+            helpText: Un rol superadmin recibe todos los permisos de todas las aplicaciones. Úselo solo para administradores técnicos.
+        }
+    )
+
+    pageItem P21_ESTADO (
+        type: selectList
+        label {
+            label: Estado
+        }
+        layout {
+            sequence: 70
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @estado-ai
+        }
+        source {
+            formRegion: @formulario
+            column: ESTADO
+            dataType: varchar2
+        }
+        help {
+            inlineHelpText: Activo o inactivo
+            helpText: Un rol inactivo deja de otorgar permisos.
+        }
+    )
+
+    pageItem P21_PERMISOS (
+        type: shuttle
+        label {
+            label: Permisos
+        }
+        layout {
+            sequence: 80
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        lov {
+            type: sharedComponent
+            lov: @permisos
+        }
+        help {
+            inlineHelpText: Pase a la derecha los permisos del rol
+            helpText: Elija los permisos que otorga este rol. Se guardan junto con el rol.
+        }
+    )
+
+    button cancelar (
+        buttonName: CANCELAR
+        label: Cancelar
+        layout {
+            sequence: 10
+            region: @botones
+            slot: CLOSE
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+    )
+
+    button eliminar (
+        buttonName: ELIMINAR
+        label: Eliminar
+        layout {
+            sequence: 20
+            region: @botones
+            slot: DELETE
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: delete
+            executeValidations: false
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: ¿Seguro que desea eliminar este registro?
+            style: danger
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P21_ROL_ID
+        }
+    )
+
+    button guardar (
+        buttonName: GUARDAR
+        label: Guardar cambios
+        layout {
+            sequence: 30
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: update
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P21_ROL_ID
+        }
+    )
+
+    button crear (
+        buttonName: CREAR
+        label: Crear
+        layout {
+            sequence: 40
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: insert
+        }
+        serverSideCondition {
+            type: itemIsNull
+            item: P21_ROL_ID
+        }
+    )
+
+    dynamicAction cerrar-panel (
+        name: Cancelar
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cancelar
+        }
+
+        action cancelar-dialogo (
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+
+    process inicializar (
+        name: Inicializar Rol
+        type: formInitialization
+        formRegion: @formulario
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+    )
+
+    process cargar-permisos (
+        name: Cargar permisos del rol
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                :P21_PERMISOS := adm_seg_rol_api.obtener_permisos(i_rol_id => :P21_ROL_ID);
+                ```
+        }
+        execution {
+            sequence: 20
+            point: beforeHeader
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P21_ROL_ID
+        }
+    )
+
+    process crear-api (
+        name: Crear (api)
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                adm_seg_rol_api.crear(
+                    i_aplicacion_id => :P21_APLICACION_ID,
+                    i_codigo        => :P21_CODIGO,
+                    i_nombre        => :P21_NOMBRE,
+                    i_descripcion   => :P21_DESCRIPCION,
+                    i_es_superadmin => :P21_ES_SUPERADMIN,
+                    i_estado        => :P21_ESTADO,
+                    o_rol_id        => :P21_ROL_ID);
+                adm_seg_rol_api.asignar_permisos(i_rol_id => :P21_ROL_ID, i_permisos => :P21_PERMISOS);
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        serverSideCondition {
+            whenButtonPressed: @crear
+        }
+        successMessage {
+            successMessage: Cambios guardados.
+        }
+    )
+
+    process guardar-api (
+        name: Guardar (api)
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                adm_seg_rol_api.modificar(
+                    i_rol_id        => :P21_ROL_ID,
+                    i_aplicacion_id => :P21_APLICACION_ID,
+                    i_codigo        => :P21_CODIGO,
+                    i_nombre        => :P21_NOMBRE,
+                    i_descripcion   => :P21_DESCRIPCION,
+                    i_es_superadmin => :P21_ES_SUPERADMIN,
+                    i_estado        => :P21_ESTADO);
+                adm_seg_rol_api.asignar_permisos(i_rol_id => :P21_ROL_ID, i_permisos => :P21_PERMISOS);
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        serverSideCondition {
+            whenButtonPressed: @guardar
+        }
+        successMessage {
+            successMessage: Cambios guardados.
+        }
+    )
+
+    process eliminar-api (
+        name: Eliminar (api)
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                adm_seg_rol_api.eliminar(i_rol_id => :P21_ROL_ID);
+                ```
+        }
+        execution {
+            sequence: 30
+        }
+        serverSideCondition {
+            whenButtonPressed: @eliminar
+        }
+        successMessage {
+            successMessage: Cambios guardados.
+        }
+    )
+
+    process cerrar (
+        name: Cerrar panel
+        type: closeDialog
+        execution {
+            sequence: 50
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: CREAR,GUARDAR,ELIMINAR
+        }
+    )
+)

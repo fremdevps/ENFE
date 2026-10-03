@@ -6,9 +6,6 @@ page 20 (
         pageTemplate: @/standard
         templateOptions: #DEFAULT#
     }
-    navigation {
-        cursorFocus: doNotFocusCursor
-    }
     security {
         authorizationScheme: @adm-seg-rol-gestionar
         pageAccessProtection: argumentsMustHaveChecksum
@@ -17,13 +14,13 @@ page 20 (
     help {
         helpText:
             ```
-            Defina los roles de cada aplicación o roles globales.
-            Un rol agrupa permisos; luego se asigna a usuarios en Roles por usuario. Use Superadmin solo para administradores técnicos.
+            Roles de cada aplicación o globales.
+            Un rol agrupa permisos; ábralo para elegir sus permisos.
             ```
     }
 
     region breadcrumb (
-        name: Breadcrumb
+        name: Roles
         type: breadcrumb
         source {
             breadcrumb: @breadcrumb
@@ -34,7 +31,10 @@ page 20 (
         }
         appearance {
             template: @/title-bar
-            templateOptions: #DEFAULT#
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
         }
         componentAppearance {
             breadcrumbTemplate: @/breadcrumb
@@ -44,17 +44,19 @@ page 20 (
 
     region roles (
         name: Roles
-        type: interactiveGrid
-        advanced {
-            htmlDomId: roles
-        }
+        type: interactiveReport
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select rol_id, aplicacion_id, codigo, nombre, descripcion, es_superadmin, estado
-                  from adm_seg_rol
+                select r.rol_id, r.codigo, r.nombre, coalesce(a.nombre, 'Global') aplicacion,
+                       decode(r.es_superadmin, 'S', 'Sí', 'No') superadmin,
+                       (select count(*) from adm_seg_rol_permiso rp where rp.rol_id = r.rol_id) permisos,
+                       (select count(*) from adm_seg_usuario_rol ur where ur.rol_id = r.rol_id) usuarios,
+                       decode(r.estado, 'A', 'Activo', 'Inactivo') estado
+                  from adm_seg_rol r
+                  left join adm_seg_aplicacion a on a.aplicacion_id = r.aplicacion_id
                 ```
         }
         layout {
@@ -65,263 +67,213 @@ page 20 (
             template: @/interactive-report
             templateOptions: #DEFAULT#
         }
-        edit {
-            enabled: true
-            allowedOperations: [
-                add
-                update
-                delete
-            ]
+        advanced {
+            htmlDomId: roles
+        }
+        link {
+            linkColumn: customTarget
+            target: {
+                page: 21
+                items: {
+                    P21_ROL_ID: #ROL_ID#
+                }
+                clearCache: 21
+            }
+            linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>
+        }
+        componentAppearance {
+            showNullValuesAs: -
         }
         pagination {
-            type: page
-            showTotalCount: true
+            type: rowRangesXToY
         }
         messages {
-            whenNoDataFound: No hay datos
-        }
-        toolbar {
-            controls: [
-                searchCol
-                searchField
-                actionsMenu
-                resetButton
-                saveButton
-            ]
+            whenNoDataFound: No hay registros.
+            whenMoreDataFound: Hay más de #MAX_ROW_COUNT# registros; use la búsqueda o los filtros.
         }
         download {
             formats: [
                 csv
-                excel
+                html
             ]
         }
         comments {
             comments:
                 ```
-                Mantenimiento de adm_seg_rol (DML automático del IG). Mensajes de constraint: adm_gen_mensaje_error.
+                Listado de adm_seg_rol. Alta/edición en la página 21 vía adm_seg_rol_api.
                 ```
         }
 
-        savedReport PRIMARY (
-            visibility: primary
-            view {
-                default: grid
+        column ROL_ID (
+            type: hidden
+            heading {
+                heading: ID
             }
-        )
-
-        column APEX$ROW_SELECTOR (
-            type: rowSelector
             layout {
                 sequence: 10
             }
-        )
-
-        column APEX$ROW_ACTION (
-            type: actionsMenu
-            layout {
-                sequence: 20
-            }
-        )
-
-        column ROL_ID (
-            type: hidden
-            layout {
-                sequence: 30
-            }
             source {
-                databaseColumn: ROL_ID
-                dataType: number
-                primaryKey: true
+                dataType: NUMBER
             }
         )
 
         column CODIGO (
-            type: textField
+            type: plainText
             heading {
                 heading: Código
             }
             layout {
-                sequence: 40
-            }
-            validation {
-                valueRequired: true
+                sequence: 20
             }
             source {
-                databaseColumn: CODIGO
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
-                comments: Summary: Código único <APP>_<NOMBRE> en mayúsculas. Display Label: Código. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
+                comments: Display Label: Código. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column APLICACION_ID (
-            type: selectList
+        column NOMBRE (
+            type: plainText
             heading {
-                heading: Aplicación (vacío = global)
+                heading: Nombre
+            }
+            layout {
+                sequence: 30
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column APLICACION (
+            type: plainText
+            heading {
+                heading: Aplicación
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Aplicación. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column SUPERADMIN (
+            type: plainText
+            heading {
+                heading: Superadmin
             }
             layout {
                 sequence: 50
             }
             source {
-                databaseColumn: APLICACION_ID
-                dataType: number
-            }
-            lov {
-                type: sharedComponent
-                lov: @aplicaciones
-            }
-            columnFilter {
-                enabled: true
-                lovType: useLov
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
-                comments: Summary: Null = rol global. Display Label: Aplicación (vacío = global). Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Superadmin. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column NOMBRE (
-            type: textField
+        column PERMISOS (
+            type: plainText
             heading {
-                heading: Nombre
+                heading: Permisos
             }
             layout {
                 sequence: 60
             }
-            validation {
-                valueRequired: true
-            }
             source {
-                databaseColumn: NOMBRE
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: NUMBER
             }
             comments {
-                comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Permisos. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column DESCRIPCION (
-            type: textField
+        column USUARIOS (
+            type: plainText
             heading {
-                heading: Descripción
+                heading: Usuarios
             }
             layout {
                 sequence: 70
             }
             source {
-                databaseColumn: DESCRIPCION
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: NUMBER
             }
             comments {
-                comments: Display Label: Descripción. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column ES_SUPERADMIN (
-            type: selectList
-            heading {
-                heading: Superadmin
-            }
-            layout {
-                sequence: 80
-            }
-            validation {
-                valueRequired: true
-            }
-            source {
-                databaseColumn: ES_SUPERADMIN
-                dataType: varchar2
-            }
-            lov {
-                type: sharedComponent
-                lov: @si-no
-            }
-            columnFilter {
-                enabled: true
-                lovType: useLov
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
-            }
-            comments {
-                comments: Summary: S otorga todos los permisos de todas las apps. Display Label: Superadmin. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Usuarios. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
         column ESTADO (
-            type: selectList
+            type: plainText
             heading {
                 heading: Estado
             }
             layout {
-                sequence: 90
-            }
-            validation {
-                valueRequired: true
+                sequence: 80
             }
             source {
-                databaseColumn: ESTADO
-                dataType: varchar2
-            }
-            lov {
-                type: sharedComponent
-                lov: @estado-ai
-            }
-            columnFilter {
-                enabled: true
-                lovType: useLov
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
-                comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )
 
-    process roles-guardar (
-        name: Guardar Roles
-        type: interactiveGridAutoRowProcessing
-        editableRegion: @roles
+    button crear (
+        buttonName: CREAR
+        label: Crear rol
+        layout {
+            sequence: 10
+            region: @roles
+            slot: RIGHT_OF_IR_SEARCH_BAR
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: #DEFAULT#
+            icon: fa-plus
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 21
+                clearCache: 21
+            }
+        }
+    )
+
+    dynamicAction refrescar-al-cerrar (
+        name: Refrescar al cerrar el formulario
         execution {
             sequence: 10
         }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @roles
+        }
+
+        action refrescar (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @roles
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
     )
 )
