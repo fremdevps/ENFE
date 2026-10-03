@@ -196,22 +196,22 @@ Todo paquete se declara `authid definer` salvo justificación documentada.
 create or replace package erp_fin_factura_api
     authid definer
 as
-    C_ERR_FACTURA_ANULADA  constant pls_integer := -20110;
+    c_err_factura_anulada  constant pls_integer := -20110;
 
-    procedure P_CREAR (
-        I_EMPRESA_ID   in  erp_fin_factura.empresa_id%type,
-        I_CLIENTE_ID   in  erp_fin_factura.cliente_id%type,
-        I_FECHA        in  erp_fin_factura.fecha_emision%type,
-        O_FACTURA_ID   out erp_fin_factura.factura_id%type
+    procedure crear (
+        i_empresa_id   in  erp_fin_factura.empresa_id%type,
+        i_cliente_id   in  erp_fin_factura.cliente_id%type,
+        i_fecha        in  erp_fin_factura.fecha_emision%type,
+        o_factura_id   out erp_fin_factura.factura_id%type
     );
 
-    procedure P_ANULAR (
-        I_FACTURA_ID   in erp_fin_factura.factura_id%type,
-        I_MOTIVO       in varchar2
+    procedure anular (
+        i_factura_id   in erp_fin_factura.factura_id%type,
+        i_motivo       in varchar2
     );
 
-    function F_OBTENER_SALDO (
-        I_FACTURA_ID   in erp_fin_factura.factura_id%type
+    function obtener_saldo (
+        i_factura_id   in erp_fin_factura.factura_id%type
     ) return number;
 end erp_fin_factura_api;
 /
@@ -228,7 +228,7 @@ end erp_fin_factura_api;
   | CRM | −20300 … −20399 |
   | (siguiente app) | bloques de 100–200 |
 
-- Cada paquete `reg` declara sus códigos como constantes `C_ERR_<NOMBRE>` en la especificación.
+- Cada paquete `reg` declara sus códigos como constantes `c_err_<nombre>` en la especificación.
 - Mensajes en español, para el usuario final, sin detalles técnicos.
 - `when others` solo para registrar (log) y **re-lanzar**; nunca para silenciar.
 
@@ -238,51 +238,64 @@ end erp_fin_factura_api;
 
 | Elemento | Prefijo | Ejemplo |
 |---|---|---|
-| Variable local | `V_` | `V_TOTAL_FACTURA` |
-| Constante | `C_` | `C_IGV_PORCENTAJE` |
-| Variable global de paquete | `G_` | `G_EMPRESA_ID` |
-| Cursor | `CUR_` | `CUR_FACTURAS_PENDIENTES` |
-| Record | `R_` | `R_FACTURA` |
-| Tipo (record/colección) | `T_` | `T_LISTA_IDS` |
-| Excepción | `E_` | `E_SALDO_INSUFICIENTE` |
-| Función | `F_` | `F_CALCULAR_IMPUESTO` |
-| Procedimiento | `P_` | `P_ANULAR_FACTURA` |
-| Parámetro IN | `I_` | `I_FACTURA_ID` |
-| Parámetro OUT | `O_` | `O_NRO_DOCUMENTO` |
-| Parámetro IN OUT | `IO_` | `IO_ESTADO` |
+| Variable local | `v_` | `v_total_factura` |
+| Constante | `c_` | `c_igv_porcentaje` |
+| Variable global de paquete | `g_` | `g_empresa_id` |
+| Cursor | `cur_` | `cur_facturas_pendientes` |
+| Record | `r_` | `r_factura` |
+| Tipo (record/colección) | `t_` | `t_lista_ids` |
+| Excepción | `e_` | `e_saldo_insuficiente` |
+| Parámetro IN | `i_` | `i_factura_id` |
+| Parámetro OUT | `o_` | `o_nro_documento` |
+| Parámetro IN OUT | `io_` | `io_estado` |
+| Función / procedimiento | **sin prefijo**: verbo + objeto (ver 5.1) | `calcular_igv`, `anular` |
+
+Todo en **minúsculas** (Oracle no distingue mayúsculas; una sola forma de escribir).
+
+**Por qué prefijos en variables y parámetros:** evitan confundirlos con columnas, un error que
+compila y es silencioso:
+
+```sql
+delete from erp_ven_cliente where cliente_id = cliente_id;    -- ¡borra todo!
+delete from erp_ven_cliente where cliente_id = i_cliente_id;  -- correcto
+```
+
+**Por qué no en funciones/procedimientos:** el verbo ya indica si es función o procedimiento, el
+compilador no permite confundirlos, y es el estilo de Oracle (`apex_page.get_url`,
+`dbms_output.put_line`) y de la guía Trivadis.
 
 ### 5.1 Nombre de funciones y procedimientos
 
-**`F_<VERBO>_<OBJETO>`** / **`P_<VERBO>_<OBJETO>`**: verbo en infinitivo y en español, y luego el
-objeto. Dentro del paquete de una entidad el objeto se omite si es la propia entidad
-(`erp_fin_factura_api.P_ANULAR`, no `P_ANULAR_FACTURA`).
+**`<verbo>_<objeto>`**: verbo en infinitivo y en español, luego el objeto. Dentro del paquete de
+una entidad el objeto se omite si es la propia entidad (`erp_fin_factura_api.anular`, no
+`anular_factura`).
 
 | Regla | Detalle |
 |---|---|
-| Procedimiento (`P_`) | **Hace** algo: cambia datos o estado. No devuelve valor (usa `O_`). |
-| Función (`F_`) | **Calcula u obtiene** algo. **Sin efectos secundarios** (no hace DML), así se puede usar en SQL. |
-| Función booleana | `F_ES_…`, `F_TIENE_…`, `F_PUEDE_…`, `F_EXISTE_…` → `return boolean`. Si debe usarse en SQL (19c): `F_ES_…_SN` `return varchar2` (`S/N`). |
+| Procedimiento | **Hace** algo: cambia datos o estado. No devuelve valor (usa parámetros `o_`). |
+| Función | **Calcula u obtiene** algo. **Sin efectos secundarios** (no hace DML), así se puede usar en SQL. |
+| Función booleana | `es_…`, `tiene_…`, `puede_…`, `existe_…` → `return boolean`. Si debe usarse en SQL (19c): sufijo `_sn` → `return varchar2` (`S/N`), ej. `tiene_permiso_sn`. |
 | Sobrecarga | Permitida solo si hacen lo mismo con distintos tipos de entrada. |
 
 **Verbos por capa** (usar estos; no inventar sinónimos):
 
 | Capa | Verbos | Ejemplos |
 |---|---|---|
-| `ctr` | `P_INSERTAR`, `P_ACTUALIZAR`, `P_ELIMINAR`, `P_BLOQUEAR` (select for update), `F_OBTENER` (devuelve `%rowtype`), `F_EXISTE` | `erp_fin_factura_ctr.P_INSERTAR` |
-| `reg` | `P_VALIDAR_…`, `F_CALCULAR_…`, `P_APLICAR_…`, `P_GENERAR_…`, `F_ES_/F_TIENE_/F_PUEDE_…` | `P_VALIDAR_CREDITO`, `F_CALCULAR_IGV` |
-| `api` | Acciones de negocio que ve el usuario: `P_CREAR`, `P_MODIFICAR`, `P_ANULAR`, `P_APROBAR`, `P_RECHAZAR`, `P_EMITIR`, `P_CERRAR`, `P_REABRIR`, `F_OBTENER_…`, `F_LISTAR_…` (cursor/colección) | `erp_fin_factura_api.P_EMITIR` |
-| `utl` | `F_FORMATEAR_…`, `F_CONVERTIR_…`, `P_REGISTRAR_LOG`, `F_LIMPIAR_…` | `adm_gen_texto_utl.F_LIMPIAR_ESPACIOS` |
+| `ctr` | `insertar`, `actualizar`, `eliminar`, `bloquear` (select for update), `obtener` (devuelve `%rowtype`), `existe` | `erp_fin_factura_ctr.insertar` |
+| `reg` | `validar_…`, `calcular_…`, `aplicar_…`, `generar_…`, `es_/tiene_/puede_…` | `validar_credito`, `calcular_igv` |
+| `api` | Acciones de negocio que ve el usuario: `crear`, `modificar`, `anular`, `aprobar`, `rechazar`, `emitir`, `cerrar`, `reabrir`, `obtener_…`, `listar_…` (cursor/colección) | `erp_fin_factura_api.emitir` |
+| `utl` | `formatear_…`, `convertir_…`, `registrar_log`, `limpiar_…` | `adm_gen_texto_utl.limpiar_espacios` |
 
 Diferencia clave: en `ctr` se habla de **filas** (insertar, eliminar); en `api` se habla del
 **negocio** (crear, anular). Una factura no se "elimina": se **anula**.
 
 ### 5.2 Reglas de código
 
-- Llamadas con **notación nombrada** (`I_FACTURA_ID => V_ID`).
+- Llamadas con **notación nombrada** (`i_factura_id => v_id`).
 - Tipos anclados: `adm_seg_usuario.username%type`, `%rowtype`.
 - Nada de SQL dinámico salvo DDL o necesidad justificada; siempre con binds.
 - **Excepción documentada**: funciones que APEX invoca con nombres fijos usan esos nombres
-  (`p_username`, `p_password` en la función de autenticación).
+  (`p_username`, `p_password` en la función de autenticación: `autenticar`).
 
 ---
 
