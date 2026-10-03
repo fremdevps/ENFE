@@ -55,3 +55,11 @@ desktop.ini
 
 # ===== Claude Code (config local personal) =====
 .claude/settings.local.json
+
+# ===== Pruebas E2E (Playwright) =====
+tests/e2e/node_modules/
+tests/e2e/reports/
+tests/e2e/.auth/
+
+# ===== Secretos locales (credenciales de ambientes) =====
+.secrets/
