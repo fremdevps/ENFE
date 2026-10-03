@@ -40,8 +40,11 @@ prompt == Paquetes
 prompt == Datos iniciales
 @@../database/data/adm_seg_datos_iniciales.sql
 
+prompt == Superadmin
+@@../database/data/adm_seg_superadmin_bootstrap.sql
+
 prompt == Objetos inválidos (debe estar vacío)
 select object_name, object_type from user_objects
  where status = 'INVALID' and object_name like 'ADM\_%' escape '\';
 
-prompt == Instalación ADM completa. Siguiente paso: @../database/data/adm_seg_crear_admin.sql
+prompt == Instalación ADM completa. Siguiente paso: @../database/data/adm_seg_password_admin.sql
