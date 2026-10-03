@@ -6,9 +6,6 @@ page 60 (
         pageTemplate: @/standard
         templateOptions: #DEFAULT#
     }
-    navigation {
-        cursorFocus: doNotFocusCursor
-    }
     security {
         authorizationScheme: @adm-aud-login-ver
         pageAccessProtection: argumentsMustHaveChecksum
@@ -17,13 +14,13 @@ page 60 (
     help {
         helpText:
             ```
-            Historial de intentos de inicio de sesión de todas las aplicaciones.
-            Use los filtros para investigar bloqueos o accesos denegados (SIN_ACCESO).
+            Historial de inicios de sesión de todas las aplicaciones.
+            Filtre por usuario o resultado para investigar bloqueos o accesos denegados.
             ```
     }
 
     region breadcrumb (
-        name: Breadcrumb
+        name: Bitácora de accesos
         type: breadcrumb
         source {
             breadcrumb: @breadcrumb
@@ -34,7 +31,10 @@ page 60 (
         }
         appearance {
             template: @/title-bar
-            templateOptions: #DEFAULT#
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
         }
         componentAppearance {
             breadcrumbTemplate: @/breadcrumb
@@ -44,19 +44,16 @@ page 60 (
 
     region bitacora-login (
         name: Bitácora de accesos
-        type: interactiveGrid
-        advanced {
-            htmlDomId: bitacora-login
-        }
+        type: interactiveReport
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select login_id, username, resultado, apex_app_id, ip_cliente,
-                       to_char(fecha, 'DD/MM/YYYY HH24:MI:SS') fecha_hora
-                  from adm_aud_login
-                 order by fecha desc
+                select l.login_id, l.fecha, l.username, initcap(replace(l.resultado, '_', ' ')) resultado,
+                       coalesce(a.nombre, to_char(l.apex_app_id)) aplicacion, l.ip_cliente
+                  from adm_aud_login l
+                  left join adm_seg_aplicacion a on a.apex_app_id = l.apex_app_id
                 ```
         }
         layout {
@@ -67,25 +64,23 @@ page 60 (
             template: @/interactive-report
             templateOptions: #DEFAULT#
         }
+        advanced {
+            htmlDomId: bitacora-login
+        }
+        componentAppearance {
+            showNullValuesAs: -
+        }
         pagination {
-            type: page
-            showTotalCount: true
+            type: rowRangesXToY
         }
         messages {
-            whenNoDataFound: No hay datos
-        }
-        toolbar {
-            controls: [
-                searchCol
-                searchField
-                actionsMenu
-                resetButton
-            ]
+            whenNoDataFound: No hay registros.
+            whenMoreDataFound: Hay más de #MAX_ROW_COUNT# registros; use la búsqueda o los filtros.
         }
         download {
             formats: [
                 csv
-                excel
+                html
             ]
         }
         comments {
@@ -95,71 +90,45 @@ page 60 (
                 ```
         }
 
-        savedReport PRIMARY (
-            visibility: primary
-            view {
-                default: grid
-            }
-        )
-
         column LOGIN_ID (
             type: hidden
+            heading {
+                heading: ID
+            }
             layout {
-                sequence: 30
+                sequence: 10
             }
             source {
-                databaseColumn: LOGIN_ID
-                dataType: number
-                primaryKey: true
+                dataType: NUMBER
             }
         )
 
-        column FECHA_HORA (
-            type: textField
+        column FECHA (
+            type: plainText
             heading {
                 heading: Fecha
             }
             layout {
-                sequence: 40
+                sequence: 20
             }
             source {
-                databaseColumn: FECHA_HORA
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: DATE
             }
             comments {
-                comments: Display Label: Fecha. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: true. Authorization Scheme: none.
+                comments: Display Label: Fecha. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
         column USERNAME (
-            type: textField
+            type: plainText
             heading {
                 heading: Usuario
             }
             layout {
-                sequence: 50
+                sequence: 30
             }
             source {
-                databaseColumn: USERNAME
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
                 comments: Display Label: Usuario. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
@@ -167,77 +136,47 @@ page 60 (
         )
 
         column RESULTADO (
-            type: textField
+            type: plainText
             heading {
                 heading: Resultado
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Summary: Ok, Password Invalido, Bloqueado, Sin Acceso… Display Label: Resultado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column APLICACION (
+            type: plainText
+            heading {
+                heading: Aplicación
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Aplicación. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column IP_CLIENTE (
+            type: plainText
+            heading {
+                heading: IP
             }
             layout {
                 sequence: 60
             }
             source {
-                databaseColumn: RESULTADO
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
-            }
-            comments {
-                comments: Display Label: Resultado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column APEX_APP_ID (
-            type: numberField
-            heading {
-                heading: App
-            }
-            layout {
-                sequence: 70
-            }
-            source {
-                databaseColumn: APEX_APP_ID
-                dataType: number
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
-            }
-            comments {
-                comments: Display Label: App. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column IP_CLIENTE (
-            type: textField
-            heading {
-                heading: IP
-            }
-            layout {
-                sequence: 80
-            }
-            source {
-                databaseColumn: IP_CLIENTE
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
                 comments: Display Label: IP. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.

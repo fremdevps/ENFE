@@ -1,35 +1,427 @@
 page 1 (
-    name: Home
+    name: Inicio
     alias: HOME
-    title: Home
+    title: Inicio
     appearance {
         pageTemplate: @/standard
         templateOptions: #DEFAULT#
-    }
-    navigation {
-        cursorFocus: doNotFocusCursor
     }
     security {
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
+    help {
+        helpText:
+            ```
+            Punto de partida de la Administración Central.
+            Elija un área en las tarjetas o revise el estado actual en los indicadores y gráficos.
+            ```
+    }
 
-    region app-name (
-        name: Home
-        title: &APP_TITLE.
-        type: staticContent
+    region breadcrumb (
+        name: Inicio
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
         layout {
             sequence: 10
-            slot: breadcrumbBar
+            slot: REGION_POSITION_01
         }
         appearance {
-            template: @/hero
-            templateOptions: #DEFAULT#
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
         }
-        image {
-            fileUrl: #APP_FILES#icons/app-icon-512.png
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
         }
     )
 
-)
+    region accesos (
+        name: ¿Qué desea hacer?
+        type: list
+        source {
+            list: @accesos
+        }
+        layout {
+            sequence: 20
+            slot: BODY
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            listTemplate: @/cards
+            templateOptions: [
+                #DEFAULT#
+                t-Cards--featured force-fa-lg
+                t-Cards--displayIcons
+                t-Cards--3cols
+                t-Cards--desc-2ln
+                t-Cards--animColorFill
+            ]
+        }
+    )
 
+    region indicadores (
+        name: Estado actual
+        type: themeTemplateComponent/metricCard
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select 1 id, 'Usuarios activos' titulo, to_char(count(*)) valor, 'De ' || (select count(*) from adm_seg_usuario) || ' registrados' detalle
+                  from adm_seg_usuario where estado = 'A'
+                union all
+                select 2, 'Usuarios bloqueados', to_char(count(*)), 'Por intentos fallidos' from adm_seg_usuario where estado = 'B'
+                union all
+                select 3, 'Ingresos hoy', to_char(count(*)), 'Inicios de sesión exitosos'
+                  from adm_aud_login where resultado = 'OK' and fecha >= trunc(current_date)
+                union all
+                select 4, 'Accesos rechazados hoy', to_char(count(*)), 'Contraseña, bloqueo o sin acceso'
+                  from adm_aud_login where resultado <> 'OK' and fecha >= trunc(current_date)
+                union all
+                select 5, 'Incidentes (7 días)', to_char(count(*)), 'Errores inesperados'
+                  from adm_aud_error where fecha >= trunc(current_date) - 7
+                ```
+        }
+        layout {
+            sequence: 30
+            slot: BODY
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            display: report
+        }
+        settings {
+            title: &TITULO.
+            metric: &VALOR.
+            meta: &DETALLE.
+            layout: 5Columns
+        }
+
+        column ID (
+            layout {
+                sequence: 10
+            }
+            source {
+                databaseColumn: ID
+                dataType: number
+                primaryKey: true
+            }
+        )
+
+        column TITULO (
+            layout {
+                sequence: 20
+            }
+            source {
+                databaseColumn: TITULO
+                dataType: varchar2
+            }
+        )
+
+        column VALOR (
+            layout {
+                sequence: 30
+            }
+            source {
+                databaseColumn: VALOR
+                dataType: varchar2
+            }
+        )
+
+        column DETALLE (
+            layout {
+                sequence: 40
+            }
+            source {
+                databaseColumn: DETALLE
+                dataType: varchar2
+            }
+        )
+    )
+
+    region accesos-por-dia (
+        name: Ingresos por día (últimos 14 días)
+        type: chart
+        layout {
+            sequence: 40
+            slot: BODY
+            columnSpan: 8
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        chart {
+            type: bar
+        }
+        legend {
+            show: false
+        }
+
+        series accesos-por-dia (
+            name: Ingresos por día (últimos 14 días)
+            execution {
+                sequence: 10
+            }
+            source {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select to_char(trunc(fecha), 'DD/MM') etiqueta, count(*) valor
+                      from adm_aud_login
+                     where resultado = 'OK' and fecha >= trunc(current_date) - 13
+                     group by trunc(fecha)
+                     order by trunc(fecha)
+                    ```
+            }
+            columnMapping {
+                label: ETIQUETA
+                value: VALOR
+            }
+        )
+
+        axis x (
+            name: x
+            value {
+            }
+            majorTicks {
+                show: false
+            }
+        )
+
+        axis y (
+            name: y
+            value {
+                format: decimal
+                decimalPlaces: 0
+                formatScaling: none
+            }
+            majorTicks {
+                show: true
+            }
+        )
+    )
+
+    region resultados-acceso (
+        name: Resultados de acceso (30 días)
+        type: chart
+        layout {
+            sequence: 50
+            slot: BODY
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        chart {
+            type: donut
+        }
+        legend {
+            show: true
+        }
+
+        series resultados-acceso (
+            name: Resultados de acceso (30 días)
+            execution {
+                sequence: 10
+            }
+            source {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select initcap(replace(resultado, '_', ' ')) etiqueta, count(*) valor
+                      from adm_aud_login
+                     where fecha >= trunc(current_date) - 30
+                     group by resultado
+                     order by 2 desc
+                    ```
+            }
+            columnMapping {
+                label: ETIQUETA
+                value: VALOR
+            }
+        )
+    )
+
+    region usuarios-por-estado (
+        name: Usuarios por estado
+        type: chart
+        layout {
+            sequence: 60
+            slot: BODY
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        chart {
+            type: pie
+        }
+        legend {
+            show: true
+        }
+
+        series usuarios-por-estado (
+            name: Usuarios por estado
+            execution {
+                sequence: 10
+            }
+            source {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select decode(estado, 'A', 'Activo', 'I', 'Inactivo', 'B', 'Bloqueado') etiqueta, count(*) valor
+                      from adm_seg_usuario
+                     group by estado
+                    ```
+            }
+            columnMapping {
+                label: ETIQUETA
+                value: VALOR
+            }
+        )
+    )
+
+    region usuarios-por-app (
+        name: Usuarios con acceso por aplicación
+        type: chart
+        layout {
+            sequence: 70
+            slot: BODY
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        chart {
+            type: bar
+        }
+        legend {
+            show: false
+        }
+
+        series usuarios-por-app (
+            name: Usuarios con acceso por aplicación
+            execution {
+                sequence: 10
+            }
+            source {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select a.nombre etiqueta, count(distinct v.usuario_id) valor
+                      from adm_seg_aplicacion a
+                      left join adm_seg_usuario_permiso_v v on v.aplicacion_id = a.aplicacion_id
+                     group by a.nombre, a.orden
+                     order by a.orden
+                    ```
+            }
+            columnMapping {
+                label: ETIQUETA
+                value: VALOR
+            }
+        )
+
+        axis x (
+            name: x
+            value {
+            }
+            majorTicks {
+                show: false
+            }
+        )
+
+        axis y (
+            name: y
+            value {
+                format: decimal
+                decimalPlaces: 0
+                formatScaling: none
+            }
+            majorTicks {
+                show: true
+            }
+        )
+    )
+
+    region incidentes-por-dia (
+        name: Incidentes por día (últimos 14 días)
+        type: chart
+        layout {
+            sequence: 80
+            slot: BODY
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        chart {
+            type: line
+        }
+        legend {
+            show: false
+        }
+
+        series incidentes-por-dia (
+            name: Incidentes por día (últimos 14 días)
+            execution {
+                sequence: 10
+            }
+            source {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select to_char(trunc(fecha), 'DD/MM') etiqueta, count(*) valor
+                      from adm_aud_error
+                     where fecha >= trunc(current_date) - 13
+                     group by trunc(fecha)
+                     order by trunc(fecha)
+                    ```
+            }
+            columnMapping {
+                label: ETIQUETA
+                value: VALOR
+            }
+        )
+
+        axis x (
+            name: x
+            value {
+            }
+            majorTicks {
+                show: false
+            }
+        )
+
+        axis y (
+            name: y
+            value {
+                format: decimal
+                decimalPlaces: 0
+                formatScaling: none
+            }
+            majorTicks {
+                show: true
+            }
+        )
+    )
+)

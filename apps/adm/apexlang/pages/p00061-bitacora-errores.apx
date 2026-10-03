@@ -6,9 +6,6 @@ page 61 (
         pageTemplate: @/standard
         templateOptions: #DEFAULT#
     }
-    navigation {
-        cursorFocus: doNotFocusCursor
-    }
     security {
         authorizationScheme: @adm-aud-error-ver
         pageAccessProtection: argumentsMustHaveChecksum
@@ -18,12 +15,12 @@ page 61 (
         helpText:
             ```
             Incidentes inesperados registrados por el manejador de errores.
-            El usuario ve solo el número de incidente: búsquelo aquí por su código (columna oculta ERROR_ID, use la búsqueda).
+            Busque por el número de incidente que le informó el usuario.
             ```
     }
 
     region breadcrumb (
-        name: Breadcrumb
+        name: Bitácora de errores
         type: breadcrumb
         source {
             breadcrumb: @breadcrumb
@@ -34,7 +31,10 @@ page 61 (
         }
         appearance {
             template: @/title-bar
-            templateOptions: #DEFAULT#
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
         }
         componentAppearance {
             breadcrumbTemplate: @/breadcrumb
@@ -44,19 +44,16 @@ page 61 (
 
     region bitacora-errores (
         name: Bitácora de errores
-        type: interactiveGrid
-        advanced {
-            htmlDomId: bitacora-errores
-        }
+        type: interactiveReport
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select error_id, to_char(fecha, 'DD/MM/YYYY HH24:MI:SS') fecha_hora, apex_app_id, apex_pagina_id,
-                       username, componente, mensaje, ora_sqlcode, ora_sqlerrm
-                  from adm_aud_error
-                 order by error_id desc
+                select e.error_id, e.error_id incidente, e.fecha, coalesce(a.nombre, to_char(e.apex_app_id)) aplicacion,
+                       e.apex_pagina_id pagina, e.username, e.componente, e.mensaje, e.ora_sqlerrm
+                  from adm_aud_error e
+                  left join adm_seg_aplicacion a on a.apex_app_id = e.apex_app_id
                 ```
         }
         layout {
@@ -67,125 +64,103 @@ page 61 (
             template: @/interactive-report
             templateOptions: #DEFAULT#
         }
+        advanced {
+            htmlDomId: bitacora-errores
+        }
+        componentAppearance {
+            showNullValuesAs: -
+        }
         pagination {
-            type: page
-            showTotalCount: true
+            type: rowRangesXToY
         }
         messages {
-            whenNoDataFound: No hay datos
-        }
-        toolbar {
-            controls: [
-                searchCol
-                searchField
-                actionsMenu
-                resetButton
-            ]
+            whenNoDataFound: No hay registros.
+            whenMoreDataFound: Hay más de #MAX_ROW_COUNT# registros; use la búsqueda o los filtros.
         }
         download {
             formats: [
                 csv
-                excel
+                html
             ]
         }
         comments {
             comments:
                 ```
-                Consulta de adm_aud_error (solo lectura). El número de incidente = error_id.
+                Consulta de adm_aud_error (solo lectura). Incidente = error_id.
                 ```
         }
 
-        savedReport PRIMARY (
-            visibility: primary
-            view {
-                default: grid
+        column ERROR_ID (
+            type: hidden
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 10
+            }
+            source {
+                dataType: NUMBER
             }
         )
 
-        column ERROR_ID (
-            type: hidden
+        column INCIDENTE (
+            type: plainText
+            heading {
+                heading: Incidente
+            }
+            layout {
+                sequence: 20
+            }
+            source {
+                dataType: NUMBER
+            }
+            comments {
+                comments: Summary: Número que ve el usuario en el mensaje de error. Display Label: Incidente. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column FECHA (
+            type: plainText
+            heading {
+                heading: Fecha
+            }
             layout {
                 sequence: 30
             }
             source {
-                databaseColumn: ERROR_ID
-                dataType: number
-                primaryKey: true
+                dataType: DATE
+            }
+            comments {
+                comments: Display Label: Fecha. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column FECHA_HORA (
-            type: textField
+        column APLICACION (
+            type: plainText
             heading {
-                heading: Fecha
+                heading: Aplicación
             }
             layout {
                 sequence: 40
             }
             source {
-                databaseColumn: FECHA_HORA
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
-                comments: Display Label: Fecha. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: true. Authorization Scheme: none.
+                comments: Display Label: Aplicación. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column APEX_APP_ID (
-            type: numberField
+        column PAGINA (
+            type: plainText
             heading {
-                heading: App
+                heading: Página
             }
             layout {
                 sequence: 50
             }
             source {
-                databaseColumn: APEX_APP_ID
-                dataType: number
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
-            }
-            comments {
-                comments: Display Label: App. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column APEX_PAGINA_ID (
-            type: numberField
-            heading {
-                heading: Página
-            }
-            layout {
-                sequence: 60
-            }
-            source {
-                databaseColumn: APEX_PAGINA_ID
-                dataType: number
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: NUMBER
             }
             comments {
                 comments: Display Label: Página. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
@@ -193,25 +168,15 @@ page 61 (
         )
 
         column USERNAME (
-            type: textField
+            type: plainText
             heading {
                 heading: Usuario
             }
             layout {
-                sequence: 70
+                sequence: 60
             }
             source {
-                databaseColumn: USERNAME
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
                 comments: Display Label: Usuario. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
@@ -219,25 +184,15 @@ page 61 (
         )
 
         column COMPONENTE (
-            type: textField
+            type: plainText
             heading {
                 heading: Componente
             }
             layout {
-                sequence: 80
+                sequence: 70
             }
             source {
-                databaseColumn: COMPONENTE
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
                 comments: Display Label: Componente. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
@@ -245,80 +200,34 @@ page 61 (
         )
 
         column MENSAJE (
-            type: textField
+            type: plainText
             heading {
                 heading: Mensaje
             }
             layout {
-                sequence: 90
+                sequence: 80
             }
             source {
-                databaseColumn: MENSAJE
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
                 comments: Display Label: Mensaje. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column ORA_SQLCODE (
-            type: numberField
-            heading {
-                heading: ORA
-            }
-            layout {
-                sequence: 100
-            }
-            source {
-                databaseColumn: ORA_SQLCODE
-                dataType: number
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
-            }
-            comments {
-                comments: Display Label: ORA. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
         column ORA_SQLERRM (
-            type: textField
+            type: plainText
             heading {
-                heading: Detalle ORA
+                heading: Detalle técnico
             }
             layout {
-                sequence: 110
+                sequence: 90
             }
             source {
-                databaseColumn: ORA_SQLERRM
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
-                comments: Display Label: Detalle ORA. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Detalle técnico. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )

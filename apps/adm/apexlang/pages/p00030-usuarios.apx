@@ -6,9 +6,6 @@ page 30 (
         pageTemplate: @/standard
         templateOptions: #DEFAULT#
     }
-    navigation {
-        cursorFocus: doNotFocusCursor
-    }
     security {
         authorizationScheme: @adm-seg-usuario-ver
         pageAccessProtection: argumentsMustHaveChecksum
@@ -17,13 +14,13 @@ page 30 (
     help {
         helpText:
             ```
-            Consulte y edite los usuarios de todas las aplicaciones.
-            Para crear usuarios use Nuevo usuario; para contraseñas, Resetear contraseña. Cambiar el estado de Bloqueado a Activo desbloquea al usuario.
+            Usuarios de todas las aplicaciones.
+            Use Crear usuario para dar de alta o el lápiz para editar, asignar roles o resetear la contraseña.
             ```
     }
 
     region breadcrumb (
-        name: Breadcrumb
+        name: Usuarios
         type: breadcrumb
         source {
             breadcrumb: @breadcrumb
@@ -34,7 +31,10 @@ page 30 (
         }
         appearance {
             template: @/title-bar
-            templateOptions: #DEFAULT#
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
         }
         componentAppearance {
             breadcrumbTemplate: @/breadcrumb
@@ -44,18 +44,19 @@ page 30 (
 
     region usuarios (
         name: Usuarios
-        type: interactiveGrid
-        advanced {
-            htmlDomId: usuarios
-        }
+        type: interactiveReport
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select usuario_id, username, email, nombres, apellidos, tipo_autenticacion,
-                       empresa_id_defecto, estado, intentos_fallidos, debe_cambiar_password
-                  from adm_seg_usuario
+                select u.usuario_id, u.username, u.nombres || ' ' || u.apellidos nombre, u.email,
+                       decode(u.tipo_autenticacion, 'LOCAL', 'Local', 'SSO') autenticacion,
+                       e.razon_social empresa,
+                       decode(u.estado, 'A', 'Activo', 'I', 'Inactivo', 'B', 'Bloqueado', u.estado) estado,
+                       to_char(u.fecha_ultimo_login, 'DD/MM/YYYY HH24:MI') ultimo_ingreso
+                  from adm_seg_usuario u
+                  left join adm_gen_empresa e on e.empresa_id = u.empresa_id_defecto
                 ```
         }
         layout {
@@ -66,352 +67,216 @@ page 30 (
             template: @/interactive-report
             templateOptions: #DEFAULT#
         }
-        edit {
-            enabled: true
-            allowedOperations: [
-                update
-            ]
+        advanced {
+            htmlDomId: usuarios
+        }
+        link {
+            linkColumn: customTarget
+            target: {
+                page: 31
+                items: {
+                    P31_USUARIO_ID: #USUARIO_ID#
+                }
+                clearCache: 31
+            }
+            linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>
+        }
+        componentAppearance {
+            showNullValuesAs: -
         }
         pagination {
-            type: page
-            showTotalCount: true
+            type: rowRangesXToY
         }
         messages {
-            whenNoDataFound: No hay datos
-        }
-        toolbar {
-            controls: [
-                searchCol
-                searchField
-                actionsMenu
-                resetButton
-                saveButton
-            ]
+            whenNoDataFound: No hay registros.
+            whenMoreDataFound: Hay más de #MAX_ROW_COUNT# registros; use la búsqueda o los filtros.
         }
         download {
             formats: [
                 csv
-                excel
+                html
             ]
         }
         comments {
             comments:
                 ```
-                Edición de adm_seg_usuario (solo update). El alta y la contraseña van por adm_seg_usuario_api.
+                Listado de adm_seg_usuario. Alta/edición en la página 31 vía adm_seg_usuario_api.
                 ```
         }
 
-        savedReport PRIMARY (
-            visibility: primary
-            view {
-                default: grid
+        column USUARIO_ID (
+            type: hidden
+            heading {
+                heading: ID
             }
-        )
-
-        column APEX$ROW_SELECTOR (
-            type: rowSelector
             layout {
                 sequence: 10
             }
-        )
-
-        column APEX$ROW_ACTION (
-            type: actionsMenu
-            layout {
-                sequence: 20
-            }
-        )
-
-        column USUARIO_ID (
-            type: hidden
-            layout {
-                sequence: 30
-            }
             source {
-                databaseColumn: USUARIO_ID
-                dataType: number
-                primaryKey: true
+                dataType: NUMBER
             }
         )
 
         column USERNAME (
-            type: textField
+            type: plainText
             heading {
                 heading: Usuario
             }
             layout {
-                sequence: 40
-            }
-            validation {
-                valueRequired: true
+                sequence: 20
             }
             source {
-                databaseColumn: USERNAME
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
-                comments: Display Label: Usuario. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
+                comments: Display Label: Usuario. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column NOMBRE (
+            type: plainText
+            heading {
+                heading: Nombre
+            }
+            layout {
+                sequence: 30
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
         column EMAIL (
-            type: textField
+            type: plainText
             heading {
                 heading: Email
             }
             layout {
-                sequence: 50
-            }
-            validation {
-                valueRequired: true
+                sequence: 40
             }
             source {
-                databaseColumn: EMAIL
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
-                comments: Display Label: Email. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Email. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column NOMBRES (
-            type: textField
+        column AUTENTICACION (
+            type: plainText
             heading {
-                heading: Nombres
+                heading: Autenticación
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Autenticación. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column EMPRESA (
+            type: plainText
+            heading {
+                heading: Empresa por defecto
             }
             layout {
                 sequence: 60
             }
-            validation {
-                valueRequired: true
-            }
             source {
-                databaseColumn: NOMBRES
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
-                comments: Display Label: Nombres. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Empresa por defecto. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column APELLIDOS (
-            type: textField
+        column ESTADO (
+            type: plainText
             heading {
-                heading: Apellidos
+                heading: Estado
             }
             layout {
                 sequence: 70
             }
             source {
-                databaseColumn: APELLIDOS
-                dataType: varchar2
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
-                comments: Display Label: Apellidos. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+                comments: Summary: Bloqueado = superó los intentos fallidos. Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column TIPO_AUTENTICACION (
-            type: selectList
+        column ULTIMO_INGRESO (
+            type: plainText
             heading {
-                heading: Autenticación
+                heading: Último ingreso
             }
             layout {
                 sequence: 80
             }
-            validation {
-                valueRequired: true
-            }
             source {
-                databaseColumn: TIPO_AUTENTICACION
-                dataType: varchar2
-            }
-            lov {
-                type: sharedComponent
-                lov: @tipo-autenticacion
-            }
-            columnFilter {
-                enabled: true
-                lovType: useLov
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
+                dataType: STRING
             }
             comments {
-                comments: Display Label: Autenticación. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column EMPRESA_ID_DEFECTO (
-            type: selectList
-            heading {
-                heading: Empresa por defecto
-            }
-            layout {
-                sequence: 90
-            }
-            source {
-                databaseColumn: EMPRESA_ID_DEFECTO
-                dataType: number
-            }
-            lov {
-                type: sharedComponent
-                lov: @empresas
-            }
-            columnFilter {
-                enabled: true
-                lovType: useLov
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
-            }
-            comments {
-                comments: Display Label: Empresa por defecto. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column ESTADO (
-            type: selectList
-            heading {
-                heading: Estado
-            }
-            layout {
-                sequence: 100
-            }
-            validation {
-                valueRequired: true
-            }
-            source {
-                databaseColumn: ESTADO
-                dataType: varchar2
-            }
-            lov {
-                type: sharedComponent
-                lov: @estado-usuario
-            }
-            columnFilter {
-                enabled: true
-                lovType: useLov
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
-            }
-            comments {
-                comments: Summary: Pasar de Bloqueado a Activo reinicia los intentos. Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column INTENTOS_FALLIDOS (
-            type: numberField
-            heading {
-                heading: Intentos fallidos
-            }
-            layout {
-                sequence: 110
-            }
-            validation {
-                valueRequired: true
-            }
-            source {
-                databaseColumn: INTENTOS_FALLIDOS
-                dataType: number
-            }
-            columnFilter {
-                enabled: true
-                lovType: none
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
-            }
-            comments {
-                comments: Display Label: Intentos fallidos. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column DEBE_CAMBIAR_PASSWORD (
-            type: selectList
-            heading {
-                heading: Debe cambiar contraseña
-            }
-            layout {
-                sequence: 120
-            }
-            validation {
-                valueRequired: true
-            }
-            source {
-                databaseColumn: DEBE_CAMBIAR_PASSWORD
-                dataType: varchar2
-            }
-            lov {
-                type: sharedComponent
-                lov: @si-no
-            }
-            columnFilter {
-                enabled: true
-                lovType: useLov
-            }
-            enableUsersTo {
-                sort: true
-                controlBreakAggregate: true
-                hide: true
-            }
-            comments {
-                comments: Display Label: Debe cambiar contraseña. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Último ingreso. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )
 
-    process usuarios-guardar (
-        name: Guardar Usuarios
-        type: interactiveGridAutoRowProcessing
-        editableRegion: @usuarios
+    button crear (
+        buttonName: CREAR
+        label: Crear usuario
+        layout {
+            sequence: 10
+            region: @usuarios
+            slot: RIGHT_OF_IR_SEARCH_BAR
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: #DEFAULT#
+            icon: fa-plus
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 31
+                clearCache: 31
+            }
+        }
+        security {
+            authorizationScheme: @adm-seg-usuario-gestionar
+        }
+    )
+
+    dynamicAction refrescar-al-cerrar (
+        name: Refrescar al cerrar el formulario
         execution {
             sequence: 10
         }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @usuarios
+        }
+
+        action refrescar (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @usuarios
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
     )
 )

@@ -1,0 +1,299 @@
+page 34 (
+    name: Asignar o quitar rol
+    alias: ASIGNAR-ROL
+    title: Asignar o quitar rol
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/drawer
+        templateOptions: [
+            #DEFAULT#
+            js-dialog-class-t-Drawer--pullOutEnd
+        ]
+    }
+    dialog {
+        chained: false
+    }
+    security {
+        authorizationScheme: @adm-seg-usuario-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Asigne un rol al usuario, para una empresa o para todas, con fecha de vigencia.
+            Para quitarlo, elija el mismo rol y empresa y presione Quitar rol.
+            ```
+    }
+
+    region botones (
+        name: Botones
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: REGION_POSITION_03
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region datos (
+        name: Asignar o quitar rol
+        type: staticContent
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P34_USUARIO_ID (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @datos
+            slot: regionBody
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P34_ROL_ID (
+        type: selectList
+        label {
+            label: Rol
+        }
+        layout {
+            sequence: 20
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @roles
+        }
+        help {
+            inlineHelpText: Rol a asignar
+            helpText: Conjunto de permisos que recibirá el usuario.
+        }
+    )
+
+    pageItem P34_EMPRESA_ID (
+        type: selectList
+        label {
+            label: Empresa
+        }
+        layout {
+            sequence: 30
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        lov {
+            type: sharedComponent
+            lov: @empresas
+            displayNullValue: true
+            nullDisplayValue: Todas las empresas
+        }
+        help {
+            inlineHelpText: Vacío = todas
+            helpText: Empresa donde aplica el rol. Si no elige ninguna, aplica a todas.
+        }
+    )
+
+    pageItem P34_FECHA_DESDE (
+        type: datePicker
+        label {
+            label: Desde
+        }
+        layout {
+            sequence: 40
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        help {
+            inlineHelpText: Inicio de vigencia
+            helpText: Fecha desde la que el rol tiene efecto.
+        }
+    )
+
+    pageItem P34_FECHA_HASTA (
+        type: datePicker
+        label {
+            label: Hasta
+        }
+        layout {
+            sequence: 50
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        help {
+            inlineHelpText: Vacío = sin vencimiento
+            helpText: Fecha hasta la que el rol tiene efecto.
+        }
+    )
+
+    button cancelar (
+        buttonName: CANCELAR
+        label: Cancelar
+        layout {
+            sequence: 5
+            region: @botones
+            slot: CLOSE
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+    )
+
+    button quitar (
+        buttonName: QUITAR
+        label: Quitar rol
+        layout {
+            sequence: 10
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: ¿Quitar este rol al usuario?
+            style: danger
+        }
+    )
+
+    button asignar (
+        buttonName: ASIGNAR
+        label: Asignar rol
+        layout {
+            sequence: 20
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+        }
+    )
+
+    dynamicAction cerrar-panel (
+        name: Cancelar
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cancelar
+        }
+
+        action cancelar-dialogo (
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+
+    process asignar-proceso (
+        name: Asignar
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                adm_seg_usuario_api.asignar_rol(
+                    i_usuario_id  => :P34_USUARIO_ID,
+                    i_rol_id      => :P34_ROL_ID,
+                    i_empresa_id  => :P34_EMPRESA_ID,
+                    i_fecha_desde => to_date(:P34_FECHA_DESDE),
+                    i_fecha_hasta => to_date(:P34_FECHA_HASTA));
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        serverSideCondition {
+            whenButtonPressed: @asignar
+        }
+        successMessage {
+            successMessage: Rol asignado.
+        }
+    )
+
+    process quitar-proceso (
+        name: Quitar
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                adm_seg_usuario_api.quitar_rol(
+                    i_usuario_id => :P34_USUARIO_ID,
+                    i_rol_id     => :P34_ROL_ID,
+                    i_empresa_id => :P34_EMPRESA_ID);
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        serverSideCondition {
+            whenButtonPressed: @quitar
+        }
+        successMessage {
+            successMessage: Rol quitado.
+        }
+    )
+
+    process cerrar (
+        name: Cerrar panel
+        type: closeDialog
+        execution {
+            sequence: 50
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: QUITAR,ASIGNAR
+        }
+    )
+)
