@@ -44,3 +44,9 @@ apex validate -input apps/<app>/apexlang
 apex import   -input apps/<app>/apexlang
 ```
 Validar siempre antes de importar. Importar solo cuando el usuario lo pida.
+
+## Git (obligatorio) — skill `git-flujo`
+
+Antes de cualquier cambio: rama `feature/|fix/|docs/|test/<tema>` desde `develop`. Micro commits
+(Conventional Commits en español), push frecuente, merge `--no-ff` a `develop`, releases a `main`
+con tag `vX.Y.Z` y `CHANGELOG.md`. Nunca trabajar directo en `main`/`develop`.
