@@ -14,6 +14,13 @@ page 41 (
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
+    help {
+        helpText:
+            ```
+            Módulos funcionales de cada aplicación.
+            El código del módulo forma parte del nombre de tablas, paquetes y permisos.
+            ```
+    }
 
     region modulos (
         name: Módulos
@@ -68,6 +75,12 @@ page 41 (
                 excel
             ]
         }
+        comments {
+            comments:
+                ```
+                Mantenimiento de adm_seg_modulo.
+                ```
+        }
 
         savedReport PRIMARY (
             visibility: primary
@@ -121,6 +134,9 @@ page 41 (
                 type: sharedComponent
                 lov: @aplicaciones
             }
+            comments {
+                comments: Display Label: Aplicación. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
+            }
         )
 
         column CODIGO (
@@ -137,6 +153,9 @@ page 41 (
             source {
                 databaseColumn: CODIGO
                 dataType: varchar2
+            }
+            comments {
+                comments: Summary: 3 letras, único en la app (FIN, STK…). Display Label: Código. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -155,6 +174,9 @@ page 41 (
                 databaseColumn: NOMBRE
                 dataType: varchar2
             }
+            comments {
+                comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+            }
         )
 
         column ICONO (
@@ -168,6 +190,9 @@ page 41 (
             source {
                 databaseColumn: ICONO
                 dataType: varchar2
+            }
+            comments {
+                comments: Display Label: Icono. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -185,6 +210,9 @@ page 41 (
             source {
                 databaseColumn: ORDEN
                 dataType: number
+            }
+            comments {
+                comments: Display Label: Orden. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
@@ -206,6 +234,9 @@ page 41 (
             lov {
                 type: sharedComponent
                 lov: @estado-ai
+            }
+            comments {
+                comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )

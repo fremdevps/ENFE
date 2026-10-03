@@ -1,0 +1,233 @@
+page 61 (
+    name: Bitácora de errores
+    alias: BITACORA-ERRORES
+    title: Bitácora de errores
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        authorizationScheme: @adm-aud-error-ver
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Incidentes inesperados registrados por el manejador de errores.
+            El usuario ve solo el número de incidente: búsquelo aquí por su código (columna oculta ERROR_ID, use la búsqueda).
+            ```
+    }
+
+    region bitacora-errores (
+        name: Bitácora de errores
+        type: interactiveGrid
+        advanced {
+            htmlDomId: bitacora-errores
+        }
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select error_id, to_char(fecha, 'DD/MM/YYYY HH24:MI:SS') fecha_hora, apex_app_id, apex_pagina_id,
+                       username, componente, mensaje, ora_sqlcode, ora_sqlerrm
+                  from adm_aud_error
+                 order by error_id desc
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        pagination {
+            type: page
+            showTotalCount: true
+        }
+        messages {
+            whenNoDataFound: No hay datos
+        }
+        toolbar {
+            controls: [
+                searchCol
+                searchField
+                actionsMenu
+                resetButton
+            ]
+        }
+        download {
+            formats: [
+                csv
+                excel
+            ]
+        }
+        comments {
+            comments:
+                ```
+                Consulta de adm_aud_error (solo lectura). El número de incidente = error_id.
+                ```
+        }
+
+        savedReport PRIMARY (
+            visibility: primary
+            view {
+                default: grid
+            }
+        )
+
+        column ERROR_ID (
+            type: hidden
+            layout {
+                sequence: 30
+            }
+            source {
+                databaseColumn: ERROR_ID
+                dataType: number
+                primaryKey: true
+            }
+        )
+
+        column FECHA_HORA (
+            type: textField
+            heading {
+                heading: Fecha
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                databaseColumn: FECHA_HORA
+                dataType: varchar2
+            }
+            comments {
+                comments: Display Label: Fecha. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: true. Authorization Scheme: none.
+            }
+        )
+
+        column APEX_APP_ID (
+            type: numberField
+            heading {
+                heading: App
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                databaseColumn: APEX_APP_ID
+                dataType: number
+            }
+            comments {
+                comments: Display Label: App. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column APEX_PAGINA_ID (
+            type: numberField
+            heading {
+                heading: Página
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                databaseColumn: APEX_PAGINA_ID
+                dataType: number
+            }
+            comments {
+                comments: Display Label: Página. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column USERNAME (
+            type: textField
+            heading {
+                heading: Usuario
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                databaseColumn: USERNAME
+                dataType: varchar2
+            }
+            comments {
+                comments: Display Label: Usuario. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column COMPONENTE (
+            type: textField
+            heading {
+                heading: Componente
+            }
+            layout {
+                sequence: 80
+            }
+            source {
+                databaseColumn: COMPONENTE
+                dataType: varchar2
+            }
+            comments {
+                comments: Display Label: Componente. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column MENSAJE (
+            type: textField
+            heading {
+                heading: Mensaje
+            }
+            layout {
+                sequence: 90
+            }
+            source {
+                databaseColumn: MENSAJE
+                dataType: varchar2
+            }
+            comments {
+                comments: Display Label: Mensaje. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column ORA_SQLCODE (
+            type: numberField
+            heading {
+                heading: ORA
+            }
+            layout {
+                sequence: 100
+            }
+            source {
+                databaseColumn: ORA_SQLCODE
+                dataType: number
+            }
+            comments {
+                comments: Display Label: ORA. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column ORA_SQLERRM (
+            type: textField
+            heading {
+                heading: Detalle ORA
+            }
+            layout {
+                sequence: 110
+            }
+            source {
+                databaseColumn: ORA_SQLERRM
+                dataType: varchar2
+            }
+            comments {
+                comments: Display Label: Detalle ORA. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+    )
+)

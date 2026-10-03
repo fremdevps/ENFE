@@ -1,7 +1,7 @@
-page 21 (
-    name: Permisos por rol
-    alias: ROL-PERMISOS
-    title: Permisos por rol
+page 51 (
+    name: Mensajes de error
+    alias: MENSAJES-ERROR
+    title: Mensajes de error
     appearance {
         pageTemplate: @/standard
         templateOptions: #DEFAULT#
@@ -10,31 +10,31 @@ page 21 (
         cursorFocus: doNotFocusCursor
     }
     security {
-        authorizationScheme: @adm-seg-rol-gestionar
+        authorizationScheme: @adm-gen-mensaje-gestionar
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
     help {
         helpText:
             ```
-            Asigne permisos a cada rol.
-            Cada fila otorga un permiso a un rol; los cambios aplican en el próximo inicio de sesión de los usuarios.
+            Mensajes claros que ve el usuario cuando un dato viola una regla de la base de datos.
+            El código es el nombre del constraint (ej. UK_ADM_USU_USERNAME). Aplica a todas las aplicaciones.
             ```
     }
 
-    region rol-permisos (
-        name: Permisos por rol
+    region mensajes-error (
+        name: Mensajes de error
         type: interactiveGrid
         advanced {
-            htmlDomId: rol-permisos
+            htmlDomId: mensajes-error
         }
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select rol_permiso_id, rol_id, permiso_id
-                  from adm_seg_rol_permiso
+                select mensaje_error_id, codigo, mensaje
+                  from adm_gen_mensaje_error
                 ```
         }
         layout {
@@ -78,7 +78,7 @@ page 21 (
         comments {
             comments:
                 ```
-                Mantenimiento de adm_seg_rol_permiso (N:M).
+                Catálogo usado por adm_gen_error_api.manejar_error_apex.
                 ```
         }
 
@@ -103,22 +103,22 @@ page 21 (
             }
         )
 
-        column ROL_PERMISO_ID (
+        column MENSAJE_ERROR_ID (
             type: hidden
             layout {
                 sequence: 30
             }
             source {
-                databaseColumn: ROL_PERMISO_ID
+                databaseColumn: MENSAJE_ERROR_ID
                 dataType: number
                 primaryKey: true
             }
         )
 
-        column ROL_ID (
-            type: selectList
+        column CODIGO (
+            type: textField
             heading {
-                heading: Rol
+                heading: Constraint
             }
             layout {
                 sequence: 40
@@ -127,22 +127,18 @@ page 21 (
                 valueRequired: true
             }
             source {
-                databaseColumn: ROL_ID
-                dataType: number
-            }
-            lov {
-                type: sharedComponent
-                lov: @roles
+                databaseColumn: CODIGO
+                dataType: varchar2
             }
             comments {
-                comments: Display Label: Rol. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
+                comments: Summary: Nombre exacto del constraint en mayúsculas. Display Label: Constraint. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
             }
         )
 
-        column PERMISO_ID (
-            type: selectList
+        column MENSAJE (
+            type: textField
             heading {
-                heading: Permiso
+                heading: Mensaje para el usuario
             }
             layout {
                 sequence: 50
@@ -151,23 +147,19 @@ page 21 (
                 valueRequired: true
             }
             source {
-                databaseColumn: PERMISO_ID
-                dataType: number
-            }
-            lov {
-                type: sharedComponent
-                lov: @permisos
+                databaseColumn: MENSAJE
+                dataType: varchar2
             }
             comments {
-                comments: Display Label: Permiso. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Mensaje para el usuario. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )
 
-    process rol-permisos-guardar (
-        name: Guardar Permisos por rol
+    process mensajes-error-guardar (
+        name: Guardar Mensajes de error
         type: interactiveGridAutoRowProcessing
-        editableRegion: @rol-permisos
+        editableRegion: @mensajes-error
         execution {
             sequence: 10
         }

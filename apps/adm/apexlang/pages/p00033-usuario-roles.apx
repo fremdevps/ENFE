@@ -14,6 +14,13 @@ page 33 (
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
+    help {
+        helpText:
+            ```
+            Asigne roles a los usuarios, por empresa y con vigencia.
+            Sin empresa, el rol aplica a todas. Sin fecha Hasta, no vence.
+            ```
+    }
 
     region usuario-roles (
         name: Roles por usuario
@@ -68,6 +75,12 @@ page 33 (
                 excel
             ]
         }
+        comments {
+            comments:
+                ```
+                Mantenimiento de adm_seg_usuario_rol.
+                ```
+        }
 
         savedReport PRIMARY (
             visibility: primary
@@ -121,6 +134,9 @@ page 33 (
                 type: sharedComponent
                 lov: @usuarios
             }
+            comments {
+                comments: Display Label: Usuario. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
+            }
         )
 
         column ROL_ID (
@@ -142,6 +158,9 @@ page 33 (
                 type: sharedComponent
                 lov: @roles
             }
+            comments {
+                comments: Display Label: Rol. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+            }
         )
 
         column EMPRESA_ID (
@@ -160,6 +179,9 @@ page 33 (
                 type: sharedComponent
                 lov: @empresas
             }
+            comments {
+                comments: Display Label: Empresa (vacío = todas). Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+            }
         )
 
         column FECHA_DESDE (
@@ -177,6 +199,9 @@ page 33 (
                 databaseColumn: FECHA_DESDE
                 dataType: date
             }
+            comments {
+                comments: Display Label: Desde. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
+            }
         )
 
         column FECHA_HASTA (
@@ -190,6 +215,9 @@ page 33 (
             source {
                 databaseColumn: FECHA_HASTA
                 dataType: date
+            }
+            comments {
+                comments: Summary: Vacío = sin vencimiento. Display Label: Hasta. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )
