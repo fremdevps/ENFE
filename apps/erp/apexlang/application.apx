@@ -1,5 +1,5 @@
 app ERP (
-    name: ENFE ERP
+    name: ERP
     logo {
         type: text
         text: &APP_TITLE.
@@ -38,7 +38,7 @@ app ERP (
         timestampTimeZone: DS
     }
     authentication {
-        scheme: @enfe-login-central
+        scheme: @login-central
     }
     authorization {
         scheme: @acceso-app

@@ -1,5 +1,5 @@
 app ADM (
-    name: ENFE Administracion Central
+    name: Administración Central
     logo {
         type: text
         text: &APP_TITLE.
@@ -38,7 +38,7 @@ app ADM (
         timestampTimeZone: DS
     }
     authentication {
-        scheme: @enfe-login-central
+        scheme: @login-central
     }
     authorization {
         scheme: @acceso-app
