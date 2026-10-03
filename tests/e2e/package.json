@@ -1,0 +1,16 @@
+{
+  "name": "enfe-e2e",
+  "private": true,
+  "description": "Pruebas end-to-end (Playwright) de las apps APEX de ENFE",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui-host=127.0.0.1 --ui-port=9323",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report reports/html --host 127.0.0.1 --port 9324",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "dotenv": "^16.4.5"
+  }
+}
