@@ -1,0 +1,197 @@
+page 50 (
+    name: Empresas
+    alias: EMPRESAS
+    title: Empresas
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        authorizationScheme: @adm-gen-empresa-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region empresas (
+        name: Empresas
+        type: interactiveGrid
+        advanced {
+            htmlDomId: empresas
+        }
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select empresa_id, codigo, razon_social, nombre_comercial, nro_documento, estado
+                  from adm_gen_empresa
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+        pagination {
+            type: page
+            showTotalCount: true
+        }
+        messages {
+            whenNoDataFound: No hay datos
+        }
+        toolbar {
+            controls: [
+                searchCol
+                searchField
+                actionsMenu
+                resetButton
+                saveButton
+            ]
+        }
+        download {
+            formats: [
+                csv
+                excel
+            ]
+        }
+
+        savedReport PRIMARY (
+            visibility: primary
+            view {
+                default: grid
+            }
+        )
+
+        column APEX$ROW_SELECTOR (
+            type: rowSelector
+            layout {
+                sequence: 10
+            }
+        )
+
+        column APEX$ROW_ACTION (
+            type: actionsMenu
+            layout {
+                sequence: 20
+            }
+        )
+
+        column EMPRESA_ID (
+            type: hidden
+            layout {
+                sequence: 30
+            }
+            source {
+                databaseColumn: EMPRESA_ID
+                dataType: number
+                primaryKey: true
+            }
+        )
+
+        column CODIGO (
+            type: textField
+            heading {
+                heading: Código
+            }
+            layout {
+                sequence: 40
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: CODIGO
+                dataType: varchar2
+            }
+        )
+
+        column RAZON_SOCIAL (
+            type: textField
+            heading {
+                heading: Razón social
+            }
+            layout {
+                sequence: 50
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: RAZON_SOCIAL
+                dataType: varchar2
+            }
+        )
+
+        column NOMBRE_COMERCIAL (
+            type: textField
+            heading {
+                heading: Nombre comercial
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                databaseColumn: NOMBRE_COMERCIAL
+                dataType: varchar2
+            }
+        )
+
+        column NRO_DOCUMENTO (
+            type: textField
+            heading {
+                heading: Nro. documento
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                databaseColumn: NRO_DOCUMENTO
+                dataType: varchar2
+            }
+        )
+
+        column ESTADO (
+            type: selectList
+            heading {
+                heading: Estado
+            }
+            layout {
+                sequence: 80
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: ESTADO
+                dataType: varchar2
+            }
+            lov {
+                type: sharedComponent
+                lov: @estado-ai
+            }
+        )
+    )
+
+    process empresas-guardar (
+        name: Guardar Empresas
+        type: interactiveGridAutoRowProcessing
+        editableRegion: @empresas
+        execution {
+            sequence: 10
+        }
+    )
+)

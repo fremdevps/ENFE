@@ -1,0 +1,156 @@
+page 21 (
+    name: Permisos por rol
+    alias: ROL-PERMISOS
+    title: Permisos por rol
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        authorizationScheme: @adm-seg-rol-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region rol-permisos (
+        name: Permisos por rol
+        type: interactiveGrid
+        advanced {
+            htmlDomId: rol-permisos
+        }
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select rol_permiso_id, rol_id, permiso_id
+                  from adm_seg_rol_permiso
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+        pagination {
+            type: page
+            showTotalCount: true
+        }
+        messages {
+            whenNoDataFound: No hay datos
+        }
+        toolbar {
+            controls: [
+                searchCol
+                searchField
+                actionsMenu
+                resetButton
+                saveButton
+            ]
+        }
+        download {
+            formats: [
+                csv
+                excel
+            ]
+        }
+
+        savedReport PRIMARY (
+            visibility: primary
+            view {
+                default: grid
+            }
+        )
+
+        column APEX$ROW_SELECTOR (
+            type: rowSelector
+            layout {
+                sequence: 10
+            }
+        )
+
+        column APEX$ROW_ACTION (
+            type: actionsMenu
+            layout {
+                sequence: 20
+            }
+        )
+
+        column ROL_PERMISO_ID (
+            type: hidden
+            layout {
+                sequence: 30
+            }
+            source {
+                databaseColumn: ROL_PERMISO_ID
+                dataType: number
+                primaryKey: true
+            }
+        )
+
+        column ROL_ID (
+            type: selectList
+            heading {
+                heading: Rol
+            }
+            layout {
+                sequence: 40
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: ROL_ID
+                dataType: number
+            }
+            lov {
+                type: sharedComponent
+                lov: @roles
+            }
+        )
+
+        column PERMISO_ID (
+            type: selectList
+            heading {
+                heading: Permiso
+            }
+            layout {
+                sequence: 50
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: PERMISO_ID
+                dataType: number
+            }
+            lov {
+                type: sharedComponent
+                lov: @permisos
+            }
+        )
+    )
+
+    process rol-permisos-guardar (
+        name: Guardar Permisos por rol
+        type: interactiveGridAutoRowProcessing
+        editableRegion: @rol-permisos
+        execution {
+            sequence: 10
+        }
+    )
+)

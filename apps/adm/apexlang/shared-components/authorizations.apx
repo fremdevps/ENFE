@@ -1,0 +1,98 @@
+authorization es-superadmin (
+    name: ES_SUPERADMIN
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seguridad_reg.f_es_superadmin(:APP_USER);
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción.
+    }
+)
+
+authorization acceso-pagina (
+    name: ACCESO_PAGINA
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seguridad_reg.f_tiene_acceso_pagina(:APP_USER, :APP_ID, :APP_PAGE_ID);
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción.
+    }
+)
+
+authorization adm-seg-usuario-ver (
+    name: ADM_SEG_USUARIO_VER
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seguridad_reg.f_tiene_permiso(:APP_USER, 'ADM_SEG_USUARIO_VER');
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción.
+    }
+)
+
+authorization adm-seg-usuario-gestionar (
+    name: ADM_SEG_USUARIO_GESTIONAR
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seguridad_reg.f_tiene_permiso(:APP_USER, 'ADM_SEG_USUARIO_GESTIONAR');
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción.
+    }
+)
+
+authorization adm-seg-usuario-reset-password (
+    name: ADM_SEG_USUARIO_RESET_PASSWORD
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seguridad_reg.f_tiene_permiso(:APP_USER, 'ADM_SEG_USUARIO_RESET_PASSWORD');
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción.
+    }
+)
+
+authorization adm-seg-rol-gestionar (
+    name: ADM_SEG_ROL_GESTIONAR
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seguridad_reg.f_tiene_permiso(:APP_USER, 'ADM_SEG_ROL_GESTIONAR');
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción.
+    }
+)
+
+authorization adm-seg-aplicacion-gestionar (
+    name: ADM_SEG_APLICACION_GESTIONAR
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seguridad_reg.f_tiene_permiso(:APP_USER, 'ADM_SEG_APLICACION_GESTIONAR');
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción.
+    }
+)
+
+authorization adm-gen-empresa-gestionar (
+    name: ADM_GEN_EMPRESA_GESTIONAR
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seguridad_reg.f_tiene_permiso(:APP_USER, 'ADM_GEN_EMPRESA_GESTIONAR');
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción.
+    }
+)
+
+authorization adm-aud-login-ver (
+    name: ADM_AUD_LOGIN_VER
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seguridad_reg.f_tiene_permiso(:APP_USER, 'ADM_AUD_LOGIN_VER');
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción.
+    }
+)

@@ -1,0 +1,221 @@
+page 41 (
+    name: Módulos
+    alias: MODULOS
+    title: Módulos
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        authorizationScheme: @adm-seg-aplicacion-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region modulos (
+        name: Módulos
+        type: interactiveGrid
+        advanced {
+            htmlDomId: modulos
+        }
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select modulo_id, aplicacion_id, codigo, nombre, icono, orden, estado
+                  from adm_seg_modulo
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+        pagination {
+            type: page
+            showTotalCount: true
+        }
+        messages {
+            whenNoDataFound: No hay datos
+        }
+        toolbar {
+            controls: [
+                searchCol
+                searchField
+                actionsMenu
+                resetButton
+                saveButton
+            ]
+        }
+        download {
+            formats: [
+                csv
+                excel
+            ]
+        }
+
+        savedReport PRIMARY (
+            visibility: primary
+            view {
+                default: grid
+            }
+        )
+
+        column APEX$ROW_SELECTOR (
+            type: rowSelector
+            layout {
+                sequence: 10
+            }
+        )
+
+        column APEX$ROW_ACTION (
+            type: actionsMenu
+            layout {
+                sequence: 20
+            }
+        )
+
+        column MODULO_ID (
+            type: hidden
+            layout {
+                sequence: 30
+            }
+            source {
+                databaseColumn: MODULO_ID
+                dataType: number
+                primaryKey: true
+            }
+        )
+
+        column APLICACION_ID (
+            type: selectList
+            heading {
+                heading: Aplicación
+            }
+            layout {
+                sequence: 40
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: APLICACION_ID
+                dataType: number
+            }
+            lov {
+                type: sharedComponent
+                lov: @aplicaciones
+            }
+        )
+
+        column CODIGO (
+            type: textField
+            heading {
+                heading: Código
+            }
+            layout {
+                sequence: 50
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: CODIGO
+                dataType: varchar2
+            }
+        )
+
+        column NOMBRE (
+            type: textField
+            heading {
+                heading: Nombre
+            }
+            layout {
+                sequence: 60
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: NOMBRE
+                dataType: varchar2
+            }
+        )
+
+        column ICONO (
+            type: textField
+            heading {
+                heading: Icono
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                databaseColumn: ICONO
+                dataType: varchar2
+            }
+        )
+
+        column ORDEN (
+            type: numberField
+            heading {
+                heading: Orden
+            }
+            layout {
+                sequence: 80
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: ORDEN
+                dataType: number
+            }
+        )
+
+        column ESTADO (
+            type: selectList
+            heading {
+                heading: Estado
+            }
+            layout {
+                sequence: 90
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: ESTADO
+                dataType: varchar2
+            }
+            lov {
+                type: sharedComponent
+                lov: @estado-ai
+            }
+        )
+    )
+
+    process modulos-guardar (
+        name: Guardar Módulos
+        type: interactiveGridAutoRowProcessing
+        editableRegion: @modulos
+        execution {
+            sequence: 10
+        }
+    )
+)
