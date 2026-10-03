@@ -1,5 +1,5 @@
 import type { Browser, Page } from '@playwright/test';
-import { gotoPage, waitForApex, login, igInsertar, igGuardar, valorLov, hoyApex } from './apex';
+import { gotoPage, waitForApex, login, igInsertar, igGuardar, valorLov, hoyApex, igCelda } from './apex';
 
 type OpcionesUsuario = { email?: string; tipo?: 'LOCAL' | 'SSO' };
 
@@ -39,5 +39,7 @@ export async function otraSesion(browser: Browser, app: 'adm' | 'erp', user: str
 /** Fila de la bitácora de accesos para un usuario y resultado (más reciente primero). */
 export async function filaBitacora(page: Page, user: string, resultado: string) {
   await gotoPage(page, 'adm', 'bitacora-login');
-  return page.locator('#bitacora-login tr', { hasText: user.toUpperCase() }).filter({ hasText: resultado }).first();
+  return page.locator('#bitacora-login').getByRole('row')
+    .filter({ has: igCelda(page, 'bitacora-login', user.toUpperCase()) })
+    .filter({ has: igCelda(page, 'bitacora-login', resultado) }).first();
 }

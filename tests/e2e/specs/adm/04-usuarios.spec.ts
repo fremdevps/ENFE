@@ -1,4 +1,4 @@
-import { test, expect, uniq, apexError, gotoPage, igBuscar, igModificar, igGuardar } from '../../support/apex';
+import { test, expect, uniq, apexError, gotoPage, igBuscar, igModificar, igGuardar, igCelda } from '../../support/apex';
 import { crearUsuario } from '../../support/adm';
 
 test.describe('ADM · Gestión de usuarios', () => {
@@ -9,7 +9,7 @@ test.describe('ADM · Gestión de usuarios', () => {
     await expect(page).toHaveTitle(/Usuarios/);
     await expect(page.getByText(/Usuario creado/)).toBeVisible();
     await igBuscar(page, 'usuarios', user);
-    await expect(page.locator('#usuarios').getByText(user)).toBeVisible();
+    await expect(igCelda(page, 'usuarios', user)).toBeVisible();
   });
 
   test('guarda el usuario en mayúsculas', async ({ admPage: page }) => {
@@ -17,7 +17,7 @@ test.describe('ADM · Gestión de usuarios', () => {
     await crearUsuario(page, user, 'Prueba2026x');
     await expect(apexError(page)).toHaveCount(0);
     await igBuscar(page, 'usuarios', user);
-    await expect(page.locator('#usuarios').getByText(user.toUpperCase())).toBeVisible();
+    await expect(igCelda(page, 'usuarios', user.toUpperCase())).toBeVisible();
   });
 
   test('crea un usuario SSO sin contraseña', async ({ admPage: page }) => {
@@ -25,11 +25,12 @@ test.describe('ADM · Gestión de usuarios', () => {
     await crearUsuario(page, user, '', 'SSO', { tipo: 'SSO' });
     await expect(apexError(page)).toHaveCount(0);
     await igBuscar(page, 'usuarios', user);
-    await expect(page.locator('#usuarios').getByText(user)).toBeVisible();
+    await expect(igCelda(page, 'usuarios', user)).toBeVisible();
   });
 
   test('exige los campos obligatorios', async ({ admPage: page }) => {
     await gotoPage(page, 'adm', 'nuevo-usuario');
+    for (const id of ['USERNAME', 'EMAIL', 'NOMBRES']) await page.locator(`#P31_${id}`).fill('');
     await page.getByRole('button', { name: 'Crear usuario' }).click();
     await expect(page).toHaveTitle(/Nuevo usuario/);
     await expect(apexError(page)).toBeVisible();
@@ -63,6 +64,6 @@ test.describe('ADM · Gestión de usuarios', () => {
 
     await gotoPage(page, 'adm', 'usuarios');
     await igBuscar(page, 'usuarios', user);
-    await expect(page.locator('#usuarios').getByText(nuevo)).toBeVisible();
+    await expect(igCelda(page, 'usuarios', nuevo)).toBeVisible();
   });
 });

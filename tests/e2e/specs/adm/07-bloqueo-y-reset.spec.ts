@@ -1,4 +1,4 @@
-import { test, expect, uniq, login, gotoPage, apexError, igBuscar, igModificar, igGuardar, valorLov } from '../../support/apex';
+import { test, expect, uniq, login, gotoPage, apexError, igBuscar, igModificar, igGuardar, valorLov, igCelda } from '../../support/apex';
 import { crearUsuario, otraSesion, filaBitacora } from '../../support/adm';
 
 const MAX_INTENTOS = 5;           // adm_seg_seguridad_reg.c_max_intentos
@@ -30,14 +30,14 @@ test.describe('ADM · Bloqueo por intentos y reseteo de contraseña', () => {
 
     await gotoPage(page, 'adm', 'usuarios');
     await igBuscar(page, 'usuarios', user);
-    await expect(page.locator('#usuarios tr', { hasText: user })).toContainText('Bloqueado');
+    await expect(page.locator('#usuarios').getByRole('row').filter({ has: igCelda(page, 'usuarios', user) })).toContainText('Bloqueado');
 
     // Reseteo: desbloquea y reinicia intentos
     await resetear(page, user, 'Nueva2026x');
     await expect(page.getByText('Contraseña reseteada y usuario desbloqueado.')).toBeVisible();
     await gotoPage(page, 'adm', 'usuarios');
     await igBuscar(page, 'usuarios', user);
-    await expect(page.locator('#usuarios tr', { hasText: user })).toContainText('Activo');
+    await expect(page.locator('#usuarios').getByRole('row').filter({ has: igCelda(page, 'usuarios', user) })).toContainText('Activo');
 
     // Ya no figura BLOQUEADO: sin roles, ahora el rechazo es SIN_ACCESO
     await login(otro, 'adm', user, 'Nueva2026x');

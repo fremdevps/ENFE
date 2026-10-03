@@ -1,4 +1,4 @@
-import { test, expect, uniq, gotoPage, apexError, igBuscar, igInsertar, igEliminar, igGuardar, valorLov } from '../../support/apex';
+import { test, expect, uniq, gotoPage, apexError, igBuscar, igInsertar, igEliminar, igGuardar, valorLov, igCelda } from '../../support/apex';
 import { crearUsuario, asignarRol } from '../../support/adm';
 import type { Page } from '@playwright/test';
 
@@ -12,7 +12,7 @@ async function crudIg(page: Page, alias: string, region: string, fila: Record<st
 
   await gotoPage(page, 'adm', alias);
   await igBuscar(page, region, valor);
-  await expect(page.locator(`#${region}`).getByText(valor)).toBeVisible();
+  await expect(igCelda(page, region, valor)).toBeVisible();
 
   expect(await igEliminar(page, region, clave, valor)).toBe(1);
   await igGuardar(page);
@@ -20,7 +20,7 @@ async function crudIg(page: Page, alias: string, region: string, fila: Record<st
 
   await gotoPage(page, 'adm', alias);
   await igBuscar(page, region, valor);
-  await expect(page.locator(`#${region}`).getByText(valor)).toHaveCount(0);
+  await expect(igCelda(page, region, valor)).toHaveCount(0);
 }
 
 /** Inserta una fila que debe fallar y verifica el mensaje claro (sin ORA-). */

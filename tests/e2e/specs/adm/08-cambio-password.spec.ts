@@ -65,6 +65,7 @@ test.describe('ADM · Cambio de contraseña obligatorio (primer ingreso)', () =>
 
   test('exige los tres campos', async ({ admPage: page }) => {
     await gotoPage(page, 'adm', 'cambiar-password');
+    for (const id of ['ACTUAL', 'NUEVO', 'CONFIRMA']) await page.locator(`#P90_PASSWORD_${id}`).fill('');
     await page.getByRole('button', { name: 'Cambiar contraseña' }).click();
     await expect(page).toHaveTitle(/Cambiar mi contraseña/);
     await expect(apexError(page)).toBeVisible();
