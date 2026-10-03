@@ -1,0 +1,224 @@
+page 31 (
+    name: Nuevo usuario
+    alias: NUEVO-USUARIO
+    title: Nuevo usuario
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: firstItemOnPage
+    }
+    security {
+        authorizationScheme: @adm-seg-usuario-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region datos (
+        name: Nuevo usuario
+        type: staticContent
+        layout {
+            sequence: 10
+            slot: BODY
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P31_USERNAME (
+        type: textField
+        label {
+            label: Usuario
+        }
+        layout {
+            sequence: 10
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+    )
+
+    pageItem P31_EMAIL (
+        type: textField
+        label {
+            label: Email
+        }
+        layout {
+            sequence: 20
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+    )
+
+    pageItem P31_NOMBRES (
+        type: textField
+        label {
+            label: Nombres
+        }
+        layout {
+            sequence: 30
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+    )
+
+    pageItem P31_APELLIDOS (
+        type: textField
+        label {
+            label: Apellidos
+        }
+        layout {
+            sequence: 40
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+
+    )
+
+    pageItem P31_TIPO_AUTENTICACION (
+        type: selectList
+        label {
+            label: Autenticación
+        }
+        layout {
+            sequence: 50
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }        lov {
+            type: sharedComponent
+            lov: @tipo-autenticacion
+        }
+    )
+
+    pageItem P31_PASSWORD (
+        type: password
+        label {
+            label: Contraseña inicial (solo LOCAL)
+        }
+        layout {
+            sequence: 60
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+
+    )
+
+    pageItem P31_EMPRESA_ID (
+        type: selectList
+        label {
+            label: Empresa por defecto
+        }
+        layout {
+            sequence: 70
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        lov {
+            type: sharedComponent
+            lov: @empresas
+        }
+    )
+
+    button crear (
+        buttonName: CREAR
+        label: Crear usuario
+        layout {
+            sequence: 10
+            region: @datos
+            slot: CREATE
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    process crear-usuario (
+        name: Crear usuario
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    V_USUARIO_ID number;
+                begin
+                    adm_usuario_ctr.P_INSERTAR(
+                        I_USERNAME           => :P31_USERNAME,
+                        I_EMAIL              => :P31_EMAIL,
+                        I_NOMBRES            => :P31_NOMBRES,
+                        I_APELLIDOS          => :P31_APELLIDOS,
+                        I_TIPO_AUTENTICACION => :P31_TIPO_AUTENTICACION,
+                        I_PASSWORD           => :P31_PASSWORD,
+                        I_EMPRESA_ID_DEFECTO => :P31_EMPRESA_ID,
+                        O_USUARIO_ID         => V_USUARIO_ID);
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        serverSideCondition {
+            whenButtonPressed: @crear
+        }
+        successMessage {
+            successMessage: Usuario creado. Debe cambiar la contraseña en su primer ingreso.
+        }
+    )
+
+    branch ir-a-30 (
+        name: Ir a página 30
+        execution {
+            sequence: 10
+            point: afterProcessing
+        }
+        behavior {
+            type: pageOrUrl
+            target: {
+                page: 30
+            }
+        }
+    )
+)

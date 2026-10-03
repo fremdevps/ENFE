@@ -1,0 +1,62 @@
+supportingObject (
+    deinstall {
+        scriptFile: deinstall-script.sql
+    }
+    advanced {
+        includeInAppExport: true
+    }
+
+    installScript tablas (
+        execution {
+            sequence: 10
+        }
+        script {
+            contentFile: 01_tablas.sql
+        }
+    )
+
+    installScript triggers (
+        execution {
+            sequence: 20
+        }
+        script {
+            contentFile: 02_triggers.sql
+        }
+    )
+
+    installScript vistas (
+        execution {
+            sequence: 30
+        }
+        script {
+            contentFile: 03_vistas.sql
+        }
+    )
+
+    installScript paquetes (
+        execution {
+            sequence: 40
+        }
+        script {
+            contentFile: 04_paquetes.sql
+        }
+    )
+
+    installScript datos-iniciales (
+        execution {
+            sequence: 50
+        }
+        script {
+            contentFile: 05_datos-iniciales.sql
+        }
+    )
+
+    installScript superadmin (
+        execution {
+            sequence: 60
+        }
+        script {
+            contentFile: 06_superadmin.sql
+        }
+    )
+)

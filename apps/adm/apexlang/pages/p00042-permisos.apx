@@ -1,0 +1,225 @@
+page 42 (
+    name: Permisos
+    alias: PERMISOS
+    title: Permisos
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        authorizationScheme: @adm-seg-aplicacion-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region permisos (
+        name: Permisos
+        type: interactiveGrid
+        advanced {
+            htmlDomId: permisos
+        }
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select permiso_id, modulo_id, codigo, nombre, tipo, apex_pagina_id, estado
+                  from adm_seg_permiso
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+        pagination {
+            type: page
+            showTotalCount: true
+        }
+        messages {
+            whenNoDataFound: No hay datos
+        }
+        toolbar {
+            controls: [
+                searchCol
+                searchField
+                actionsMenu
+                resetButton
+                saveButton
+            ]
+        }
+        download {
+            formats: [
+                csv
+                excel
+            ]
+        }
+
+        savedReport PRIMARY (
+            visibility: primary
+            view {
+                default: grid
+            }
+        )
+
+        column APEX$ROW_SELECTOR (
+            type: rowSelector
+            layout {
+                sequence: 10
+            }
+        )
+
+        column APEX$ROW_ACTION (
+            type: actionsMenu
+            layout {
+                sequence: 20
+            }
+        )
+
+        column PERMISO_ID (
+            type: hidden
+            layout {
+                sequence: 30
+            }
+            source {
+                databaseColumn: PERMISO_ID
+                dataType: number
+                primaryKey: true
+            }
+        )
+
+        column MODULO_ID (
+            type: selectList
+            heading {
+                heading: Módulo
+            }
+            layout {
+                sequence: 40
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: MODULO_ID
+                dataType: number
+            }
+            lov {
+                type: sharedComponent
+                lov: @modulos
+            }
+        )
+
+        column CODIGO (
+            type: textField
+            heading {
+                heading: Código
+            }
+            layout {
+                sequence: 50
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: CODIGO
+                dataType: varchar2
+            }
+        )
+
+        column NOMBRE (
+            type: textField
+            heading {
+                heading: Nombre
+            }
+            layout {
+                sequence: 60
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: NOMBRE
+                dataType: varchar2
+            }
+        )
+
+        column TIPO (
+            type: selectList
+            heading {
+                heading: Tipo
+            }
+            layout {
+                sequence: 70
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: TIPO
+                dataType: varchar2
+            }
+            lov {
+                type: sharedComponent
+                lov: @tipo-permiso
+            }
+        )
+
+        column APEX_PAGINA_ID (
+            type: numberField
+            heading {
+                heading: Página APEX
+            }
+            layout {
+                sequence: 80
+            }
+            source {
+                databaseColumn: APEX_PAGINA_ID
+                dataType: number
+            }
+        )
+
+        column ESTADO (
+            type: selectList
+            heading {
+                heading: Estado
+            }
+            layout {
+                sequence: 90
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: ESTADO
+                dataType: varchar2
+            }
+            lov {
+                type: sharedComponent
+                lov: @estado-ai
+            }
+        )
+    )
+
+    process permisos-guardar (
+        name: Guardar Permisos
+        type: interactiveGridAutoRowProcessing
+        editableRegion: @permisos
+        execution {
+            sequence: 10
+        }
+    )
+)

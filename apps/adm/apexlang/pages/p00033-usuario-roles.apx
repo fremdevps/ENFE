@@ -1,0 +1,205 @@
+page 33 (
+    name: Roles por usuario
+    alias: USUARIO-ROLES
+    title: Roles por usuario
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        authorizationScheme: @adm-seg-usuario-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region usuario-roles (
+        name: Roles por usuario
+        type: interactiveGrid
+        advanced {
+            htmlDomId: usuario-roles
+        }
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select usuario_rol_id, usuario_id, rol_id, empresa_id, fecha_desde, fecha_hasta
+                  from adm_seg_usuario_rol
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+        pagination {
+            type: page
+            showTotalCount: true
+        }
+        messages {
+            whenNoDataFound: No hay datos
+        }
+        toolbar {
+            controls: [
+                searchCol
+                searchField
+                actionsMenu
+                resetButton
+                saveButton
+            ]
+        }
+        download {
+            formats: [
+                csv
+                excel
+            ]
+        }
+
+        savedReport PRIMARY (
+            visibility: primary
+            view {
+                default: grid
+            }
+        )
+
+        column APEX$ROW_SELECTOR (
+            type: rowSelector
+            layout {
+                sequence: 10
+            }
+        )
+
+        column APEX$ROW_ACTION (
+            type: actionsMenu
+            layout {
+                sequence: 20
+            }
+        )
+
+        column USUARIO_ROL_ID (
+            type: hidden
+            layout {
+                sequence: 30
+            }
+            source {
+                databaseColumn: USUARIO_ROL_ID
+                dataType: number
+                primaryKey: true
+            }
+        )
+
+        column USUARIO_ID (
+            type: selectList
+            heading {
+                heading: Usuario
+            }
+            layout {
+                sequence: 40
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: USUARIO_ID
+                dataType: number
+            }
+            lov {
+                type: sharedComponent
+                lov: @usuarios
+            }
+        )
+
+        column ROL_ID (
+            type: selectList
+            heading {
+                heading: Rol
+            }
+            layout {
+                sequence: 50
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: ROL_ID
+                dataType: number
+            }
+            lov {
+                type: sharedComponent
+                lov: @roles
+            }
+        )
+
+        column EMPRESA_ID (
+            type: selectList
+            heading {
+                heading: Empresa (vacío = todas)
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                databaseColumn: EMPRESA_ID
+                dataType: number
+            }
+            lov {
+                type: sharedComponent
+                lov: @empresas
+            }
+        )
+
+        column FECHA_DESDE (
+            type: datePicker
+            heading {
+                heading: Desde
+            }
+            layout {
+                sequence: 70
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: FECHA_DESDE
+                dataType: date
+            }
+        )
+
+        column FECHA_HASTA (
+            type: datePicker
+            heading {
+                heading: Hasta
+            }
+            layout {
+                sequence: 80
+            }
+            source {
+                databaseColumn: FECHA_HASTA
+                dataType: date
+            }
+        )
+    )
+
+    process usuario-roles-guardar (
+        name: Guardar Roles por usuario
+        type: interactiveGridAutoRowProcessing
+        editableRegion: @usuario-roles
+        execution {
+            sequence: 10
+        }
+    )
+)

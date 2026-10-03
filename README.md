@@ -40,7 +40,9 @@ docs/
 1. **DBA** (ADMIN en OCI, SYS/SYSTEM on-prem): `apps/adm/install/00_prerequisitos_dba.sql`
 2. **Esquema WKSP_DEV**: desde `apps/adm` → `@install/install.sql`
    (o vía Supporting Objects al importar la app APEX)
-3. Crear el primer superadmin: `@database/data/adm_seg_crear_admin.sql`
+3. El superadmin **`ADMIN`** se crea solo en cada instalación (rol SUPERADMIN, contraseña aleatoria).
+   Fijar su contraseña inicial: `@database/data/adm_seg_password_admin.sql` (la pide por consola;
+   el sistema obliga a cambiarla en el primer ingreso).
 
 ## Flujo de trabajo (APEXlang)
 

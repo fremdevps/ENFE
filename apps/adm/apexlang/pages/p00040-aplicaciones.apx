@@ -1,0 +1,228 @@
+page 40 (
+    name: Aplicaciones
+    alias: APLICACIONES
+    title: Aplicaciones
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        authorizationScheme: @adm-seg-aplicacion-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region aplicaciones (
+        name: Aplicaciones
+        type: interactiveGrid
+        advanced {
+            htmlDomId: aplicaciones
+        }
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select aplicacion_id, codigo, nombre, descripcion, apex_app_id, icono, orden, estado
+                  from adm_seg_aplicacion
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+        pagination {
+            type: page
+            showTotalCount: true
+        }
+        messages {
+            whenNoDataFound: No hay datos
+        }
+        toolbar {
+            controls: [
+                searchCol
+                searchField
+                actionsMenu
+                resetButton
+                saveButton
+            ]
+        }
+        download {
+            formats: [
+                csv
+                excel
+            ]
+        }
+
+        savedReport PRIMARY (
+            visibility: primary
+            view {
+                default: grid
+            }
+        )
+
+        column APEX$ROW_SELECTOR (
+            type: rowSelector
+            layout {
+                sequence: 10
+            }
+        )
+
+        column APEX$ROW_ACTION (
+            type: actionsMenu
+            layout {
+                sequence: 20
+            }
+        )
+
+        column APLICACION_ID (
+            type: hidden
+            layout {
+                sequence: 30
+            }
+            source {
+                databaseColumn: APLICACION_ID
+                dataType: number
+                primaryKey: true
+            }
+        )
+
+        column CODIGO (
+            type: textField
+            heading {
+                heading: Código
+            }
+            layout {
+                sequence: 40
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: CODIGO
+                dataType: varchar2
+            }
+        )
+
+        column NOMBRE (
+            type: textField
+            heading {
+                heading: Nombre
+            }
+            layout {
+                sequence: 50
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: NOMBRE
+                dataType: varchar2
+            }
+        )
+
+        column DESCRIPCION (
+            type: textField
+            heading {
+                heading: Descripción
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                databaseColumn: DESCRIPCION
+                dataType: varchar2
+            }
+        )
+
+        column APEX_APP_ID (
+            type: numberField
+            heading {
+                heading: ID App APEX
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                databaseColumn: APEX_APP_ID
+                dataType: number
+            }
+        )
+
+        column ICONO (
+            type: textField
+            heading {
+                heading: Icono
+            }
+            layout {
+                sequence: 80
+            }
+            source {
+                databaseColumn: ICONO
+                dataType: varchar2
+            }
+        )
+
+        column ORDEN (
+            type: numberField
+            heading {
+                heading: Orden
+            }
+            layout {
+                sequence: 90
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: ORDEN
+                dataType: number
+            }
+        )
+
+        column ESTADO (
+            type: selectList
+            heading {
+                heading: Estado
+            }
+            layout {
+                sequence: 100
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: ESTADO
+                dataType: varchar2
+            }
+            lov {
+                type: sharedComponent
+                lov: @estado-ai
+            }
+        )
+    )
+
+    process aplicaciones-guardar (
+        name: Guardar Aplicaciones
+        type: interactiveGridAutoRowProcessing
+        editableRegion: @aplicaciones
+        execution {
+            sequence: 10
+        }
+    )
+)

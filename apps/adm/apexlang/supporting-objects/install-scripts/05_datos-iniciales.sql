@@ -1,3 +1,6 @@
+-- GENERADO por tools/build-supporting-objects.ps1 - NO EDITAR (fuente: apps/adm/database)
+
+-- >>> apps/adm/database/data/adm_seg_datos_iniciales.sql
 -- =============================================================================
 -- Datos iniciales de seguridad central (idempotente: se puede re-ejecutar).
 -- Registra la app ADM, sus módulos, permisos y roles base.
