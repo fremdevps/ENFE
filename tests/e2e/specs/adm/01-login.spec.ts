@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { env, login, waitForApex, apexError } from '../../support/apex';
 
 test.describe('ADM · Login central', () => {
-  test('muestra la página de login', async ({ page }) => {
+  test('muestra la página de login @publico', async ({ page }) => {
     await page.goto(`${env('APEX_BASE_URL')}/adm/login`);
     await waitForApex(page);
     await expect(page.locator('#P9999_USERNAME')).toBeVisible();
