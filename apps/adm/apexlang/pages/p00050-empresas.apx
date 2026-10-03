@@ -22,6 +22,26 @@ page 50 (
             ```
     }
 
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
     region empresas (
         name: Empresas
         type: interactiveGrid
@@ -38,7 +58,7 @@ page 50 (
                 ```
         }
         layout {
-            sequence: 10
+            sequence: 20
             slot: BODY
         }
         appearance {
@@ -130,6 +150,15 @@ page 50 (
                 databaseColumn: CODIGO
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Display Label: Código. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
             }
@@ -150,6 +179,15 @@ page 50 (
                 databaseColumn: RAZON_SOCIAL
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Display Label: Razón social. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
@@ -166,6 +204,15 @@ page 50 (
             source {
                 databaseColumn: NOMBRE_COMERCIAL
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: Nombre comercial. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
@@ -184,6 +231,15 @@ page 50 (
                 databaseColumn: NRO_DOCUMENTO
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Display Label: Nro. documento. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
@@ -200,6 +256,15 @@ page 50 (
             source {
                 databaseColumn: ZONA_HORARIA
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Summary: Formato IANA, ej. America/Asuncion. Display Label: Zona horaria. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
@@ -224,6 +289,15 @@ page 50 (
             lov {
                 type: sharedComponent
                 lov: @estado-ai
+            }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.

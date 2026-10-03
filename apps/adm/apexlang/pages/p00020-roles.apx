@@ -22,6 +22,26 @@ page 20 (
             ```
     }
 
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
     region roles (
         name: Roles
         type: interactiveGrid
@@ -38,7 +58,7 @@ page 20 (
                 ```
         }
         layout {
-            sequence: 10
+            sequence: 20
             slot: BODY
         }
         appearance {
@@ -130,6 +150,15 @@ page 20 (
                 databaseColumn: CODIGO
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Summary: Código único <APP>_<NOMBRE> en mayúsculas. Display Label: Código. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
             }
@@ -151,6 +180,15 @@ page 20 (
                 type: sharedComponent
                 lov: @aplicaciones
             }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Summary: Null = rol global. Display Label: Aplicación (vacío = global). Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
@@ -171,6 +209,15 @@ page 20 (
                 databaseColumn: NOMBRE
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
@@ -187,6 +234,15 @@ page 20 (
             source {
                 databaseColumn: DESCRIPCION
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: Descripción. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
@@ -212,6 +268,15 @@ page 20 (
                 type: sharedComponent
                 lov: @si-no
             }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Summary: S otorga todos los permisos de todas las apps. Display Label: Superadmin. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
@@ -235,6 +300,15 @@ page 20 (
             lov {
                 type: sharedComponent
                 lov: @estado-ai
+            }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.

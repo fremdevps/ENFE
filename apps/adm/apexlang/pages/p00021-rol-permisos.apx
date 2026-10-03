@@ -22,6 +22,26 @@ page 21 (
             ```
     }
 
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
     region rol-permisos (
         name: Permisos por rol
         type: interactiveGrid
@@ -38,7 +58,7 @@ page 21 (
                 ```
         }
         layout {
-            sequence: 10
+            sequence: 20
             slot: BODY
         }
         appearance {
@@ -134,6 +154,15 @@ page 21 (
                 type: sharedComponent
                 lov: @roles
             }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Display Label: Rol. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
             }
@@ -157,6 +186,15 @@ page 21 (
             lov {
                 type: sharedComponent
                 lov: @permisos
+            }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: Permiso. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.

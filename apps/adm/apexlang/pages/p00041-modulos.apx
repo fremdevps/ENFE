@@ -22,6 +22,26 @@ page 41 (
             ```
     }
 
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
     region modulos (
         name: Módulos
         type: interactiveGrid
@@ -38,7 +58,7 @@ page 41 (
                 ```
         }
         layout {
-            sequence: 10
+            sequence: 20
             slot: BODY
         }
         appearance {
@@ -134,6 +154,15 @@ page 41 (
                 type: sharedComponent
                 lov: @aplicaciones
             }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Display Label: Aplicación. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: true. Authorization Scheme: none.
             }
@@ -153,6 +182,15 @@ page 41 (
             source {
                 databaseColumn: CODIGO
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Summary: 3 letras, único en la app (FIN, STK…). Display Label: Código. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
@@ -174,6 +212,15 @@ page 41 (
                 databaseColumn: NOMBRE
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
             }
@@ -190,6 +237,15 @@ page 41 (
             source {
                 databaseColumn: ICONO
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: Icono. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
@@ -210,6 +266,15 @@ page 41 (
             source {
                 databaseColumn: ORDEN
                 dataType: number
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: Orden. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.
@@ -234,6 +299,15 @@ page 41 (
             lov {
                 type: sharedComponent
                 lov: @estado-ai
+            }
+            columnFilter {
+                enabled: true
+                lovType: useLov
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: true. Read Only: false. Primary Display Column: false. Authorization Scheme: none.

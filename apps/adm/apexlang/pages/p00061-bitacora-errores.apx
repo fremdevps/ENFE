@@ -22,6 +22,26 @@ page 61 (
             ```
     }
 
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
     region bitacora-errores (
         name: Bitácora de errores
         type: interactiveGrid
@@ -40,7 +60,7 @@ page 61 (
                 ```
         }
         layout {
-            sequence: 10
+            sequence: 20
             slot: BODY
         }
         appearance {
@@ -106,6 +126,15 @@ page 61 (
                 databaseColumn: FECHA_HORA
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Display Label: Fecha. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: true. Authorization Scheme: none.
             }
@@ -122,6 +151,15 @@ page 61 (
             source {
                 databaseColumn: APEX_APP_ID
                 dataType: number
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: App. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
@@ -140,6 +178,15 @@ page 61 (
                 databaseColumn: APEX_PAGINA_ID
                 dataType: number
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Display Label: Página. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
@@ -156,6 +203,15 @@ page 61 (
             source {
                 databaseColumn: USERNAME
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: Usuario. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
@@ -174,6 +230,15 @@ page 61 (
                 databaseColumn: COMPONENTE
                 dataType: varchar2
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Display Label: Componente. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
@@ -190,6 +255,15 @@ page 61 (
             source {
                 databaseColumn: MENSAJE
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: Mensaje. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
@@ -208,6 +282,15 @@ page 61 (
                 databaseColumn: ORA_SQLCODE
                 dataType: number
             }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
+            }
             comments {
                 comments: Display Label: ORA. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
@@ -224,6 +307,15 @@ page 61 (
             source {
                 databaseColumn: ORA_SQLERRM
                 dataType: varchar2
+            }
+            columnFilter {
+                enabled: true
+                lovType: none
+            }
+            enableUsersTo {
+                sort: true
+                controlBreakAggregate: true
+                hide: true
             }
             comments {
                 comments: Display Label: Detalle ORA. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
