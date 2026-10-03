@@ -1,0 +1,12 @@
+# APEXlang exige LF: sin esto, git en Windows convierte a CRLF y `apex validate` falla
+*.apx   text eol=lf
+*.json  text eol=lf
+*.sql   text eol=lf
+*.pks   text eol=lf
+*.pkb   text eol=lf
+*.md    text eol=lf
+
+*.png   binary
+*.jpg   binary
+*.docx  binary
+*.zip   binary

@@ -1,0 +1,57 @@
+# ===== Oracle APEX / Oracle DB =====
+# Credenciales y wallets (NUNCA subir)
+wallet/
+Wallet_*/
+*.sso
+*.p12
+*.jks
+cwallet.*
+ewallet.*
+tnsnames.ora
+sqlnet.ora
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# SQLcl / SQL Developer
+.sqlcl/
+*.log
+*.lst
+*.bad
+*.dsc
+spool/
+sqldeveloper/
+*.bak
+*~
+
+# Exports temporales de APEX (los versionados van en apex/ via SQLcl project / apex export -split)
+f[0-9]*.sql.bak
+apex_export_tmp/
+*.zip
+
+# Oracle SQLcl project (dist generado)
+dist/
+artifact/
+
+# ===== Node / herramientas front (plugins, JS, CSS) =====
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-store/
+build/
+
+# ===== Editores / SO =====
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Claude Code (config local personal) =====
+.claude/settings.local.json
