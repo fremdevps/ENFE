@@ -19,17 +19,14 @@ docs/                      estándar (docx) y arquitectura
 .claude/skills/            skills oficiales Oracle (oracle-apex, oracle-db)
 ```
 
-## Estándar de nomenclatura (obligatorio) — docs/Estandar_Tecnico_Nomenclatura_DB_PLSQL_V2.docx
+## Estándar técnico (obligatorio) — docs/ESTANDAR.md (V3)
 
-- Tablas: `app_modulo_tabla` en **singular** (`erp_fin_factura`, `adm_seg_usuario`).
-- PK `pk_<tabla>` · FK `fk_<padre sin _>_<hija sin _>` (`fk_admsegrol_admsegusuariorol`)
-  · UK `uk_<desc>` · CK `ck_<desc>` · índice `idx_<desc>`.
-  (`df_` no aplica: Oracle no permite nombrar DEFAULTs.)
-- Triggers: `trg_<tabla>_<momento><evento>` → `_bi _bu _bd _ai _au _ad _biu _aiu _biud _aiud _io`.
-- Paquetes: `<modulo>_<programa>_<tipo>`; `ctr` = DML/persistencia, `reg` = reglas de negocio.
-- PL/SQL: variables `V_`, constantes `C_`, funciones `F_`, procedimientos `P_`;
-  parámetros `I_` (in), `O_` (out), `IO_` (in out).
-  Excepción: funciones que APEX invoca con nombres fijos (`p_username`, `p_password`).
+Leer `docs/ESTANDAR.md` antes de crear cualquier objeto. Resumen:
+- Todo lleva código de app; máximo 30 caracteres; minúsculas.
+- Tablas `app_mod_entidad` (singular) con abreviatura registrada en `apps/<app>/database/ABREVIATURAS.md`.
+- Derivados con `<app>_<abrev>`: `pk_erp_fac`, `fk_erp_fac_cli`, `uk_/ck_/idx_erp_fac_...`, `trg_erp_fac_biu`, `seq_erp_fac`.
+- Paquetes `app_mod_entidad_{ctr|reg|api|utl}`; APEX/REST solo llaman `*_api`; ctr/reg nunca hacen COMMIT.
+- PL/SQL en minúsculas: `v_ c_ g_ cur_ r_ t_ e_`, parámetros `i_ o_ io_`; funciones/procedimientos SIN prefijo (`verbo_objeto`, verbos por capa en 5.1); errores en el rango de la app.
 
 ## Convenciones propias
 
