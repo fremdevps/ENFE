@@ -212,6 +212,67 @@ as
 end adm_gen_mensaje_error_ctr;
 /
 
+-- >>> apps/adm/database/packages/adm_seg_rol_ctr.pks
+create or replace package adm_seg_rol_ctr
+    authid definer
+    accessible by (package adm_seg_rol_api)
+as
+-- =============================================================================
+-- Paquete : adm_seg_rol_ctr   (capa ctr)
+-- Tabla   : adm_seg_rol
+-- =============================================================================
+
+    procedure insertar (
+        i_aplicacion_id  in  adm_seg_rol.aplicacion_id%type,
+        i_codigo         in  adm_seg_rol.codigo%type,
+        i_nombre         in  adm_seg_rol.nombre%type,
+        i_descripcion    in  adm_seg_rol.descripcion%type,
+        i_es_superadmin  in  adm_seg_rol.es_superadmin%type,
+        i_estado         in  adm_seg_rol.estado%type,
+        o_rol_id         out adm_seg_rol.rol_id%type
+    );
+
+    procedure actualizar (
+        i_rol_id         in adm_seg_rol.rol_id%type,
+        i_aplicacion_id  in adm_seg_rol.aplicacion_id%type,
+        i_codigo         in adm_seg_rol.codigo%type,
+        i_nombre         in adm_seg_rol.nombre%type,
+        i_descripcion    in adm_seg_rol.descripcion%type,
+        i_es_superadmin  in adm_seg_rol.es_superadmin%type,
+        i_estado         in adm_seg_rol.estado%type
+    );
+
+    procedure eliminar (
+        i_rol_id  in adm_seg_rol.rol_id%type
+    );
+
+end adm_seg_rol_ctr;
+/
+
+-- >>> apps/adm/database/packages/adm_seg_rol_permiso_ctr.pks
+create or replace package adm_seg_rol_permiso_ctr
+    authid definer
+    accessible by (package adm_seg_rol_api)
+as
+-- =============================================================================
+-- Paquete : adm_seg_rol_permiso_ctr   (capa ctr)
+-- Tabla   : adm_seg_rol_permiso
+-- =============================================================================
+
+    procedure insertar (
+        i_rol_id      in adm_seg_rol_permiso.rol_id%type,
+        i_permiso_id  in adm_seg_rol_permiso.permiso_id%type
+    );
+
+    -- Elimina los permisos del rol que NO están en i_permisos_ids.
+    procedure eliminar_no_incluidos (
+        i_rol_id        in adm_seg_rol_permiso.rol_id%type,
+        i_permisos_ids  in apex_t_number
+    );
+
+end adm_seg_rol_permiso_ctr;
+/
+
 -- >>> apps/adm/database/packages/adm_seg_seguridad_reg.pks
 create or replace package adm_seg_seguridad_reg
     authid definer
@@ -355,6 +416,55 @@ as
     );
 
 end adm_seg_usuario_api;
+/
+
+-- >>> apps/adm/database/packages/adm_seg_rol_api.pks
+create or replace package adm_seg_rol_api
+    authid definer
+as
+-- =============================================================================
+-- Paquete : adm_seg_rol_api   (capa api)
+-- Desc    : Gestión de roles y sus permisos para APEX / REST.
+-- =============================================================================
+
+    c_err_superadmin_protegido  constant pls_integer := -20030;
+
+    procedure crear (
+        i_aplicacion_id  in  adm_seg_rol.aplicacion_id%type,
+        i_codigo         in  adm_seg_rol.codigo%type,
+        i_nombre         in  adm_seg_rol.nombre%type,
+        i_descripcion    in  adm_seg_rol.descripcion%type,
+        i_es_superadmin  in  adm_seg_rol.es_superadmin%type,
+        i_estado         in  adm_seg_rol.estado%type,
+        o_rol_id         out adm_seg_rol.rol_id%type
+    );
+
+    procedure modificar (
+        i_rol_id         in adm_seg_rol.rol_id%type,
+        i_aplicacion_id  in adm_seg_rol.aplicacion_id%type,
+        i_codigo         in adm_seg_rol.codigo%type,
+        i_nombre         in adm_seg_rol.nombre%type,
+        i_descripcion    in adm_seg_rol.descripcion%type,
+        i_es_superadmin  in adm_seg_rol.es_superadmin%type,
+        i_estado         in adm_seg_rol.estado%type
+    );
+
+    procedure eliminar (
+        i_rol_id  in adm_seg_rol.rol_id%type
+    );
+
+    -- Deja al rol exactamente con los permisos indicados (lista "1:5:9" de APEX).
+    procedure asignar_permisos (
+        i_rol_id    in adm_seg_rol.rol_id%type,
+        i_permisos  in varchar2
+    );
+
+    -- Permisos del rol en formato "1:5:9" (para el shuttle de APEX).
+    function obtener_permisos (
+        i_rol_id  in adm_seg_rol.rol_id%type
+    ) return varchar2;
+
+end adm_seg_rol_api;
 /
 
 -- >>> apps/adm/database/packages/adm_gen_error_api.pks

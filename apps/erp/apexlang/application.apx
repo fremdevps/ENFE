@@ -16,6 +16,7 @@ app ERP (
         listTemplate: @/side-navigation-menu
         templateOptions: [
             #DEFAULT#
+            js-defaultCollapsed
             js-navCollapsed--default
             t-TreeNav--styleA
         ]
@@ -45,6 +46,12 @@ app ERP (
     }
     sessionStateProtection {
         checksumSalt: BE8E26C19CF3511FBFEB1A6F9F79DA741A84B7ED70299369E025F6E56E2FFF65
+    }
+    globalization {
+        primaryLanguage: es
+        languageDerivedFrom: appPrimaryLanguage
+        autoTimeZone: true
+        autoCsvEncoding: true
     }
     errorHandling {
         defaultDisplayLocation: inlineWithFieldAndInNotification

@@ -161,8 +161,16 @@ expresar. **La lógica de negocio va en paquetes, nunca en triggers.**
 Ejemplos: `erp_fin_factura_ctr` · `erp_fin_factura_reg` · `erp_fin_factura_api` · `adm_seg_seguridad_reg` · `adm_gen_texto_utl`
 
 **Regla de oro:** las pantallas APEX y los servicios REST **solo llaman a paquetes `api`**.
-(Excepción: la seguridad central `adm_seg_seguridad_reg`, invocada por autenticación/autorización.)
 Así se puede cambiar todo lo de adentro sin romper pantallas.
+
+Excepciones documentadas:
+1. La seguridad central `adm_seg_seguridad_reg`, invocada por autenticación/autorización de APEX.
+2. **Catálogos simples sin reglas de negocio** (ej. empresas, aplicaciones, módulos, permisos,
+   mensajes de error): sus formularios pueden usar el guardado automático de APEX
+   (*Form - Automatic Row Processing*). Las reglas que tengan se expresan con constraints
+   (`uk_`, `ck_`, `fk_`) y sus mensajes en `adm_gen_mensaje_error`. **En cuanto un catálogo
+   necesite una regla en PL/SQL, pasa a tener su paquete `api`.**
+3. Las **lecturas** (reportes, LOVs, listados) pueden consultar tablas y vistas directamente.
 
 Todo paquete se declara `authid definer` salvo justificación documentada.
 

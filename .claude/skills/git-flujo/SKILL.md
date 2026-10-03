@@ -47,9 +47,10 @@ primero commitearlos en su rama.
 
 ## Al TERMINAR la tarea
 
-1. `apex validate` OK en las apps tocadas y Supporting Objects regenerados
-   (`tools/build-supporting-objects.ps1 -App <app>`).
-2. Suite E2E en verde (ver skill `playwright-e2e`); si no se pudo correr, decirlo explícitamente.
+1. Cumplir la **Definición de terminado** de `AGENTS.md`: `apex validate`, import en DEV,
+   `tools/apex/verificar_consultas.sql` sin errores, pruebas Playwright (ver skill `playwright-e2e`).
+   Supporting Objects regenerados (`tools/build-supporting-objects.ps1 -App <app>`).
+2. Si algún paso no se pudo correr, decirlo explícitamente en el reporte y en el merge.
 3. Merge a develop (sin fast-forward, para que quede la historia de la rama):
    ```bash
    git checkout develop && git pull

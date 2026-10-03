@@ -5,6 +5,9 @@
 drop package adm_gen_error_api;
 drop package adm_gen_mensaje_error_ctr;
 drop package adm_aud_error_ctr;
+drop package adm_seg_rol_api;
+drop package adm_seg_rol_permiso_ctr;
+drop package adm_seg_rol_ctr;
 drop package adm_seg_usuario_api;
 drop package adm_seg_usuario_reg;
 drop package adm_seg_seguridad_reg;

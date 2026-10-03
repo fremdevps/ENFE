@@ -1,23 +1,6 @@
 list navigation-bar (
     name: Navigation Bar
 
-    entry --- (
-        label: ---
-        layout {
-            sequence: 20
-            parentEntry: @app-user
-        }
-        link {
-            target: {
-                type: url
-                url: separator
-            }
-        }
-        serverSideCondition {
-            type: userIsAuthenticated
-        }
-    )
-
     entry app-user (
         label: &APP_USER.
         icon {
@@ -43,12 +26,26 @@ list navigation-bar (
             imageIconCssClasses: fa-key
         }
         layout {
-            sequence: 25
+            sequence: 20
             parentEntry: @app-user
         }
         link {
             target: {
                 page: 90
+            }
+        }
+    )
+
+    entry --- (
+        label: ---
+        layout {
+            sequence: 25
+            parentEntry: @app-user
+        }
+        link {
+            target: {
+                type: url
+                url: separator
             }
         }
     )
@@ -68,9 +65,6 @@ list navigation-bar (
                 url: &LOGOUT_URL.
             }
         }
-        serverSideCondition {
-            type: userIsAuthenticated
-        }
     )
 
 )
@@ -78,21 +72,19 @@ list navigation-bar (
 list navigation-menu (
     name: Navigation Menu
 
-    entry home (
+    entry inicio (
         label: Inicio
         icon {
             imageIconCssClasses: fa-home
         }
         layout {
             sequence: 10
-
         }
         link {
             target: {
                 page: 1
             }
         }
-
     )
 
     entry seguridad (
@@ -102,7 +94,6 @@ list navigation-menu (
         }
         layout {
             sequence: 20
-
         }
         link {
             target: {
@@ -110,7 +101,6 @@ list navigation-menu (
                 url: #
             }
         }
-
     )
 
     entry usuarios (
@@ -132,70 +122,13 @@ list navigation-menu (
         }
     )
 
-    entry nuevo-usuario (
-        label: Nuevo usuario
+    entry roles (
+        label: Roles y permisos
         icon {
-            imageIconCssClasses: fa-user-plus
+            imageIconCssClasses: fa-key
         }
         layout {
             sequence: 22
-            parentEntry: @seguridad
-        }
-        link {
-            target: {
-                page: 31
-            }
-        }
-        security {
-            authorizationScheme: @adm-seg-usuario-gestionar
-        }
-    )
-
-    entry usuario-roles (
-        label: Roles por usuario
-        icon {
-            imageIconCssClasses: fa-user-key
-        }
-        layout {
-            sequence: 23
-            parentEntry: @seguridad
-        }
-        link {
-            target: {
-                page: 33
-            }
-        }
-        security {
-            authorizationScheme: @adm-seg-usuario-gestionar
-        }
-    )
-
-    entry reset-password (
-        label: Resetear contraseña
-        icon {
-            imageIconCssClasses: fa-unlock
-        }
-        layout {
-            sequence: 24
-            parentEntry: @seguridad
-        }
-        link {
-            target: {
-                page: 32
-            }
-        }
-        security {
-            authorizationScheme: @adm-seg-usuario-reset-password
-        }
-    )
-
-    entry roles (
-        label: Roles
-        icon {
-            imageIconCssClasses: fa-badge
-        }
-        layout {
-            sequence: 25
             parentEntry: @seguridad
         }
         link {
@@ -208,33 +141,13 @@ list navigation-menu (
         }
     )
 
-    entry rol-permisos (
-        label: Permisos por rol
-        icon {
-            imageIconCssClasses: fa-check-square-o
-        }
-        layout {
-            sequence: 26
-            parentEntry: @seguridad
-        }
-        link {
-            target: {
-                page: 21
-            }
-        }
-        security {
-            authorizationScheme: @adm-seg-rol-gestionar
-        }
-    )
-
     entry catalogo (
-        label: Catálogo de aplicaciones
+        label: Catálogo
         icon {
-            imageIconCssClasses: fa-apps
+            imageIconCssClasses: fa-sitemap
         }
         layout {
-            sequence: 30
-
+            sequence: 32
         }
         link {
             target: {
@@ -242,16 +155,15 @@ list navigation-menu (
                 url: #
             }
         }
-
     )
 
     entry aplicaciones (
         label: Aplicaciones
         icon {
-            imageIconCssClasses: fa-window-new
+            imageIconCssClasses: fa-apps
         }
         layout {
-            sequence: 31
+            sequence: 33
             parentEntry: @catalogo
         }
         link {
@@ -270,12 +182,12 @@ list navigation-menu (
             imageIconCssClasses: fa-folder-o
         }
         layout {
-            sequence: 32
+            sequence: 34
             parentEntry: @catalogo
         }
         link {
             target: {
-                page: 41
+                page: 42
             }
         }
         security {
@@ -286,15 +198,15 @@ list navigation-menu (
     entry permisos (
         label: Permisos
         icon {
-            imageIconCssClasses: fa-key
+            imageIconCssClasses: fa-check-square-o
         }
         layout {
-            sequence: 33
+            sequence: 35
             parentEntry: @catalogo
         }
         link {
             target: {
-                page: 42
+                page: 44
             }
         }
         security {
@@ -308,8 +220,8 @@ list navigation-menu (
             imageIconCssClasses: fa-building-o
         }
         layout {
-            sequence: 40
-
+            sequence: 36
+            parentEntry: @catalogo
         }
         link {
             target: {
@@ -321,14 +233,49 @@ list navigation-menu (
         }
     )
 
-    entry bitacora (
+    entry mensajes-error (
+        label: Mensajes de error
+        icon {
+            imageIconCssClasses: fa-comment-o
+        }
+        layout {
+            sequence: 37
+            parentEntry: @catalogo
+        }
+        link {
+            target: {
+                page: 52
+            }
+        }
+        security {
+            authorizationScheme: @adm-gen-mensaje-gestionar
+        }
+    )
+
+    entry auditoria (
+        label: Auditoría
+        icon {
+            imageIconCssClasses: fa-search
+        }
+        layout {
+            sequence: 47
+        }
+        link {
+            target: {
+                type: url
+                url: #
+            }
+        }
+    )
+
+    entry bitacora-login (
         label: Bitácora de accesos
         icon {
             imageIconCssClasses: fa-history
         }
         layout {
-            sequence: 50
-
+            sequence: 48
+            parentEntry: @auditoria
         }
         link {
             target: {
@@ -340,36 +287,213 @@ list navigation-menu (
         }
     )
 
-    entry mensajes-error (
-        label: Mensajes de error
-        icon {
-            imageIconCssClasses: fa-comment-o
-        }
-        layout {
-            sequence: 45
-        }
-        link {
-            target: {
-                page: 51
-            }
-        }
-        security {
-            authorizationScheme: @adm-gen-mensaje-gestionar
-        }
-    )
-
     entry bitacora-errores (
         label: Bitácora de errores
         icon {
             imageIconCssClasses: fa-bug
         }
         layout {
-            sequence: 55
+            sequence: 49
+            parentEntry: @auditoria
         }
         link {
             target: {
                 page: 61
             }
+        }
+        security {
+            authorizationScheme: @adm-aud-error-ver
+        }
+    )
+
+)
+
+list accesos (
+    name: Accesos
+
+    entry acc-usuarios (
+        label: Usuarios
+        icon {
+            imageIconCssClasses: fa-users
+        }
+        layout {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 30
+            }
+        }
+        userDefinedAttributes {
+            1: Alta, edición, roles y contraseñas de los usuarios.
+        }
+        security {
+            authorizationScheme: @adm-seg-usuario-ver
+        }
+    )
+
+    entry acc-roles (
+        label: Roles y permisos
+        icon {
+            imageIconCssClasses: fa-key
+        }
+        layout {
+            sequence: 20
+        }
+        link {
+            target: {
+                page: 20
+            }
+        }
+        userDefinedAttributes {
+            1: Qué puede hacer cada rol en cada aplicación.
+        }
+        security {
+            authorizationScheme: @adm-seg-rol-gestionar
+        }
+    )
+
+    entry acc-aplicaciones (
+        label: Aplicaciones
+        icon {
+            imageIconCssClasses: fa-apps
+        }
+        layout {
+            sequence: 30
+        }
+        link {
+            target: {
+                page: 40
+            }
+        }
+        userDefinedAttributes {
+            1: Catálogo de aplicaciones de la plataforma.
+        }
+        security {
+            authorizationScheme: @adm-seg-aplicacion-gestionar
+        }
+    )
+
+    entry acc-modulos (
+        label: Módulos
+        icon {
+            imageIconCssClasses: fa-folder-o
+        }
+        layout {
+            sequence: 40
+        }
+        link {
+            target: {
+                page: 42
+            }
+        }
+        userDefinedAttributes {
+            1: Módulos funcionales de cada aplicación.
+        }
+        security {
+            authorizationScheme: @adm-seg-aplicacion-gestionar
+        }
+    )
+
+    entry acc-permisos (
+        label: Permisos
+        icon {
+            imageIconCssClasses: fa-check-square-o
+        }
+        layout {
+            sequence: 50
+        }
+        link {
+            target: {
+                page: 44
+            }
+        }
+        userDefinedAttributes {
+            1: Permisos atómicos por módulo.
+        }
+        security {
+            authorizationScheme: @adm-seg-aplicacion-gestionar
+        }
+    )
+
+    entry acc-empresas (
+        label: Empresas
+        icon {
+            imageIconCssClasses: fa-building-o
+        }
+        layout {
+            sequence: 60
+        }
+        link {
+            target: {
+                page: 50
+            }
+        }
+        userDefinedAttributes {
+            1: Empresas y unidades de negocio.
+        }
+        security {
+            authorizationScheme: @adm-gen-empresa-gestionar
+        }
+    )
+
+    entry acc-mensajes-error (
+        label: Mensajes de error
+        icon {
+            imageIconCssClasses: fa-comment-o
+        }
+        layout {
+            sequence: 70
+        }
+        link {
+            target: {
+                page: 52
+            }
+        }
+        userDefinedAttributes {
+            1: Textos claros para los errores de datos.
+        }
+        security {
+            authorizationScheme: @adm-gen-mensaje-gestionar
+        }
+    )
+
+    entry acc-bitacora-login (
+        label: Bitácora de accesos
+        icon {
+            imageIconCssClasses: fa-history
+        }
+        layout {
+            sequence: 80
+        }
+        link {
+            target: {
+                page: 60
+            }
+        }
+        userDefinedAttributes {
+            1: Quién ingresó, cuándo y con qué resultado.
+        }
+        security {
+            authorizationScheme: @adm-aud-login-ver
+        }
+    )
+
+    entry acc-bitacora-errores (
+        label: Bitácora de errores
+        icon {
+            imageIconCssClasses: fa-bug
+        }
+        layout {
+            sequence: 90
+        }
+        link {
+            target: {
+                page: 61
+            }
+        }
+        userDefinedAttributes {
+            1: Incidentes inesperados para soporte.
         }
         security {
             authorizationScheme: @adm-aud-error-ver
