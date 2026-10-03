@@ -29,6 +29,32 @@ function Write-Lf([string]$path, [string]$text) {
     [IO.File]::WriteAllText($path, ($text -replace "`r`n", "`n"), $utf8)
 }
 
+# Envuelve cada sentencia DDL de un archivo de tablas en un bloque idempotente:
+# ignora "ya existe" (ORA-00955 objeto, -01408 índice, -02260/-02261/-02264/-02275 constraints)
+# para que reinstalar/actualizar la app no falle. Funciona en 19c+ (sin IF NOT EXISTS de 23ai).
+function ConvertTo-IdempotentDdl([string]$sql) {
+    $out = New-Object Text.StringBuilder
+    foreach ($stmt in ($sql -replace "`r`n", "`n") -split ';\s*\n') {
+        $lines = $stmt -split "`n"
+        $comments = ($lines | Where-Object { $_ -match '^\s*--' }) -join "`n"
+        $code = (($lines | Where-Object { $_ -notmatch '^\s*--' }) -join "`n").Trim()
+        if ($comments) { [void]$out.AppendLine($comments) }
+        if (-not $code) { continue }
+        if ($code -match '^(create|alter)\s') {
+            [void]$out.AppendLine("begin")
+            [void]$out.AppendLine("    execute immediate q'~$code~';")
+            [void]$out.AppendLine("exception")
+            [void]$out.AppendLine("    when others then")
+            [void]$out.AppendLine("        if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;")
+            [void]$out.AppendLine("end;")
+            [void]$out.AppendLine("/")
+        } else {
+            [void]$out.AppendLine("$code;")
+        }
+    }
+    return $out.ToString()
+}
+
 function Get-Slug([string]$text) {
     $n = $text.Normalize([Text.NormalizationForm]::FormD)
     $n = -join ($n.ToCharArray() | Where-Object { [Globalization.CharUnicodeInfo]::GetUnicodeCategory($_) -ne 'NonSpacingMark' })
@@ -73,7 +99,9 @@ foreach ($s in $sections | Where-Object { $_.Files.Count -gt 0 }) {
     foreach ($f in $s.Files) {
         $rel = (Resolve-Path $f).Path.Substring($root.Length + 1) -replace '\\', '/'
         [void]$body.AppendLine("`n-- >>> $rel")
-        [void]$body.AppendLine(([IO.File]::ReadAllText((Resolve-Path $f), $utf8)).TrimEnd())
+        $content = [IO.File]::ReadAllText((Resolve-Path $f), $utf8)
+        if ($rel -match '/database/tables/') { $content = ConvertTo-IdempotentDdl $content }
+        [void]$body.AppendLine($content.TrimEnd())
     }
     Write-Lf (Join-Path $scriptsDir $file) $body.ToString()
 
