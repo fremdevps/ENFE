@@ -24,3 +24,14 @@ create table adm_seg_aplicacion (
 
 comment on table  adm_seg_aplicacion             is 'Aplicaciones gestionadas por la seguridad central. Abrev: apl';
 comment on column adm_seg_aplicacion.apex_app_id is 'ID de la aplicación APEX (APP_ID)';
+comment on column adm_seg_aplicacion.aplicacion_id      is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_aplicacion.codigo             is 'Código de la aplicación en mayúsculas (ADM, ERP, CRM); prefijo de sus objetos';
+comment on column adm_seg_aplicacion.nombre             is 'Nombre visible de la aplicación';
+comment on column adm_seg_aplicacion.descripcion        is 'Descripción funcional';
+comment on column adm_seg_aplicacion.icono              is 'Clase de ícono Font APEX (ej. fa-cubes)';
+comment on column adm_seg_aplicacion.orden              is 'Orden de presentación en menús y portal';
+comment on column adm_seg_aplicacion.estado             is 'A=Activo, I=Inactivo';
+comment on column adm_seg_aplicacion.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_aplicacion.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_aplicacion.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_aplicacion.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';

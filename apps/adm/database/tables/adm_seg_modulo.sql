@@ -25,3 +25,15 @@ create table adm_seg_modulo (
 -- (aplicacion_id ya está indexado por uk_adm_mod_apl_codigo)
 
 comment on table adm_seg_modulo is 'Módulos funcionales por aplicación. Abrev: mod';
+comment on column adm_seg_modulo.modulo_id          is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_modulo.aplicacion_id      is 'Aplicación a la que pertenece (FK adm_seg_aplicacion)';
+comment on column adm_seg_modulo.codigo             is 'Código del módulo en mayúsculas, único dentro de la aplicación (FIN, STK)';
+comment on column adm_seg_modulo.nombre             is 'Nombre visible del módulo';
+comment on column adm_seg_modulo.descripcion        is 'Descripción funcional';
+comment on column adm_seg_modulo.icono              is 'Clase de ícono Font APEX';
+comment on column adm_seg_modulo.orden              is 'Orden de presentación';
+comment on column adm_seg_modulo.estado             is 'A=Activo, I=Inactivo';
+comment on column adm_seg_modulo.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_modulo.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_modulo.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_modulo.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';

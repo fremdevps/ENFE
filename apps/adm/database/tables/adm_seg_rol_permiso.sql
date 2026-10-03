@@ -20,3 +20,10 @@ create table adm_seg_rol_permiso (
 create index idx_adm_rope_permiso_id on adm_seg_rol_permiso (permiso_id);
 
 comment on table adm_seg_rol_permiso is 'Permisos por rol. Abrev: rope';
+comment on column adm_seg_rol_permiso.rol_permiso_id     is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_rol_permiso.rol_id             is 'Rol (FK adm_seg_rol)';
+comment on column adm_seg_rol_permiso.permiso_id         is 'Permiso otorgado al rol (FK adm_seg_permiso)';
+comment on column adm_seg_rol_permiso.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_rol_permiso.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_rol_permiso.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_rol_permiso.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';

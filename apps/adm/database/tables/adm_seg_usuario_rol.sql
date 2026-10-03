@@ -26,3 +26,13 @@ create index idx_adm_usro_rol_id     on adm_seg_usuario_rol (rol_id);
 create index idx_adm_usro_empresa_id on adm_seg_usuario_rol (empresa_id);
 
 comment on table adm_seg_usuario_rol is 'Roles por usuario con vigencia. Abrev: usro';
+comment on column adm_seg_usuario_rol.usuario_rol_id     is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_usuario_rol.usuario_id         is 'Usuario (FK adm_seg_usuario)';
+comment on column adm_seg_usuario_rol.rol_id             is 'Rol asignado (FK adm_seg_rol)';
+comment on column adm_seg_usuario_rol.empresa_id         is 'Empresa donde aplica el rol; null = todas (FK adm_gen_empresa)';
+comment on column adm_seg_usuario_rol.fecha_desde        is 'Inicio de vigencia (fecha del usuario)';
+comment on column adm_seg_usuario_rol.fecha_hasta        is 'Fin de vigencia; null = sin vencimiento';
+comment on column adm_seg_usuario_rol.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_usuario_rol.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_usuario_rol.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_usuario_rol.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';

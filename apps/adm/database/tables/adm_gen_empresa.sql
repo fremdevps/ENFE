@@ -22,3 +22,12 @@ create table adm_gen_empresa (
 comment on table  adm_gen_empresa              is 'Empresas / unidades de negocio. Abrev: emp';
 comment on column adm_gen_empresa.zona_horaria is 'Zona horaria IANA (ej. America/Asuncion) para fechas de negocio';
 comment on column adm_gen_empresa.estado       is 'A=Activo, I=Inactivo';
+comment on column adm_gen_empresa.empresa_id         is 'Identificador técnico (PK, identity)';
+comment on column adm_gen_empresa.codigo             is 'Código corto único de la empresa';
+comment on column adm_gen_empresa.razon_social       is 'Razón social legal';
+comment on column adm_gen_empresa.nombre_comercial   is 'Nombre comercial o de fantasía';
+comment on column adm_gen_empresa.nro_documento      is 'Número de identificación tributaria (RUC/NIT)';
+comment on column adm_gen_empresa.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_gen_empresa.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_gen_empresa.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_gen_empresa.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';

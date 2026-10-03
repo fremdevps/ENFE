@@ -16,3 +16,9 @@ create table adm_aud_login (
 create index idx_adm_log_username_fecha on adm_aud_login (username, fecha);
 
 comment on table adm_aud_login is 'Bitácora de inicios de sesión. Abrev: log';
+comment on column adm_aud_login.login_id    is 'Identificador técnico (PK, identity cache 1000)';
+comment on column adm_aud_login.username    is 'Usuario que intentó ingresar (tal como lo escribió, en mayúsculas)';
+comment on column adm_aud_login.resultado   is 'OK, PASSWORD_INVALIDO, USUARIO_NO_EXISTE, BLOQUEADO, INACTIVO o SIN_ACCESO';
+comment on column adm_aud_login.apex_app_id is 'Aplicación APEX desde la que se intentó ingresar';
+comment on column adm_aud_login.ip_cliente  is 'Dirección IP del cliente (si está disponible)';
+comment on column adm_aud_login.fecha       is 'Fecha y hora del intento';

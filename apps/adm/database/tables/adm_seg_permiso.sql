@@ -28,3 +28,14 @@ create index idx_adm_per_modulo_id on adm_seg_permiso (modulo_id);
 
 comment on table  adm_seg_permiso                is 'Permisos atómicos. Abrev: per';
 comment on column adm_seg_permiso.apex_pagina_id is 'Página APEX protegida cuando tipo = PAGINA';
+comment on column adm_seg_permiso.permiso_id         is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_permiso.modulo_id          is 'Módulo al que pertenece (FK adm_seg_modulo)';
+comment on column adm_seg_permiso.codigo             is 'Código único APP_MOD_ENTIDAD_ACCION; igual al authorization scheme de APEX';
+comment on column adm_seg_permiso.nombre             is 'Descripción corta del permiso';
+comment on column adm_seg_permiso.descripcion        is 'Explicación de qué habilita el permiso';
+comment on column adm_seg_permiso.tipo               is 'PAGINA (acceso a página), ACCION (botón/proceso) o REPORTE';
+comment on column adm_seg_permiso.estado             is 'A=Activo, I=Inactivo';
+comment on column adm_seg_permiso.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_permiso.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_permiso.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_permiso.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';

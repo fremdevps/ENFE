@@ -26,3 +26,13 @@ create index idx_adm_rol_aplicacion_id on adm_seg_rol (aplicacion_id);
 
 comment on table  adm_seg_rol               is 'Roles. Abrev: rol';
 comment on column adm_seg_rol.aplicacion_id is 'Null = rol global';
+comment on column adm_seg_rol.rol_id             is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_rol.codigo             is 'Código único del rol en mayúsculas (<APP>_<NOMBRE>)';
+comment on column adm_seg_rol.nombre             is 'Nombre visible del rol';
+comment on column adm_seg_rol.descripcion        is 'Responsabilidades que cubre el rol';
+comment on column adm_seg_rol.es_superadmin      is 'S = otorga todos los permisos de todas las aplicaciones';
+comment on column adm_seg_rol.estado             is 'A=Activo, I=Inactivo';
+comment on column adm_seg_rol.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_rol.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_rol.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_rol.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';
