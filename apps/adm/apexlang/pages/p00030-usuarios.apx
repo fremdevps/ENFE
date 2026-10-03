@@ -1,0 +1,276 @@
+page 30 (
+    name: Usuarios
+    alias: USUARIOS
+    title: Usuarios
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        authorizationScheme: @adm-seg-usuario-ver
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region usuarios (
+        name: Usuarios
+        type: interactiveGrid
+        advanced {
+            htmlDomId: usuarios
+        }
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select usuario_id, username, email, nombres, apellidos, tipo_autenticacion,
+                       empresa_id_defecto, estado, intentos_fallidos, debe_cambiar_password
+                  from adm_seg_usuario
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                update
+            ]
+        }
+        pagination {
+            type: page
+            showTotalCount: true
+        }
+        messages {
+            whenNoDataFound: No hay datos
+        }
+        toolbar {
+            controls: [
+                searchCol
+                searchField
+                actionsMenu
+                resetButton
+                saveButton
+            ]
+        }
+        download {
+            formats: [
+                csv
+                excel
+            ]
+        }
+
+        savedReport PRIMARY (
+            visibility: primary
+            view {
+                default: grid
+            }
+        )
+
+        column APEX$ROW_SELECTOR (
+            type: rowSelector
+            layout {
+                sequence: 10
+            }
+        )
+
+        column APEX$ROW_ACTION (
+            type: actionsMenu
+            layout {
+                sequence: 20
+            }
+        )
+
+        column USUARIO_ID (
+            type: hidden
+            layout {
+                sequence: 30
+            }
+            source {
+                databaseColumn: USUARIO_ID
+                dataType: number
+                primaryKey: true
+            }
+        )
+
+        column USERNAME (
+            type: textField
+            heading {
+                heading: Usuario
+            }
+            layout {
+                sequence: 40
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: USERNAME
+                dataType: varchar2
+            }
+        )
+
+        column EMAIL (
+            type: textField
+            heading {
+                heading: Email
+            }
+            layout {
+                sequence: 50
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: EMAIL
+                dataType: varchar2
+            }
+        )
+
+        column NOMBRES (
+            type: textField
+            heading {
+                heading: Nombres
+            }
+            layout {
+                sequence: 60
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: NOMBRES
+                dataType: varchar2
+            }
+        )
+
+        column APELLIDOS (
+            type: textField
+            heading {
+                heading: Apellidos
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                databaseColumn: APELLIDOS
+                dataType: varchar2
+            }
+        )
+
+        column TIPO_AUTENTICACION (
+            type: selectList
+            heading {
+                heading: Autenticación
+            }
+            layout {
+                sequence: 80
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: TIPO_AUTENTICACION
+                dataType: varchar2
+            }
+            lov {
+                type: sharedComponent
+                lov: @tipo-autenticacion
+            }
+        )
+
+        column EMPRESA_ID_DEFECTO (
+            type: selectList
+            heading {
+                heading: Empresa por defecto
+            }
+            layout {
+                sequence: 90
+            }
+            source {
+                databaseColumn: EMPRESA_ID_DEFECTO
+                dataType: number
+            }
+            lov {
+                type: sharedComponent
+                lov: @empresas
+            }
+        )
+
+        column ESTADO (
+            type: selectList
+            heading {
+                heading: Estado
+            }
+            layout {
+                sequence: 100
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: ESTADO
+                dataType: varchar2
+            }
+            lov {
+                type: sharedComponent
+                lov: @estado-usuario
+            }
+        )
+
+        column INTENTOS_FALLIDOS (
+            type: numberField
+            heading {
+                heading: Intentos fallidos
+            }
+            layout {
+                sequence: 110
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: INTENTOS_FALLIDOS
+                dataType: number
+            }
+        )
+
+        column DEBE_CAMBIAR_PASSWORD (
+            type: selectList
+            heading {
+                heading: Debe cambiar contraseña
+            }
+            layout {
+                sequence: 120
+            }
+            validation {
+                valueRequired: true
+            }
+            source {
+                databaseColumn: DEBE_CAMBIAR_PASSWORD
+                dataType: varchar2
+            }
+            lov {
+                type: sharedComponent
+                lov: @si-no
+            }
+        )
+    )
+
+    process usuarios-guardar (
+        name: Guardar Usuarios
+        type: interactiveGridAutoRowProcessing
+        editableRegion: @usuarios
+        execution {
+            sequence: 10
+        }
+    )
+)

@@ -1,20 +1,214 @@
-lov boolean (
-    name: BOOLEAN
+lov estado-ai (
+    name: ESTADO_AI
     source {
         location: staticValues
     }
 
-    entry false (
-        sequence: 2
-        display: No
-        return: FALSE
+    entry activo (
+        sequence: 10
+        display: Activo
+        return: A
     )
 
-    entry true (
-        sequence: 1
-        display: Yes
-        return: TRUE
+    entry inactivo (
+        sequence: 20
+        display: Inactivo
+        return: I
     )
 
 )
 
+lov estado-usuario (
+    name: ESTADO_USUARIO
+    source {
+        location: staticValues
+    }
+
+    entry activo (
+        sequence: 10
+        display: Activo
+        return: A
+    )
+
+    entry inactivo (
+        sequence: 20
+        display: Inactivo
+        return: I
+    )
+
+    entry bloqueado (
+        sequence: 30
+        display: Bloqueado
+        return: B
+    )
+
+)
+
+lov si-no (
+    name: SI_NO
+    source {
+        location: staticValues
+    }
+
+    entry si (
+        sequence: 10
+        display: Sí
+        return: S
+    )
+
+    entry no (
+        sequence: 20
+        display: No
+        return: N
+    )
+
+)
+
+lov tipo-permiso (
+    name: TIPO_PERMISO
+    source {
+        location: staticValues
+    }
+
+    entry pagina (
+        sequence: 10
+        display: Página
+        return: PAGINA
+    )
+
+    entry accion (
+        sequence: 20
+        display: Acción
+        return: ACCION
+    )
+
+    entry reporte (
+        sequence: 30
+        display: Reporte
+        return: REPORTE
+    )
+
+)
+
+lov tipo-autenticacion (
+    name: TIPO_AUTENTICACION
+    source {
+        location: staticValues
+    }
+
+    entry local (
+        sequence: 10
+        display: Local (contraseña)
+        return: LOCAL
+    )
+
+    entry sso (
+        sequence: 20
+        display: SSO (proveedor externo)
+        return: SSO
+    )
+
+)
+
+lov aplicaciones (
+    name: APLICACIONES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select codigo || ' - ' || nombre d, aplicacion_id r
+              from adm_seg_aplicacion
+             order by orden, codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov modulos (
+    name: MODULOS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select a.codigo || ' / ' || m.codigo || ' - ' || m.nombre d, m.modulo_id r
+              from adm_seg_modulo m
+              join adm_seg_aplicacion a on a.aplicacion_id = m.aplicacion_id
+             order by a.orden, a.codigo, m.orden, m.codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov permisos (
+    name: PERMISOS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select codigo || ' - ' || nombre d, permiso_id r
+              from adm_seg_permiso
+             order by codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov roles (
+    name: ROLES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select codigo || ' - ' || nombre d, rol_id r
+              from adm_seg_rol
+             order by codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov usuarios (
+    name: USUARIOS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select username || ' - ' || nombres || ' ' || apellidos d, usuario_id r
+              from adm_seg_usuario
+             order by username
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov empresas (
+    name: EMPRESAS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select codigo || ' - ' || razon_social d, empresa_id r
+              from adm_gen_empresa
+             order by codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
