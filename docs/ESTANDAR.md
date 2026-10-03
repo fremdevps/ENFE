@@ -44,7 +44,20 @@ objetos derivados (constraints, índices, triggers, secuencias), que así quedan
 
 `adm_seg_usuario` · `erp_fin_factura` · `erp_fin_factura_linea` · `erp_stk_movimiento`
 
-Tablas de relación N:M: las dos entidades en orden de dependencia → `adm_seg_rol_permiso`.
+| Tipo de tabla | Regla | Ejemplo |
+|---|---|---|
+| Maestro / catálogo | `<app>_<mod>_<entidad>` | `erp_ven_cliente`, `erp_stk_producto` |
+| Transacción (cabecera) | `<app>_<mod>_<documento>` | `erp_fin_factura` |
+| Detalle de una cabecera | `<cabecera>_<detalle>` | `erp_fin_factura_linea` |
+| Relación N:M | las dos entidades, primero la "dueña" | `adm_seg_rol_permiso`, `adm_seg_usuario_rol` |
+| Histórico | `<tabla>_hist` | `erp_stk_producto_hist` |
+| Carga / staging | `<app>_<mod>_<entidad>_stg` | `erp_stk_producto_stg` |
+| Temporal (global temporary) | `<app>_<mod>_<entidad>_tmp` | `erp_ven_carrito_tmp` |
+| Bitácora / log | `<app>_aud_<evento>` | `adm_aud_login` |
+| Parámetros de la app | `<app>_gen_parametro` | `erp_gen_parametro` |
+
+No usar: plurales (`clientes`), prefijos genéricos (`tbl_`, `t_`), nombres de tipo de dato
+(`cliente_data`) ni palabras reservadas como nombre completo (`user`, `date`, `level`).
 
 ### 1.2 Columnas
 
@@ -153,6 +166,57 @@ Así se puede cambiar todo lo de adentro sin romper pantallas.
 
 Todo paquete se declara `authid definer` salvo justificación documentada.
 
+### 4.1.1 Cuántos paquetes y cómo se relacionan
+
+- **Un juego de paquetes por entidad de negocio** (no un paquete gigante por módulo):
+
+  ```
+  erp_fin_factura_ctr   DML de erp_fin_factura
+  erp_fin_factura_linea_ctr  (si el nombre pasa de 30: erp_fin_fac_linea_ctr con la abreviatura)
+  erp_fin_factura_reg   reglas: calcular totales, validar, anular
+  erp_fin_factura_api   lo que usa APEX/REST: crear, anular, emitir
+  ```
+- **Sin dependencias circulares.** El flujo es siempre hacia abajo: `api → reg → ctr`, y todos
+  pueden usar `utl`. Un `ctr` nunca llama a un `reg`. Si dos `reg` se necesitan mutuamente, lo
+  común va a un tercer paquete.
+- **Oracle hace cumplir las capas** con `accessible by` (12.2+):
+
+  ```sql
+  create or replace package erp_fin_factura_ctr
+      authid definer
+      accessible by (package erp_fin_factura_reg, package erp_fin_factura_api)
+  as ...
+  ```
+  Si alguien llama a `erp_fin_factura_ctr` desde APEX u otro paquete, **no compila** (PLS-00904).
+- Especificación (`.pks`) mínima: solo lo que otros necesitan. Lo interno va únicamente en el body.
+
+### 4.1.2 Ejemplo completo de una entidad
+
+```sql
+create or replace package erp_fin_factura_api
+    authid definer
+as
+    C_ERR_FACTURA_ANULADA  constant pls_integer := -20110;
+
+    procedure P_CREAR (
+        I_EMPRESA_ID   in  erp_fin_factura.empresa_id%type,
+        I_CLIENTE_ID   in  erp_fin_factura.cliente_id%type,
+        I_FECHA        in  erp_fin_factura.fecha_emision%type,
+        O_FACTURA_ID   out erp_fin_factura.factura_id%type
+    );
+
+    procedure P_ANULAR (
+        I_FACTURA_ID   in erp_fin_factura.factura_id%type,
+        I_MOTIVO       in varchar2
+    );
+
+    function F_OBTENER_SALDO (
+        I_FACTURA_ID   in erp_fin_factura.factura_id%type
+    ) return number;
+end erp_fin_factura_api;
+/
+```
+
 ### 4.2 Errores
 
 - `raise_application_error` con rango **por app**:
@@ -187,7 +251,33 @@ Todo paquete se declara `authid definer` salvo justificación documentada.
 | Parámetro OUT | `O_` | `O_NRO_DOCUMENTO` |
 | Parámetro IN OUT | `IO_` | `IO_ESTADO` |
 
-Reglas:
+### 5.1 Nombre de funciones y procedimientos
+
+**`F_<VERBO>_<OBJETO>`** / **`P_<VERBO>_<OBJETO>`**: verbo en infinitivo y en español, y luego el
+objeto. Dentro del paquete de una entidad el objeto se omite si es la propia entidad
+(`erp_fin_factura_api.P_ANULAR`, no `P_ANULAR_FACTURA`).
+
+| Regla | Detalle |
+|---|---|
+| Procedimiento (`P_`) | **Hace** algo: cambia datos o estado. No devuelve valor (usa `O_`). |
+| Función (`F_`) | **Calcula u obtiene** algo. **Sin efectos secundarios** (no hace DML), así se puede usar en SQL. |
+| Función booleana | `F_ES_…`, `F_TIENE_…`, `F_PUEDE_…`, `F_EXISTE_…` → `return boolean`. Si debe usarse en SQL (19c): `F_ES_…_SN` `return varchar2` (`S/N`). |
+| Sobrecarga | Permitida solo si hacen lo mismo con distintos tipos de entrada. |
+
+**Verbos por capa** (usar estos; no inventar sinónimos):
+
+| Capa | Verbos | Ejemplos |
+|---|---|---|
+| `ctr` | `P_INSERTAR`, `P_ACTUALIZAR`, `P_ELIMINAR`, `P_BLOQUEAR` (select for update), `F_OBTENER` (devuelve `%rowtype`), `F_EXISTE` | `erp_fin_factura_ctr.P_INSERTAR` |
+| `reg` | `P_VALIDAR_…`, `F_CALCULAR_…`, `P_APLICAR_…`, `P_GENERAR_…`, `F_ES_/F_TIENE_/F_PUEDE_…` | `P_VALIDAR_CREDITO`, `F_CALCULAR_IGV` |
+| `api` | Acciones de negocio que ve el usuario: `P_CREAR`, `P_MODIFICAR`, `P_ANULAR`, `P_APROBAR`, `P_RECHAZAR`, `P_EMITIR`, `P_CERRAR`, `P_REABRIR`, `F_OBTENER_…`, `F_LISTAR_…` (cursor/colección) | `erp_fin_factura_api.P_EMITIR` |
+| `utl` | `F_FORMATEAR_…`, `F_CONVERTIR_…`, `P_REGISTRAR_LOG`, `F_LIMPIAR_…` | `adm_gen_texto_utl.F_LIMPIAR_ESPACIOS` |
+
+Diferencia clave: en `ctr` se habla de **filas** (insertar, eliminar); en `api` se habla del
+**negocio** (crear, anular). Una factura no se "elimina": se **anula**.
+
+### 5.2 Reglas de código
+
 - Llamadas con **notación nombrada** (`I_FACTURA_ID => V_ID`).
 - Tipos anclados: `adm_seg_usuario.username%type`, `%rowtype`.
 - Nada de SQL dinámico salvo DDL o necesidad justificada; siempre con binds.
