@@ -4,15 +4,20 @@
 -- El usuario administrador se crea aparte (adm_seg_crear_admin.sql).
 -- =============================================================================
 
--- Aplicación central ---------------------------------------------------------
+-- Aplicaciones (IDs APEX fijos: ADM=100, ERP=200) -----------------------------
 merge into adm_seg_aplicacion t
 using (select 'ADM' codigo, 'Administración Central' nombre,
               'Seguridad, usuarios, roles y catálogo de aplicaciones' descripcion,
-              'fa-shield' icono, 0 orden from dual) s
+              100 apex_app_id, 'fa-shield' icono, 0 orden from dual
+       union all
+       select 'ERP', 'ERP', 'Planificación de recursos empresariales',
+              200, 'fa-cubes', 10 from dual) s
    on (t.codigo = s.codigo)
+ when matched then
+    update set t.apex_app_id = nvl(t.apex_app_id, s.apex_app_id)
  when not matched then
-    insert (codigo, nombre, descripcion, icono, orden)
-    values (s.codigo, s.nombre, s.descripcion, s.icono, s.orden);
+    insert (codigo, nombre, descripcion, apex_app_id, icono, orden)
+    values (s.codigo, s.nombre, s.descripcion, s.apex_app_id, s.icono, s.orden);
 
 -- Módulos ---------------------------------------------------------------------
 merge into adm_seg_modulo t
