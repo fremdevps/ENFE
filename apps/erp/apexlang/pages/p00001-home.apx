@@ -1,0 +1,106 @@
+page 1 (
+    name: Inicio
+    alias: HOME
+    title: Inicio
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region app-name (
+        name: Inicio
+        title: &APP_TITLE.
+        type: staticContent
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/hero
+            templateOptions: #DEFAULT#
+        }
+        image {
+            fileUrl: #APP_FILES#icons/app-icon-512.png
+        }
+    )
+
+    region mis-modulos (
+        name: Mis módulos
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select m.codigo, m.nombre, m.icono
+                  from adm_seg_modulo m
+                  join adm_seg_aplicacion a on a.aplicacion_id = m.aplicacion_id
+                 where a.codigo = 'ERP'
+                   and m.estado = 'A'
+                   and exists (select 1
+                                 from adm_seg_usuario_permiso_v v
+                                where v.username  = :APP_USER
+                                  and v.modulo_id = m.modulo_id)
+                 order by m.orden
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: BODY
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+
+        column CODIGO (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Código
+                alignment: start
+            }
+            layout {
+                sequence: 10
+                columnAlignment: start
+            }
+        )
+
+        column NOMBRE (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Módulo
+                alignment: start
+            }
+            layout {
+                sequence: 20
+                columnAlignment: start
+            }
+        )
+
+        column ICONO (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Icono
+                alignment: start
+            }
+            layout {
+                sequence: 30
+                columnAlignment: start
+            }
+        )
+    )
+)

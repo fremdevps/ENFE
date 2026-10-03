@@ -1,0 +1,17 @@
+supportingObject (
+    deinstall {
+        scriptFile: deinstall-script.sql
+    }
+    advanced {
+        includeInAppExport: true
+    }
+
+    installScript registro-en-seguridad-central (
+        execution {
+            sequence: 10
+        }
+        script {
+            contentFile: 01_registro-en-seguridad-central.sql
+        }
+    )
+)
