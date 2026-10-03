@@ -1,0 +1,21 @@
+appProcess forzar-cambio-password (
+    name: Forzar cambio de contraseña
+    type: executeCode
+    source {
+        plsqlCode:
+            ```plsql
+            -- Usuarios con debe_cambiar_password = 'S' (nuevos, reseteados, ADMIN inicial)
+            -- solo pueden usar la página 90 de ADM hasta cambiar su contraseña.
+            if not (:APP_ID = 100 and :APP_PAGE_ID in (90, 9999))
+               and adm_seguridad_reg.f_debe_cambiar_password(:APP_USER)
+            then
+                apex_util.redirect_url(
+                    p_url => apex_page.get_url(p_application => '100', p_page => '90'));
+            end if;
+            ```
+    }
+    execution {
+        sequence: 10
+        point: beforeHeader
+    }
+)
