@@ -2,10 +2,8 @@
 
 -- >>> apps/adm/database/tables/adm_gen_empresa.sql
 -- =============================================================================
--- Tabla : adm_gen_empresa
--- App   : adm (Administración Central)  | Módulo: gen (General)
--- Desc  : Empresas / unidades de negocio. Permite que todas las apps sean
---         multi-empresa y que los roles se asignen por empresa.
+-- Tabla  : adm_gen_empresa   (abrev: emp)
+-- Empresas / unidades de negocio (multi-empresa).
 -- =============================================================================
 begin
     execute immediate q'~create table adm_gen_empresa (
@@ -14,29 +12,38 @@ begin
     razon_social        varchar2(200)  not null,
     nombre_comercial    varchar2(200),
     nro_documento       varchar2(20),
+    zona_horaria        varchar2(64),
     estado              varchar2(1)    default on null 'A' not null,
     creado_por          varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
-    fecha_creacion      timestamp      default on null systimestamp not null,
+    fecha_creacion      timestamp with local time zone default on null systimestamp not null,
     modificado_por      varchar2(100),
-    fecha_modificacion  timestamp,
-    constraint pk_adm_gen_empresa primary key (empresa_id),
-    constraint uk_empresa_codigo unique (codigo),
-    constraint ck_empresa_estado check (estado in ('A','I'))
+    fecha_modificacion  timestamp with local time zone,
+    constraint pk_adm_emp primary key (empresa_id),
+    constraint uk_adm_emp_codigo unique (codigo),
+    constraint ck_adm_emp_estado check (estado in ('A','I'))
 )~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
-comment on table  adm_gen_empresa        is 'Empresas / unidades de negocio (multi-empresa)';
-comment on column adm_gen_empresa.estado is 'A=Activo, I=Inactivo';
+comment on table  adm_gen_empresa              is 'Empresas / unidades de negocio. Abrev: emp';
+comment on column adm_gen_empresa.zona_horaria is 'Zona horaria IANA (ej. America/Asuncion) para fechas de negocio';
+comment on column adm_gen_empresa.estado       is 'A=Activo, I=Inactivo';
+comment on column adm_gen_empresa.empresa_id         is 'Identificador técnico (PK, identity)';
+comment on column adm_gen_empresa.codigo             is 'Código corto único de la empresa';
+comment on column adm_gen_empresa.razon_social       is 'Razón social legal';
+comment on column adm_gen_empresa.nombre_comercial   is 'Nombre comercial o de fantasía';
+comment on column adm_gen_empresa.nro_documento      is 'Número de identificación tributaria (RUC/NIT)';
+comment on column adm_gen_empresa.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_gen_empresa.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_gen_empresa.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_gen_empresa.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';
 
 -- >>> apps/adm/database/tables/adm_seg_aplicacion.sql
 -- =============================================================================
--- Tabla : adm_seg_aplicacion
--- App   : adm | Módulo: seg (Seguridad)
--- Desc  : Catálogo de sistemas/aplicaciones (ADM, ERP, CRM...). Cada una puede
---         apuntar a su app APEX para armar el menú/portal de lanzamiento.
+-- Tabla  : adm_seg_aplicacion   (abrev: apl)
+-- Catálogo de aplicaciones (ADM, ERP, CRM...).
 -- =============================================================================
 begin
     execute immediate q'~create table adm_seg_aplicacion (
@@ -49,28 +56,38 @@ begin
     orden               number(4)      default on null 0 not null,
     estado              varchar2(1)    default on null 'A' not null,
     creado_por          varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
-    fecha_creacion      timestamp      default on null systimestamp not null,
+    fecha_creacion      timestamp with local time zone default on null systimestamp not null,
     modificado_por      varchar2(100),
-    fecha_modificacion  timestamp,
-    constraint pk_adm_seg_aplicacion primary key (aplicacion_id),
-    constraint uk_aplicacion_codigo unique (codigo),
-    constraint uk_aplicacion_apex_app_id unique (apex_app_id),
-    constraint ck_aplicacion_estado check (estado in ('A','I')),
-    constraint ck_aplicacion_codigo_mayus check (codigo = upper(codigo))
+    fecha_modificacion  timestamp with local time zone,
+    constraint pk_adm_apl primary key (aplicacion_id),
+    constraint uk_adm_apl_codigo unique (codigo),
+    constraint uk_adm_apl_apex_app_id unique (apex_app_id),
+    constraint ck_adm_apl_estado check (estado in ('A','I')),
+    constraint ck_adm_apl_codigo_mayus check (codigo = upper(codigo))
 )~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
-comment on table  adm_seg_aplicacion             is 'Sistemas/aplicaciones gestionados por la seguridad central';
+comment on table  adm_seg_aplicacion             is 'Aplicaciones gestionadas por la seguridad central. Abrev: apl';
 comment on column adm_seg_aplicacion.apex_app_id is 'ID de la aplicación APEX (APP_ID)';
+comment on column adm_seg_aplicacion.aplicacion_id      is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_aplicacion.codigo             is 'Código de la aplicación en mayúsculas (ADM, ERP, CRM); prefijo de sus objetos';
+comment on column adm_seg_aplicacion.nombre             is 'Nombre visible de la aplicación';
+comment on column adm_seg_aplicacion.descripcion        is 'Descripción funcional';
+comment on column adm_seg_aplicacion.icono              is 'Clase de ícono Font APEX (ej. fa-cubes)';
+comment on column adm_seg_aplicacion.orden              is 'Orden de presentación en menús y portal';
+comment on column adm_seg_aplicacion.estado             is 'A=Activo, I=Inactivo';
+comment on column adm_seg_aplicacion.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_aplicacion.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_aplicacion.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_aplicacion.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';
 
 -- >>> apps/adm/database/tables/adm_seg_modulo.sql
 -- =============================================================================
--- Tabla : adm_seg_modulo
--- App   : adm | Módulo: seg
--- Desc  : Módulos funcionales de cada aplicación (ERP->FIN, STK, PRD...).
+-- Tabla  : adm_seg_modulo   (abrev: mod)
+-- Módulos funcionales por aplicación.
 -- =============================================================================
 begin
     execute immediate q'~create table adm_seg_modulo (
@@ -83,40 +100,39 @@ begin
     orden               number(4)      default on null 0 not null,
     estado              varchar2(1)    default on null 'A' not null,
     creado_por          varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
-    fecha_creacion      timestamp      default on null systimestamp not null,
+    fecha_creacion      timestamp with local time zone default on null systimestamp not null,
     modificado_por      varchar2(100),
-    fecha_modificacion  timestamp,
-    constraint pk_adm_seg_modulo primary key (modulo_id),
-    constraint fk_admsegaplicacion_admsegmodulo foreign key (aplicacion_id)
-        references adm_seg_aplicacion (aplicacion_id),
-    constraint uk_modulo_aplicacion_codigo unique (aplicacion_id, codigo),
-    constraint ck_modulo_estado check (estado in ('A','I')),
-    constraint ck_modulo_codigo_mayus check (codigo = upper(codigo))
+    fecha_modificacion  timestamp with local time zone,
+    constraint pk_adm_mod primary key (modulo_id),
+    constraint fk_adm_mod_apl foreign key (aplicacion_id) references adm_seg_aplicacion (aplicacion_id),
+    constraint uk_adm_mod_apl_codigo unique (aplicacion_id, codigo),
+    constraint ck_adm_mod_estado check (estado in ('A','I')),
+    constraint ck_adm_mod_codigo_mayus check (codigo = upper(codigo))
 )~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
-begin
-    execute immediate q'~create index idx_modulo_aplicacion on adm_seg_modulo (aplicacion_id)~';
-exception
-    when others then
-        if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
-end;
-/
-comment on table adm_seg_modulo is 'Módulos funcionales por aplicación';
+-- (aplicacion_id ya está indexado por uk_adm_mod_apl_codigo)
+comment on table adm_seg_modulo is 'Módulos funcionales por aplicación. Abrev: mod';
+comment on column adm_seg_modulo.modulo_id          is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_modulo.aplicacion_id      is 'Aplicación a la que pertenece (FK adm_seg_aplicacion)';
+comment on column adm_seg_modulo.codigo             is 'Código del módulo en mayúsculas, único dentro de la aplicación (FIN, STK)';
+comment on column adm_seg_modulo.nombre             is 'Nombre visible del módulo';
+comment on column adm_seg_modulo.descripcion        is 'Descripción funcional';
+comment on column adm_seg_modulo.icono              is 'Clase de ícono Font APEX';
+comment on column adm_seg_modulo.orden              is 'Orden de presentación';
+comment on column adm_seg_modulo.estado             is 'A=Activo, I=Inactivo';
+comment on column adm_seg_modulo.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_modulo.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_modulo.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_modulo.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';
 
 -- >>> apps/adm/database/tables/adm_seg_permiso.sql
 -- =============================================================================
--- Tabla : adm_seg_permiso
--- App   : adm | Módulo: seg
--- Desc  : Permisos atómicos dentro de un módulo. Pueden ser de tipo:
---           PAGINA  -> acceso a una página APEX (apex_pagina_id)
---           ACCION  -> botón/proceso (crear, anular, aprobar...)
---           REPORTE -> reportes/exportaciones
---         El código es único global, formato sugerido APP_MODULO_ENTIDAD_ACCION
---         (ej. ERP_FIN_FACTURA_ANULAR).
+-- Tabla  : adm_seg_permiso   (abrev: per)
+-- Permisos atómicos (PAGINA / ACCION / REPORTE). Código APP_MOD_ENTIDAD_ACCION.
 -- =============================================================================
 begin
     execute immediate q'~create table adm_seg_permiso (
@@ -129,17 +145,16 @@ begin
     apex_pagina_id      number,
     estado              varchar2(1)    default on null 'A' not null,
     creado_por          varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
-    fecha_creacion      timestamp      default on null systimestamp not null,
+    fecha_creacion      timestamp with local time zone default on null systimestamp not null,
     modificado_por      varchar2(100),
-    fecha_modificacion  timestamp,
-    constraint pk_adm_seg_permiso primary key (permiso_id),
-    constraint fk_admsegmodulo_admsegpermiso foreign key (modulo_id)
-        references adm_seg_modulo (modulo_id),
-    constraint uk_permiso_codigo unique (codigo),
-    constraint ck_permiso_tipo check (tipo in ('PAGINA','ACCION','REPORTE')),
-    constraint ck_permiso_pagina check (tipo <> 'PAGINA' or apex_pagina_id is not null),
-    constraint ck_permiso_estado check (estado in ('A','I')),
-    constraint ck_permiso_codigo_mayus check (codigo = upper(codigo))
+    fecha_modificacion  timestamp with local time zone,
+    constraint pk_adm_per primary key (permiso_id),
+    constraint fk_adm_per_mod foreign key (modulo_id) references adm_seg_modulo (modulo_id),
+    constraint uk_adm_per_codigo unique (codigo),
+    constraint ck_adm_per_tipo check (tipo in ('PAGINA','ACCION','REPORTE')),
+    constraint ck_adm_per_pagina check (tipo <> 'PAGINA' or apex_pagina_id is not null),
+    constraint ck_adm_per_estado check (estado in ('A','I')),
+    constraint ck_adm_per_codigo_mayus check (codigo = upper(codigo))
 )~';
 exception
     when others then
@@ -147,22 +162,30 @@ exception
 end;
 /
 begin
-    execute immediate q'~create index idx_permiso_modulo on adm_seg_permiso (modulo_id)~';
+    execute immediate q'~create index idx_adm_per_modulo_id on adm_seg_permiso (modulo_id)~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
-comment on table  adm_seg_permiso                is 'Permisos atómicos (página, acción o reporte)';
+comment on table  adm_seg_permiso                is 'Permisos atómicos. Abrev: per';
 comment on column adm_seg_permiso.apex_pagina_id is 'Página APEX protegida cuando tipo = PAGINA';
+comment on column adm_seg_permiso.permiso_id         is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_permiso.modulo_id          is 'Módulo al que pertenece (FK adm_seg_modulo)';
+comment on column adm_seg_permiso.codigo             is 'Código único APP_MOD_ENTIDAD_ACCION; igual al authorization scheme de APEX';
+comment on column adm_seg_permiso.nombre             is 'Descripción corta del permiso';
+comment on column adm_seg_permiso.descripcion        is 'Explicación de qué habilita el permiso';
+comment on column adm_seg_permiso.tipo               is 'PAGINA (acceso a página), ACCION (botón/proceso) o REPORTE';
+comment on column adm_seg_permiso.estado             is 'A=Activo, I=Inactivo';
+comment on column adm_seg_permiso.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_permiso.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_permiso.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_permiso.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';
 
 -- >>> apps/adm/database/tables/adm_seg_rol.sql
 -- =============================================================================
--- Tabla : adm_seg_rol
--- App   : adm | Módulo: seg
--- Desc  : Roles. Un rol pertenece a una aplicación (aplicacion_id) o es
---         global (aplicacion_id null, ej. SUPERADMIN).
---         es_superadmin = 'S' otorga todos los permisos de todas las apps.
+-- Tabla  : adm_seg_rol   (abrev: rol)
+-- Roles por aplicación (aplicacion_id) o globales (null). es_superadmin = S: acceso total.
 -- =============================================================================
 begin
     execute immediate q'~create table adm_seg_rol (
@@ -174,16 +197,15 @@ begin
     es_superadmin       varchar2(1)    default on null 'N' not null,
     estado              varchar2(1)    default on null 'A' not null,
     creado_por          varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
-    fecha_creacion      timestamp      default on null systimestamp not null,
+    fecha_creacion      timestamp with local time zone default on null systimestamp not null,
     modificado_por      varchar2(100),
-    fecha_modificacion  timestamp,
-    constraint pk_adm_seg_rol primary key (rol_id),
-    constraint fk_admsegaplicacion_admsegrol foreign key (aplicacion_id)
-        references adm_seg_aplicacion (aplicacion_id),
-    constraint uk_rol_codigo unique (codigo),
-    constraint ck_rol_es_superadmin check (es_superadmin in ('S','N')),
-    constraint ck_rol_estado check (estado in ('A','I')),
-    constraint ck_rol_codigo_mayus check (codigo = upper(codigo))
+    fecha_modificacion  timestamp with local time zone,
+    constraint pk_adm_rol primary key (rol_id),
+    constraint fk_adm_rol_apl foreign key (aplicacion_id) references adm_seg_aplicacion (aplicacion_id),
+    constraint uk_adm_rol_codigo unique (codigo),
+    constraint ck_adm_rol_es_superadmin check (es_superadmin in ('S','N')),
+    constraint ck_adm_rol_estado check (estado in ('A','I')),
+    constraint ck_adm_rol_codigo_mayus check (codigo = upper(codigo))
 )~';
 exception
     when others then
@@ -191,20 +213,29 @@ exception
 end;
 /
 begin
-    execute immediate q'~create index idx_rol_aplicacion on adm_seg_rol (aplicacion_id)~';
+    execute immediate q'~create index idx_adm_rol_aplicacion_id on adm_seg_rol (aplicacion_id)~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
-comment on table  adm_seg_rol               is 'Roles por aplicación o globales';
+comment on table  adm_seg_rol               is 'Roles. Abrev: rol';
 comment on column adm_seg_rol.aplicacion_id is 'Null = rol global';
+comment on column adm_seg_rol.rol_id             is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_rol.codigo             is 'Código único del rol en mayúsculas (<APP>_<NOMBRE>)';
+comment on column adm_seg_rol.nombre             is 'Nombre visible del rol';
+comment on column adm_seg_rol.descripcion        is 'Responsabilidades que cubre el rol';
+comment on column adm_seg_rol.es_superadmin      is 'S = otorga todos los permisos de todas las aplicaciones';
+comment on column adm_seg_rol.estado             is 'A=Activo, I=Inactivo';
+comment on column adm_seg_rol.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_rol.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_rol.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_rol.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';
 
 -- >>> apps/adm/database/tables/adm_seg_rol_permiso.sql
 -- =============================================================================
--- Tabla : adm_seg_rol_permiso
--- App   : adm | Módulo: seg
--- Desc  : Permisos otorgados a cada rol (N:M).
+-- Tabla  : adm_seg_rol_permiso   (abrev: rope)
+-- Permisos otorgados a cada rol (N:M).
 -- =============================================================================
 begin
     execute immediate q'~create table adm_seg_rol_permiso (
@@ -212,40 +243,40 @@ begin
     rol_id              number         not null,
     permiso_id          number         not null,
     creado_por          varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
-    fecha_creacion      timestamp      default on null systimestamp not null,
+    fecha_creacion      timestamp with local time zone default on null systimestamp not null,
     modificado_por      varchar2(100),
-    fecha_modificacion  timestamp,
-    constraint pk_adm_seg_rol_permiso primary key (rol_permiso_id),
-    constraint fk_admsegrol_admsegrolpermiso foreign key (rol_id)
-        references adm_seg_rol (rol_id) on delete cascade,
-    constraint fk_admsegpermiso_admsegrolpermiso foreign key (permiso_id)
-        references adm_seg_permiso (permiso_id) on delete cascade,
-    constraint uk_rol_permiso unique (rol_id, permiso_id)
+    fecha_modificacion  timestamp with local time zone,
+    constraint pk_adm_rope primary key (rol_permiso_id),
+    constraint fk_adm_rope_rol foreign key (rol_id) references adm_seg_rol (rol_id) on delete cascade,
+    constraint fk_adm_rope_per foreign key (permiso_id) references adm_seg_permiso (permiso_id) on delete cascade,
+    constraint uk_adm_rope_rol_permiso unique (rol_id, permiso_id)
 )~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
+-- (rol_id ya está indexado por uk_adm_rope_rol_permiso)
 begin
-    execute immediate q'~create index idx_rol_permiso_permiso on adm_seg_rol_permiso (permiso_id)~';
+    execute immediate q'~create index idx_adm_rope_permiso_id on adm_seg_rol_permiso (permiso_id)~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
-comment on table adm_seg_rol_permiso is 'Permisos asignados a roles';
+comment on table adm_seg_rol_permiso is 'Permisos por rol. Abrev: rope';
+comment on column adm_seg_rol_permiso.rol_permiso_id     is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_rol_permiso.rol_id             is 'Rol (FK adm_seg_rol)';
+comment on column adm_seg_rol_permiso.permiso_id         is 'Permiso otorgado al rol (FK adm_seg_permiso)';
+comment on column adm_seg_rol_permiso.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_rol_permiso.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_rol_permiso.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_rol_permiso.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';
 
 -- >>> apps/adm/database/tables/adm_seg_usuario.sql
 -- =============================================================================
--- Tabla : adm_seg_usuario
--- App   : adm | Módulo: seg
--- Desc  : Usuarios únicos para TODAS las aplicaciones.
---         tipo_autenticacion:
---           LOCAL -> contraseña propia (hash + salt en esta tabla)
---           SSO   -> autenticado por proveedor externo (OCI IAM / Google / MS),
---                    aquí solo se controla estado y autorización.
---         Las contraseñas NUNCA se guardan en claro.
+-- Tabla  : adm_seg_usuario   (abrev: usu)
+-- Usuarios únicos para todas las apps. LOCAL (hash+salt) o SSO (proveedor externo).
 -- =============================================================================
 begin
     execute immediate q'~create table adm_seg_usuario (
@@ -258,40 +289,61 @@ begin
     password_hash           raw(64),
     password_salt           raw(32),
     debe_cambiar_password   varchar2(1)    default on null 'S' not null,
-    fecha_cambio_password   timestamp,
+    fecha_cambio_password   timestamp with local time zone,
     intentos_fallidos       number(3)      default on null 0 not null,
-    fecha_ultimo_login      timestamp,
+    fecha_ultimo_login      timestamp with local time zone,
     empresa_id_defecto      number,
     estado                  varchar2(1)    default on null 'A' not null,
-    creado_por              varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
-    fecha_creacion          timestamp      default on null systimestamp not null,
-    modificado_por          varchar2(100),
-    fecha_modificacion      timestamp,
-    constraint pk_adm_seg_usuario primary key (usuario_id),
-    constraint fk_admgenempresa_admsegusuario foreign key (empresa_id_defecto)
-        references adm_gen_empresa (empresa_id),
-    constraint uk_usuario_username unique (username),
-    constraint uk_usuario_email unique (email),
-    constraint ck_usuario_username_mayus check (username = upper(username)),
-    constraint ck_usuario_tipo_autenticacion check (tipo_autenticacion in ('LOCAL','SSO')),
-    constraint ck_usuario_password_local check (tipo_autenticacion <> 'LOCAL' or password_hash is not null),
-    constraint ck_usuario_debe_cambiar check (debe_cambiar_password in ('S','N')),
-    constraint ck_usuario_estado check (estado in ('A','I','B'))
+    creado_por          varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
+    fecha_creacion      timestamp with local time zone default on null systimestamp not null,
+    modificado_por      varchar2(100),
+    fecha_modificacion  timestamp with local time zone,
+    constraint pk_adm_usu primary key (usuario_id),
+    constraint fk_adm_usu_emp_def foreign key (empresa_id_defecto) references adm_gen_empresa (empresa_id),
+    constraint uk_adm_usu_username unique (username),
+    constraint uk_adm_usu_email unique (email),
+    constraint ck_adm_usu_username_mayus check (username = upper(username)),
+    constraint ck_adm_usu_tipo_aut check (tipo_autenticacion in ('LOCAL','SSO')),
+    constraint ck_adm_usu_password_local check (tipo_autenticacion <> 'LOCAL' or password_hash is not null),
+    constraint ck_adm_usu_debe_cambiar check (debe_cambiar_password in ('S','N')),
+    constraint ck_adm_usu_estado check (estado in ('A','I','B'))
 )~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
-comment on table  adm_seg_usuario        is 'Usuarios centrales de todas las aplicaciones';
+begin
+    execute immediate q'~create index idx_adm_usu_empresa_id_def on adm_seg_usuario (empresa_id_defecto)~';
+exception
+    when others then
+        if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
+end;
+/
+comment on table  adm_seg_usuario        is 'Usuarios centrales. Abrev: usu';
 comment on column adm_seg_usuario.estado is 'A=Activo, I=Inactivo, B=Bloqueado (intentos fallidos)';
+comment on column adm_seg_usuario.usuario_id            is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_usuario.username              is 'Nombre de usuario para iniciar sesión, en mayúsculas';
+comment on column adm_seg_usuario.email                 is 'Correo electrónico único, en minúsculas';
+comment on column adm_seg_usuario.nombres               is 'Nombres de la persona';
+comment on column adm_seg_usuario.apellidos             is 'Apellidos de la persona';
+comment on column adm_seg_usuario.tipo_autenticacion    is 'LOCAL (contraseña propia) o SSO (proveedor externo)';
+comment on column adm_seg_usuario.password_hash         is 'Hash PBKDF2-HMAC-SHA512 de la contraseña (solo LOCAL)';
+comment on column adm_seg_usuario.password_salt         is 'Salt aleatorio de 32 bytes del hash (solo LOCAL)';
+comment on column adm_seg_usuario.debe_cambiar_password is 'S = debe cambiar la contraseña en el próximo ingreso';
+comment on column adm_seg_usuario.fecha_cambio_password is 'Fecha del último cambio de contraseña';
+comment on column adm_seg_usuario.intentos_fallidos     is 'Intentos fallidos consecutivos; al llegar al máximo se bloquea';
+comment on column adm_seg_usuario.fecha_ultimo_login    is 'Fecha del último inicio de sesión exitoso';
+comment on column adm_seg_usuario.empresa_id_defecto    is 'Empresa con la que trabaja por defecto (FK adm_gen_empresa)';
+comment on column adm_seg_usuario.creado_por            is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_usuario.fecha_creacion        is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_usuario.modificado_por        is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_usuario.fecha_modificacion    is 'Fecha y hora de la última modificación (trigger _bu)';
 
 -- >>> apps/adm/database/tables/adm_seg_usuario_rol.sql
 -- =============================================================================
--- Tabla : adm_seg_usuario_rol
--- App   : adm | Módulo: seg
--- Desc  : Roles asignados a usuarios, opcionalmente por empresa y con vigencia.
---         empresa_id null = el rol aplica a todas las empresas.
+-- Tabla  : adm_seg_usuario_rol   (abrev: usro)
+-- Roles por usuario, opcionalmente por empresa (null = todas) y con vigencia.
 -- =============================================================================
 begin
     execute immediate q'~create table adm_seg_usuario_rol (
@@ -299,59 +351,66 @@ begin
     usuario_id          number         not null,
     rol_id              number         not null,
     empresa_id          number,
-    fecha_desde         date           default on null trunc(sysdate) not null,
+    fecha_desde         date           default on null trunc(current_date) not null,
     fecha_hasta         date,
     creado_por          varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
-    fecha_creacion      timestamp      default on null systimestamp not null,
+    fecha_creacion      timestamp with local time zone default on null systimestamp not null,
     modificado_por      varchar2(100),
-    fecha_modificacion  timestamp,
-    constraint pk_adm_seg_usuario_rol primary key (usuario_rol_id),
-    constraint fk_admsegusuario_admsegusuariorol foreign key (usuario_id)
-        references adm_seg_usuario (usuario_id) on delete cascade,
-    constraint fk_admsegrol_admsegusuariorol foreign key (rol_id)
-        references adm_seg_rol (rol_id),
-    constraint fk_admgenempresa_admsegusuariorol foreign key (empresa_id)
-        references adm_gen_empresa (empresa_id),
-    constraint uk_usuario_rol_empresa unique (usuario_id, rol_id, empresa_id),
-    constraint ck_usuario_rol_vigencia check (fecha_hasta is null or fecha_hasta >= fecha_desde)
+    fecha_modificacion  timestamp with local time zone,
+    constraint pk_adm_usro primary key (usuario_rol_id),
+    constraint fk_adm_usro_usu foreign key (usuario_id) references adm_seg_usuario (usuario_id) on delete cascade,
+    constraint fk_adm_usro_rol foreign key (rol_id) references adm_seg_rol (rol_id),
+    constraint fk_adm_usro_emp foreign key (empresa_id) references adm_gen_empresa (empresa_id),
+    constraint uk_adm_usro_usu_rol_emp unique (usuario_id, rol_id, empresa_id),
+    constraint ck_adm_usro_vigencia check (fecha_hasta is null or fecha_hasta >= fecha_desde)
 )~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
+-- (usuario_id ya está indexado por uk_adm_usro_usu_rol_emp)
 begin
-    execute immediate q'~create index idx_usuario_rol_rol     on adm_seg_usuario_rol (rol_id)~';
+    execute immediate q'~create index idx_adm_usro_rol_id     on adm_seg_usuario_rol (rol_id)~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
 begin
-    execute immediate q'~create index idx_usuario_rol_empresa on adm_seg_usuario_rol (empresa_id)~';
+    execute immediate q'~create index idx_adm_usro_empresa_id on adm_seg_usuario_rol (empresa_id)~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
-comment on table adm_seg_usuario_rol is 'Roles por usuario (y por empresa) con vigencia';
+comment on table adm_seg_usuario_rol is 'Roles por usuario con vigencia. Abrev: usro';
+comment on column adm_seg_usuario_rol.usuario_rol_id     is 'Identificador técnico (PK, identity)';
+comment on column adm_seg_usuario_rol.usuario_id         is 'Usuario (FK adm_seg_usuario)';
+comment on column adm_seg_usuario_rol.rol_id             is 'Rol asignado (FK adm_seg_rol)';
+comment on column adm_seg_usuario_rol.empresa_id         is 'Empresa donde aplica el rol; null = todas (FK adm_gen_empresa)';
+comment on column adm_seg_usuario_rol.fecha_desde        is 'Inicio de vigencia (fecha del usuario)';
+comment on column adm_seg_usuario_rol.fecha_hasta        is 'Fin de vigencia; null = sin vencimiento';
+comment on column adm_seg_usuario_rol.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_seg_usuario_rol.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_seg_usuario_rol.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_seg_usuario_rol.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';
 
 -- >>> apps/adm/database/tables/adm_aud_login.sql
 -- =============================================================================
--- Tabla : adm_aud_login
--- App   : adm | Módulo: aud (Auditoría)
--- Desc  : Bitácora de intentos de inicio de sesión (exitosos y fallidos).
+-- Tabla  : adm_aud_login   (abrev: log)
+-- Bitácora de intentos de inicio de sesión. Alto volumen: identity cache 1000.
 -- =============================================================================
 begin
     execute immediate q'~create table adm_aud_login (
-    login_id            number generated by default on null as identity,
+    login_id            number generated by default on null as identity (cache 1000),
     username            varchar2(100)  not null,
     resultado           varchar2(20)   not null,
     apex_app_id         number,
     ip_cliente          varchar2(50),
-    fecha               timestamp      default on null systimestamp not null,
-    constraint pk_adm_aud_login primary key (login_id),
-    constraint ck_login_resultado check (resultado in ('OK','PASSWORD_INVALIDO','USUARIO_NO_EXISTE','BLOQUEADO','INACTIVO','SIN_ACCESO'))
+    fecha               timestamp with local time zone default on null systimestamp not null,
+    constraint pk_adm_log primary key (login_id),
+    constraint ck_adm_log_resultado check (resultado in ('OK','PASSWORD_INVALIDO','USUARIO_NO_EXISTE','BLOQUEADO','INACTIVO','SIN_ACCESO'))
 )~';
 exception
     when others then
@@ -359,10 +418,93 @@ exception
 end;
 /
 begin
-    execute immediate q'~create index idx_login_username_fecha on adm_aud_login (username, fecha)~';
+    execute immediate q'~create index idx_adm_log_username_fecha on adm_aud_login (username, fecha)~';
 exception
     when others then
         if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
 end;
 /
-comment on table adm_aud_login is 'Bitácora de inicios de sesión';
+comment on table adm_aud_login is 'Bitácora de inicios de sesión. Abrev: log';
+comment on column adm_aud_login.login_id    is 'Identificador técnico (PK, identity cache 1000)';
+comment on column adm_aud_login.username    is 'Usuario que intentó ingresar (tal como lo escribió, en mayúsculas)';
+comment on column adm_aud_login.resultado   is 'OK, PASSWORD_INVALIDO, USUARIO_NO_EXISTE, BLOQUEADO, INACTIVO o SIN_ACCESO';
+comment on column adm_aud_login.apex_app_id is 'Aplicación APEX desde la que se intentó ingresar';
+comment on column adm_aud_login.ip_cliente  is 'Dirección IP del cliente (si está disponible)';
+comment on column adm_aud_login.fecha       is 'Fecha y hora del intento';
+
+-- >>> apps/adm/database/tables/adm_aud_error.sql
+-- =============================================================================
+-- Tabla  : adm_aud_error   (abrev: err)
+-- Bitácora de errores inesperados de todas las apps (manejador de errores APEX
+-- y bloques when others). Alto volumen: identity cache 1000.
+-- =============================================================================
+begin
+    execute immediate q'~create table adm_aud_error (
+    error_id            number generated by default on null as identity (cache 1000),
+    apex_app_id         number,
+    apex_pagina_id      number,
+    username            varchar2(100),
+    componente          varchar2(400),
+    mensaje             varchar2(4000),
+    ora_sqlcode         number,
+    ora_sqlerrm         varchar2(4000),
+    error_backtrace     varchar2(4000),
+    fecha               timestamp with local time zone default on null systimestamp not null,
+    constraint pk_adm_err primary key (error_id)
+)~';
+exception
+    when others then
+        if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
+end;
+/
+begin
+    execute immediate q'~create index idx_adm_err_fecha on adm_aud_error (fecha)~';
+exception
+    when others then
+        if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
+end;
+/
+comment on table  adm_aud_error                 is 'Bitácora de errores inesperados (incidentes). Abrev: err';
+comment on column adm_aud_error.error_id        is 'Número de incidente que se muestra al usuario';
+comment on column adm_aud_error.apex_app_id     is 'Aplicación APEX donde ocurrió';
+comment on column adm_aud_error.apex_pagina_id  is 'Página APEX donde ocurrió';
+comment on column adm_aud_error.username        is 'Usuario conectado';
+comment on column adm_aud_error.componente      is 'Componente APEX o rutina PL/SQL que falló';
+comment on column adm_aud_error.mensaje         is 'Mensaje original del error';
+comment on column adm_aud_error.ora_sqlcode     is 'Código ORA (negativo)';
+comment on column adm_aud_error.ora_sqlerrm     is 'Texto ORA completo';
+comment on column adm_aud_error.error_backtrace is 'Pila de llamadas (dbms_utility.format_error_backtrace)';
+comment on column adm_aud_error.fecha           is 'Fecha y hora del incidente';
+
+-- >>> apps/adm/database/tables/adm_gen_mensaje_error.sql
+-- =============================================================================
+-- Tabla  : adm_gen_mensaje_error   (abrev: mse)
+-- Mensajes claros para el usuario por nombre de constraint (uk_, ck_, fk_).
+-- Los usa el manejador de errores central para TODAS las apps.
+-- =============================================================================
+begin
+    execute immediate q'~create table adm_gen_mensaje_error (
+    mensaje_error_id    number generated by default on null as identity,
+    codigo              varchar2(128)  not null,
+    mensaje             varchar2(1000) not null,
+    creado_por          varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
+    fecha_creacion      timestamp with local time zone default on null systimestamp not null,
+    modificado_por      varchar2(100),
+    fecha_modificacion  timestamp with local time zone,
+    constraint pk_adm_mse primary key (mensaje_error_id),
+    constraint uk_adm_mse_codigo unique (codigo),
+    constraint ck_adm_mse_codigo_mayus check (codigo = upper(codigo))
+)~';
+exception
+    when others then
+        if sqlcode not in (-955, -1408, -2260, -2261, -2264, -2275) then raise; end if;
+end;
+/
+comment on table  adm_gen_mensaje_error                    is 'Mensajes de error por constraint. Abrev: mse';
+comment on column adm_gen_mensaje_error.mensaje_error_id   is 'Identificador técnico (PK, identity)';
+comment on column adm_gen_mensaje_error.codigo             is 'Nombre del constraint en mayúsculas (ej. UK_ADM_USU_USERNAME)';
+comment on column adm_gen_mensaje_error.mensaje            is 'Mensaje que verá el usuario';
+comment on column adm_gen_mensaje_error.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';
+comment on column adm_gen_mensaje_error.fecha_creacion     is 'Fecha y hora de creación (con zona horaria)';
+comment on column adm_gen_mensaje_error.modificado_por     is 'Usuario de la última modificación (trigger _bu)';
+comment on column adm_gen_mensaje_error.fecha_modificacion is 'Fecha y hora de la última modificación (trigger _bu)';
