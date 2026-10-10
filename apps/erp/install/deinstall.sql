@@ -21,6 +21,7 @@ begin
         ejecutar('drop package ' || r.nombre);
     end loop;
 
+    ejecutar('drop view erp_gen_usuario_empresa_v');
     ejecutar('drop type erp_impuesto_calc_tab');
     ejecutar('drop type erp_impuesto_calc_typ');
 

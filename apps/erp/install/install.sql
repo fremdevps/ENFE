@@ -45,6 +45,9 @@ prompt == Triggers
 @@../database/triggers/trg_erp_par_bu.sql
 @@../database/triggers/trg_erp_peri_bu.sql
 
+prompt == Vistas
+@@../database/views/erp_gen_usuario_empresa_v.sql
+
 prompt == Tipos
 @@../database/types/erp_impuesto_calc_typ.sql
 @@../database/types/erp_impuesto_calc_tab.sql
