@@ -23,7 +23,7 @@
 | Nivel | Formato | Ejemplos |
 |---|---|---|
 | App | 3 letras | `adm` Administración Central · `erp` ERP · `crm` CRM |
-| Módulo | 3 letras, único dentro de la app | `seg` Seguridad · `gen` General · `aud` Auditoría · `fin` Finanzas · `stk` Inventario · `com` Compras · `ven` Ventas · `prd` Producción |
+| Módulo | 3 letras, único dentro de la app | `seg` Seguridad · `gen` General · `aud` Auditoría · `doc` Documentos · `fin` Finanzas · `stk` Inventario · `com` Compras · `ven` Ventas · `cnt` Contabilidad · `prd` Producción |
 
 Los códigos se registran en ADM (`adm_seg_aplicacion`, `adm_seg_modulo`) antes de usarse.
 
@@ -153,9 +153,9 @@ expresar. **La lógica de negocio va en paquetes, nunca en triggers.**
 
 | Capa | Responsabilidad | La llaman | Puede llamar | COMMIT |
 |---|---|---|---|---|
-| `ctr` | DML de **una sola tabla**: insertar, actualizar, borrar, bloquear | `reg`, `api` | — | Nunca |
+| `ctr` | DML de **una sola tabla**: insertar, actualizar, borrar, bloquear | `reg`, `api` | — | Nunca (excepción: bitácoras y contadores en `pragma autonomous_transaction`, que confirman solo su propia transacción) |
 | `reg` | Reglas de negocio: validaciones, cálculos, flujos | `api`, otros `reg` | `ctr`, `reg` | Nunca |
-| `api` | **Fachada pública** para APEX, ORDS/REST, jobs y otras apps. Valida permisos, orquesta, traduce errores. | APEX, REST, jobs | `reg`, `ctr` (solo lectura) | Solo en jobs/REST; en APEX lo hace APEX |
+| `api` | **Fachada pública** para APEX, ORDS/REST, jobs y otras apps. Valida permisos, orquesta, traduce errores. | APEX, REST, jobs | `reg`, `ctr`, `utl` | Solo en jobs/REST; en APEX lo hace APEX |
 | `utl` | Utilitarios sin negocio (fechas, textos, logging) | todos | `utl` | Nunca |
 
 Ejemplos: `erp_fin_factura_ctr` · `erp_fin_factura_reg` · `erp_fin_factura_api` · `adm_seg_seguridad_reg` · `adm_gen_texto_utl`
@@ -282,7 +282,7 @@ una entidad el objeto se omite si es la propia entidad (`erp_fin_factura_api.anu
 |---|---|
 | Procedimiento | **Hace** algo: cambia datos o estado. No devuelve valor (usa parámetros `o_`). |
 | Función | **Calcula u obtiene** algo. **Sin efectos secundarios** (no hace DML), así se puede usar en SQL. |
-| Función booleana | `es_…`, `tiene_…`, `puede_…`, `existe_…` → `return boolean`. Si debe usarse en SQL (19c): sufijo `_sn` → `return varchar2` (`S/N`), ej. `tiene_permiso_sn`. |
+| Función booleana | `es_…`, `tiene_…`, `puede_…`, `debe_…`, `existe_…` → `return boolean`. Si debe usarse en SQL (19c): sufijo `_sn` → `return varchar2` (`S/N`), ej. `tiene_permiso_sn`. |
 | Sobrecarga | Permitida solo si hacen lo mismo con distintos tipos de entrada. |
 
 **Verbos por capa** (usar estos; no inventar sinónimos):
@@ -291,8 +291,8 @@ una entidad el objeto se omite si es la propia entidad (`erp_fin_factura_api.anu
 |---|---|---|
 | `ctr` | `insertar`, `actualizar`, `eliminar`, `bloquear` (select for update), `obtener` (devuelve `%rowtype`), `existe` | `erp_fin_factura_ctr.insertar` |
 | `reg` | `validar_…`, `calcular_…`, `aplicar_…`, `generar_…`, `es_/tiene_/puede_…` | `validar_credito`, `calcular_igv` |
-| `api` | Acciones de negocio que ve el usuario: `crear`, `modificar`, `anular`, `aprobar`, `rechazar`, `emitir`, `cerrar`, `reabrir`, `obtener_…`, `listar_…` (cursor/colección) | `erp_fin_factura_api.emitir` |
-| `utl` | `formatear_…`, `convertir_…`, `registrar_log`, `limpiar_…` | `adm_gen_texto_utl.limpiar_espacios` |
+| `api` | Acciones de negocio que ve el usuario: `crear`, `modificar`, `eliminar` (solo catálogos), `anular`, `aprobar`, `rechazar`, `emitir`, `cerrar`, `reabrir`, `asignar_…`, `quitar_…`, `resetear_…`, `desbloquear`, `validar_…`, `obtener_…`, `listar_…` (cursor/colección) | `erp_fin_factura_api.emitir` |
+| `utl` | `formatear_…`, `convertir_…`, `generar_…`, `calcular_…`, `validar_…`, `es_…`, `registrar_log`, `limpiar_…` | `adm_gen_texto_utl.limpiar_espacios` |
 
 Diferencia clave: en `ctr` se habla de **filas** (insertar, eliminar); en `api` se habla del
 **negocio** (crear, anular). Una factura no se "elimina": se **anula**.
@@ -303,7 +303,11 @@ Diferencia clave: en `ctr` se habla de **filas** (insertar, eliminar); en `api` 
 - Tipos anclados: `adm_seg_usuario.username%type`, `%rowtype`.
 - Nada de SQL dinámico salvo DDL o necesidad justificada; siempre con binds.
 - **Excepción documentada**: funciones que APEX invoca con nombres fijos usan esos nombres
-  (`p_username`, `p_password` en la función de autenticación: `autenticar`).
+  (`p_username`, `p_password` en la función de autenticación `autenticar`; `p_error` en la función de
+  manejo de errores `adm_gen_error_api.manejar_error_apex`). No hay otras excepciones: nunca prefijos `f_`/`p_` en
+  funciones ni procedimientos.
+- Funciones de bitácora (`adm_gen_error_api.registrar`) son la única excepción a "funciones sin efectos
+  secundarios": registran en transacción autónoma y devuelven el número de incidente.
 
 ---
 
@@ -314,7 +318,7 @@ Diferencia clave: en `ctr` se habla de **filas** (insertar, eliminar); en `api` 
 | ID de app | Fijo, por bloques de 100; las apps de módulo de un sistema usan sub-bloques de 10 (ver `docs/arquitectura-erp.md` §2.1) | ADM `100` · ERP `200` (configuración, app maestra) · ERP Inventario `210` · ERP Ventas `230` · CRM `300` |
 | Alias de app | código de app | `adm`, `erp` |
 | Rango de páginas | 1–9 inicio · 10–99 módulo 1 · 100–199 módulo 2 · … · 9000–9998 utilitarios · 9999 login | — |
-| Alias de página | minúsculas con guion | `nuevo-usuario` |
+| Alias de página | con guion; en `.apx` queda en MAYÚSCULAS y en la URL en minúsculas | `USUARIO` → `/adm/usuario` |
 | Item | `P<página>_<COLUMNA>` (estándar APEX) | `P31_USERNAME` |
 | Región (Static ID) | minúsculas con guion, la entidad | `empresas` |
 | Botón | nombre en MAYÚSCULAS = acción | `CREAR`, `GUARDAR`, `ANULAR` |

@@ -4,21 +4,25 @@ Plataforma multi-aplicación (ADM, ERP, CRM, …) sobre **Oracle APEX 26.1+** co
 **seguridad centralizada**. Funciona en **OCI Autonomous Database** y **on-premise**.
 
 - Workspace APEX: `DEV` (esquema `WKSP_DEV`)
-- Estándar de nomenclatura: [docs/Estandar_Tecnico_Nomenclatura_DB_PLSQL_V2.docx](docs/Estandar_Tecnico_Nomenclatura_DB_PLSQL_V2.docx)
+- Estándar técnico (V3, obligatorio): [docs/ESTANDAR.md](docs/ESTANDAR.md)
+  (reemplaza a `docs/Estandar_Tecnico_Nomenclatura_DB_PLSQL_V2.docx`)
 - Arquitectura de seguridad: [docs/arquitectura-seguridad.md](docs/arquitectura-seguridad.md)
+- Arquitectura del ERP: [docs/arquitectura-erp.md](docs/arquitectura-erp.md)
 - **¿Trabajas con un asistente de IA?** Lee [AGENTS.md](AGENTS.md) y usa el [prompt inicial](docs/PROMPT-INICIAL.md).
 
 ## Estructura
 
 ```
 apps/
-  adm/                Administración Central: usuarios, roles, permisos, apps, empresas
+  adm/                Administración Central (app 100): usuarios, roles, permisos, apps, empresas
     database/         tables/ views/ triggers/ packages/ data/   (fuente SQL)
     install/          install.sql, deinstall.sql, 00_prerequisitos_dba.sql
     apexlang/         app APEX en formato APEXlang
-  erp/                ERP (misma estructura)
-docs/
-.claude/skills/       skills oficiales de Oracle (APEX/APEXlang y Database) para Claude
+  erp/                ERP Configuración (app 200; misma estructura, más database/types/)
+docs/                 estándar y arquitectura
+tools/                generadores APEXlang, Supporting Objects y verificador de consultas
+tests/e2e/            pruebas Playwright
+.claude/skills/       skills oficiales de Oracle (APEX/APEXlang y Database) y del proyecto (git-flujo, playwright-e2e)
 ```
 
 ## Requisitos

@@ -99,8 +99,8 @@ Dependencias (siempre hacia abajo, nunca circulares):
 | `erp_gen_usuario_sucursal` | ussu | Sucursales y departamentos que puede operar cada usuario, con punto de expedición por defecto |
 | `erp_gen_funcionalidad` | func | Catálogo de funcionalidades activables (lotes, series, safra, vendedores, centros de costo…) |
 | `erp_gen_rubro` | rub | Perfil de rubro (comercio, agro, industria, servicios…) con sus funcionalidades sugeridas |
-| `erp_gen_rubro_funcionalidad` | rufu | Funcionalidades que activa cada rubro |
-| `erp_gen_empresa_funcionalidad` | emfu | Funcionalidades activas de cada empresa |
+| `erp_gen_rubro_func` | rufu | Funcionalidades que activa cada rubro |
+| `erp_gen_empresa_func` | emfu | Funcionalidades activas de cada empresa |
 | `erp_gen_tipo_rol` | tirl | Roles de persona configurables (cliente, proveedor, empleado, transportista, productor…) |
 | `erp_gen_persona_rol` | prro | Roles de cada persona por empresa |
 | `erp_stk_deposito` | dpo | Depósito de una sucursal (módulo `stk`, creado con la estructura organizativa) |
@@ -174,7 +174,7 @@ Nada de tablas por cliente ni triggers por cliente. La adaptación es por **dato
 1. **Funcionalidades** (`erp_gen_funcionalidad`): interruptores por empresa que muestran u
    ocultan campos, pantallas y validaciones (ej. `LOTE`, `VENCIMIENTO`, `SERIE`, `SAFRA`,
    `VENDEDOR`, `CENTRO_COSTO`, `DEPARTAMENTO`, `CONSIGNACION`).
-   En APEX: condición `erp_gen_funcionalidad_api.esta_activa_sn('LOTE', :APP_EMPRESA_ID) = 'S'`.
+   En APEX: condición `erp_gen_funcionalidad_api.es_activa_sn('LOTE', :APP_EMPRESA_ID) = 'S'`.
 2. **Rubros** (`erp_gen_rubro`): plantillas que activan un conjunto de funcionalidades al
    configurar la empresa (comercio, distribuidora, agro/cooperativa, industria, servicios,
    restaurante…). Se pueden ajustar después, empresa por empresa.

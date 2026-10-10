@@ -75,4 +75,4 @@ prompt == Objetos inválidos (debe estar vacío)
 select object_name, object_type from user_objects
  where status = 'INVALID' and (object_name like 'ADM\_%' escape '\' or object_name like 'TRG\_ADM\_%' escape '\');
 
-prompt == Instalación ADM completa. Siguiente paso: @../database/data/adm_seg_password_admin.sql
+prompt == Instalación ADM completa. Siguiente paso (desde apps/adm): @database/data/adm_seg_password_admin.sql

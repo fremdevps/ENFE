@@ -51,8 +51,8 @@ Reportar el resultado real de cada paso. "Valida" no significa "funciona".
 ```
 tests/e2e/
   playwright.config.ts     reporters list + html + junit, trace/video/screenshot al fallar
-  support/apex.ts          login, gotoPage (alias + sesión), waitForApex, apexError, fixture admPage, uniq()
-  support/adm.ts           acciones de negocio reutilizables de ADM (crearUsuario…)
+  support/apex.ts          login, gotoPage (alias + sesión), sessionId, waitForApex, apexError, fixture admPage, uniq()
+  support/adm.ts           acciones de negocio reutilizables de ADM (crearUsuario, asignarRol, filaBitacora…)
   specs/<app>/NN-<tema>.spec.ts
 ```
 
@@ -64,9 +64,13 @@ tests/e2e/
    (friendly URL `/r/<ws>/<app>/<alias>?session=…`). No usar números de página.
 4. Selectores: items APEX por id (`#P31_USERNAME`), regiones por su `htmlDomId`
    (`#empresas`), botones por rol + nombre visible. Nada de clases CSS de tema.
-5. **Interactive Grid**: alta/baja/edición vía el modelo JS
-   (`apex.region('<id>').call('getViews','grid').model`) y luego clic en *Guardar*.
-   Es estable frente a cambios de layout; verificar siempre recargando la página.
+5. **Listado + formulario** (diseño de ADM y ERP): el listado es un Interactive Report
+   (región con `htmlDomId` = entidad, ej. `#usuarios`) y el alta/edición se hace en la página
+   de formulario, que abre como panel lateral (modal drawer, se maneja con
+   `page.frameLocator(...)` porque APEX lo muestra en un iframe), con los botones `Crear` /
+   `Guardar cambios` / `Eliminar`. Las acciones van a la página del formulario (`usuario`,
+   `asignar-rol`, `reset-password`…), no a una grilla editable. Verificar siempre recargando
+   el listado. Hoy ninguna app usa Interactive Grid (ver AGENTS.md).
 6. Datos de prueba con `uniq()` → prefijo `QA_E2E_`/`QA_`; nunca tocar datos reales.
 7. Esperar con `waitForApex(page)` después de cada submit/navegación.
 8. Errores: `apexError(page)` debe tener `toHaveCount(0)` en caminos felices.
