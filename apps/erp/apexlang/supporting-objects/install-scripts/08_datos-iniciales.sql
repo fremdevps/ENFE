@@ -180,17 +180,17 @@ using (select r.rubro_id, f.funcionalidad_id
 
 -- Roles de persona ------------------------------------------------------------------------
 merge into erp_gen_tipo_rol t
-using (select 'CLIENTE' codigo, 'Cliente' nombre, 'S' es_ventas, 'N' es_compras, 'S' es_finanzas, 'N' es_stock from dual union all
-       select 'PROVEEDOR',     'Proveedor',      'N', 'S', 'S', 'N' from dual union all
-       select 'EMPLEADO',      'Empleado',       'N', 'N', 'S', 'N' from dual union all
-       select 'VENDEDOR',      'Vendedor',       'S', 'N', 'N', 'N' from dual union all
-       select 'TRANSPORTISTA', 'Transportista',  'S', 'S', 'S', 'S' from dual union all
-       select 'PRODUCTOR',     'Productor',      'S', 'S', 'S', 'S' from dual union all
-       select 'BANCO',         'Banco / financiera', 'N', 'N', 'S', 'N' from dual) s
+using (select 'CLIENTE' codigo, 'Cliente' nombre, 'S' es_ventas, 'N' es_compras, 'S' es_cobrar, 'N' es_pagar, 'N' es_stock from dual union all
+       select 'PROVEEDOR',     'Proveedor',          'N', 'S', 'N', 'S', 'N' from dual union all
+       select 'EMPLEADO',      'Empleado',           'N', 'N', 'S', 'S', 'N' from dual union all
+       select 'VENDEDOR',      'Vendedor',           'S', 'N', 'N', 'S', 'N' from dual union all
+       select 'TRANSPORTISTA', 'Transportista',      'S', 'S', 'N', 'S', 'S' from dual union all
+       select 'PRODUCTOR',     'Productor',          'S', 'S', 'S', 'S', 'S' from dual union all
+       select 'BANCO',         'Banco / financiera', 'N', 'N', 'S', 'S', 'N' from dual) s
    on (t.codigo = s.codigo)
  when not matched then
-    insert (codigo, nombre, es_ventas, es_compras, es_finanzas, es_stock)
-    values (s.codigo, s.nombre, s.es_ventas, s.es_compras, s.es_finanzas, s.es_stock);
+    insert (codigo, nombre, es_ventas, es_compras, es_cobrar, es_pagar, es_stock)
+    values (s.codigo, s.nombre, s.es_ventas, s.es_compras, s.es_cobrar, s.es_pagar, s.es_stock);
 
 -- Parámetros generales (empresa_id null = valor por defecto de todas) -------------------
 merge into erp_gen_parametro t
@@ -275,7 +275,12 @@ using (
     select 'FK_ERP_PTEX_DPTO',                      'No se puede eliminar el departamento: tiene puntos de expedición.' from dual union all
     select 'FK_ERP_DPO_DPTO',                       'No se puede eliminar el departamento: tiene depósitos.' from dual union all
     select 'FK_ERP_PRRO_TIRL',                      'No se puede eliminar el rol: lo tienen personas.' from dual union all
-    select 'FK_ERP_EMCF_RUB',                       'No se puede eliminar el rubro: lo usa una empresa.' from dual
+    select 'FK_ERP_EMCF_RUB',                       'No se puede eliminar el rubro: lo usa una empresa.' from dual union all
+    select 'UK_ERP_PRDO_TDI_NRO',                   'Ya existe una persona con ese tipo y número de documento.' from dual union all
+    select 'CK_ERP_PRDO_VIGENCIA',                  'La fecha de vencimiento debe ser igual o posterior a la fecha desde.' from dual union all
+    select 'UK_ERP_FERI_PAIS_FECHA',                'Ya hay un feriado cargado en esa fecha para el país.' from dual union all
+    select 'UK_ERP_PEHA_PERI_USU',                  'El usuario ya tiene una habilitación para ese período.' from dual union all
+    select 'CK_ERP_ITV_MINIMO',                     'El monto mínimo debe ser positivo e indicar su moneda.' from dual
 ) s
    on (t.codigo = s.codigo)
  when matched then

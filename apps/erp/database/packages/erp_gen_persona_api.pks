@@ -45,6 +45,13 @@ as
         i_estado                 in erp_gen_persona.estado%type
     );
 
+    -- Valida formato y dígito verificador (documentos adicionales de la persona).
+    procedure validar_documento (
+        i_tipo_doc_identidad_id  in number,
+        i_nro_documento          in varchar2,
+        i_dv                     in varchar2
+    );
+
     -- Para mostrar el DV sugerido en pantalla.
     function obtener_dv_ruc (
         i_numero  in varchar2

@@ -10,6 +10,22 @@ as
         return coalesce(upper(r_parametro.valor), 'N') = 'S';
     end es_estricto;
 
+    -- El usuario de la sesión APEX tiene una habilitación vigente para el período cerrado.
+    function tiene_habilitacion (
+        i_periodo_id  in erp_gen_periodo.periodo_id%type
+    ) return boolean is
+        v_cantidad  pls_integer;
+    begin
+        select count(*)
+          into v_cantidad
+          from erp_gen_periodo_habilita h
+          join adm_seg_usuario u on u.usuario_id = h.usuario_id
+         where h.periodo_id = i_periodo_id
+           and upper(u.username) = upper(sys_context('APEX$SESSION', 'APP_USER'))
+           and h.fecha_hasta >= trunc(current_date);
+        return v_cantidad > 0;
+    end tiene_habilitacion;
+
     function es_abierto (
         i_empresa_id  in number,
         i_modulo      in varchar2,
@@ -25,7 +41,10 @@ as
         if r_periodo.periodo_id is null then
             return not es_estricto(i_empresa_id => i_empresa_id);
         end if;
-        return r_periodo.estado = 'A';
+        if r_periodo.estado = 'A' then
+            return true;
+        end if;
+        return tiene_habilitacion(i_periodo_id => r_periodo.periodo_id);
     end es_abierto;
 
     procedure validar_abierto (

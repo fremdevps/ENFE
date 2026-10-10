@@ -1,26 +1,26 @@
-page 44 (
-    name: Vigencias de tasas
-    alias: VIGENCIAS
-    title: Vigencias de tasas
+page 68 (
+    name: Documentos adicionales
+    alias: DOCUMENTOS-PERSONA
+    title: Documentos adicionales
     appearance {
         pageTemplate: @/standard
         templateOptions: #DEFAULT#
     }
     security {
-        authorizationScheme: @erp-gen-catalogo-gestionar
+        authorizationScheme: @erp-gen-persona-ver
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
     help {
         helpText:
             ```
-            Porcentaje de cada tasa a lo largo del tiempo. Un cambio de tasa no altera documentos ya emitidos.
-            Use Crear vigencia para agregar o el lápiz de cada fila para editar.
+            Documentos de identidad adicionales de las personas (por ejemplo cédula y RUC, o pasaporte y RUC).
+            El documento principal se carga en la persona.
             ```
     }
 
     region breadcrumb (
-        name: Vigencias de tasas
+        name: Documentos adicionales
         type: breadcrumb
         source {
             breadcrumb: @breadcrumb
@@ -42,20 +42,19 @@ page 44 (
         }
     )
 
-    region vigencias (
-        name: Vigencias de tasas
+    region documentos-persona (
+        name: Documentos adicionales
         type: interactiveReport
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select v.impuesto_tasa_vig_id, i.codigo || ' / ' || t.codigo tasa, v.fecha_desde, v.porcentaje,
-                       v.monto_minimo, m.codigo moneda_minimo, v.observacion
-                  from erp_gen_impuesto_tasa_vig v
-                  join erp_gen_impuesto_tasa t on t.impuesto_tasa_id = v.impuesto_tasa_id
-                  join erp_gen_impuesto i on i.impuesto_id = t.impuesto_id
-                  left join erp_gen_moneda m on m.moneda_id = v.moneda_id
+                select d.persona_documento_id, p.razon_social persona, td.codigo tipo, d.nro_documento || nvl2(d.dv, '-' || d.dv, null) documento,
+                       d.fecha_desde, d.fecha_hasta
+                  from erp_gen_persona_documento d
+                  join erp_gen_persona p on p.persona_id = d.persona_id
+                  join erp_gen_tipo_doc_identidad td on td.tipo_doc_identidad_id = d.tipo_doc_identidad_id
                 ```
         }
         layout {
@@ -67,16 +66,16 @@ page 44 (
             templateOptions: #DEFAULT#
         }
         advanced {
-            htmlDomId: vigencias
+            htmlDomId: documentos-persona
         }
         link {
             linkColumn: customTarget
             target: {
-                page: 45
+                page: 69
                 items: {
-                    P45_IMPUESTO_TASA_VIG_ID: #IMPUESTO_TASA_VIG_ID#
+                    P69_PERSONA_DOCUMENTO_ID: #PERSONA_DOCUMENTO_ID#
                 }
-                clearCache: 45
+                clearCache: 69
             }
             linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>
         }
@@ -99,11 +98,11 @@ page 44 (
         comments {
             comments:
                 ```
-                Listado de erp_gen_impuesto_tasa_vig. Alta/edición en la página 45 (guardado automático: catálogo).
+                Listado de erp_gen_persona_documento. Alta/edición en la página 69 con validación vía erp_gen_persona_api.
                 ```
         }
 
-        column IMPUESTO_TASA_VIG_ID (
+        column PERSONA_DOCUMENTO_ID (
             type: hidden
             heading {
                 heading: ID
@@ -116,10 +115,10 @@ page 44 (
             }
         )
 
-        column TASA (
+        column PERSONA (
             type: plainText
             heading {
-                heading: Tasa
+                heading: Persona
             }
             layout {
                 sequence: 20
@@ -128,97 +127,81 @@ page 44 (
                 dataType: STRING
             }
             comments {
-                comments: Display Label: Tasa. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Persona. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column TIPO (
+            type: plainText
+            heading {
+                heading: Tipo
+            }
+            layout {
+                sequence: 30
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Tipo. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column DOCUMENTO (
+            type: plainText
+            heading {
+                heading: Documento
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Documento. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
         column FECHA_DESDE (
             type: plainText
             heading {
-                heading: Rige desde
-            }
-            layout {
-                sequence: 30
-            }
-            source {
-                dataType: DATE
-            }
-            comments {
-                comments: Display Label: Rige desde. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column PORCENTAJE (
-            type: plainText
-            heading {
-                heading: Porcentaje
-            }
-            layout {
-                sequence: 40
-            }
-            source {
-                dataType: NUMBER
-            }
-            comments {
-                comments: Display Label: Porcentaje. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column MONTO_MINIMO (
-            type: plainText
-            heading {
-                heading: Monto mínimo
+                heading: Desde
             }
             layout {
                 sequence: 50
             }
             source {
-                dataType: NUMBER
+                dataType: DATE
             }
             comments {
-                comments: Summary: Retenciones: se aplican desde este monto. Display Label: Monto mínimo. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Desde. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column MONEDA_MINIMO (
+        column FECHA_HASTA (
             type: plainText
             heading {
-                heading: Moneda
+                heading: Vence
             }
             layout {
                 sequence: 60
             }
             source {
-                dataType: STRING
+                dataType: DATE
             }
             comments {
-                comments: Display Label: Moneda. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column OBSERVACION (
-            type: plainText
-            heading {
-                heading: Norma / observación
-            }
-            layout {
-                sequence: 70
-            }
-            source {
-                dataType: STRING
-            }
-            comments {
-                comments: Display Label: Norma / observación. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Vence. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )
 
     button crear (
         buttonName: CREAR
-        label: Crear vigencia
+        label: Agregar documento
         layout {
             sequence: 10
-            region: @vigencias
+            region: @documentos-persona
             slot: RIGHT_OF_IR_SEARCH_BAR
         }
         appearance {
@@ -230,9 +213,12 @@ page 44 (
         behavior {
             action: redirectThisApp
             target: {
-                page: 45
-                clearCache: 45
+                page: 69
+                clearCache: 69
             }
+        }
+        security {
+            authorizationScheme: @erp-gen-persona-gestionar
         }
     )
 
@@ -244,14 +230,14 @@ page 44 (
         when {
             event: apexafterclosedialog
             selectionType: region
-            region: @vigencias
+            region: @documentos-persona
         }
 
         action refrescar (
             action: refresh
             affectedElements {
                 selectionType: region
-                region: @vigencias
+                region: @documentos-persona
             }
             execution {
                 sequence: 10

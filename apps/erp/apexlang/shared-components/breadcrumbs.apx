@@ -158,6 +158,22 @@ breadcrumb breadcrumb (
         }
     )
 
+    entry habilitaciones (
+        name: Habilitaciones de período
+        pageNumber: 86
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 110
+        }
+        link {
+            target: {
+                page: 86
+            }
+        }
+    )
+
     entry monedas (
         name: Monedas
         pageNumber: 30
@@ -165,7 +181,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 110
+            sequence: 120
         }
         link {
             target: {
@@ -181,7 +197,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 120
+            sequence: 130
         }
         link {
             target: {
@@ -197,7 +213,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 130
+            sequence: 140
         }
         link {
             target: {
@@ -213,7 +229,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 140
+            sequence: 150
         }
         link {
             target: {
@@ -229,7 +245,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 150
+            sequence: 160
         }
         link {
             target: {
@@ -245,7 +261,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 160
+            sequence: 170
         }
         link {
             target: {
@@ -261,7 +277,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 170
+            sequence: 180
         }
         link {
             target: {
@@ -277,7 +293,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 180
+            sequence: 190
         }
         link {
             target: {
@@ -293,7 +309,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 190
+            sequence: 200
         }
         link {
             target: {
@@ -309,7 +325,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 200
+            sequence: 210
         }
         link {
             target: {
@@ -325,7 +341,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 210
+            sequence: 220
         }
         link {
             target: {
@@ -341,11 +357,27 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 220
+            sequence: 230
         }
         link {
             target: {
                 page: 66
+            }
+        }
+    )
+
+    entry documentos-persona (
+        name: Documentos adicionales
+        pageNumber: 68
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 240
+        }
+        link {
+            target: {
+                page: 68
             }
         }
     )
@@ -357,7 +389,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 230
+            sequence: 250
         }
         link {
             target: {
@@ -373,11 +405,27 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 240
+            sequence: 260
         }
         link {
             target: {
                 page: 72
+            }
+        }
+    )
+
+    entry feriados (
+        name: Feriados
+        pageNumber: 84
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 270
+        }
+        link {
+            target: {
+                page: 84
             }
         }
     )
@@ -389,7 +437,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 250
+            sequence: 280
         }
         link {
             target: {
@@ -405,7 +453,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 260
+            sequence: 290
         }
         link {
             target: {
@@ -421,7 +469,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 270
+            sequence: 300
         }
         link {
             target: {
@@ -437,7 +485,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 280
+            sequence: 310
         }
         link {
             target: {

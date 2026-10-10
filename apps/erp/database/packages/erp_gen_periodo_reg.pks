@@ -6,6 +6,8 @@ as
 -- Desc    : Control de períodos abiertos/cerrados por empresa y módulo.
 --           Período sin registro = abierto, salvo que el parámetro
 --           ERP_GEN_PERIODO_ESTRICTO = 'S' (entonces debe existir y estar abierto).
+--           Un período cerrado admite registros del usuario de la sesión si tiene
+--           una habilitación vigente (erp_gen_periodo_habilita).
 -- =============================================================================
 
     c_err_periodo_cerrado     constant pls_integer := -20106;

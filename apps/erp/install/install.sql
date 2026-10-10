@@ -10,6 +10,7 @@ set define off
 prompt == Tablas
 @@../database/tables/erp_gen_moneda.sql
 @@../database/tables/erp_gen_pais.sql
+@@../database/tables/erp_gen_feriado.sql
 @@../database/tables/erp_gen_ubicacion.sql
 @@../database/tables/erp_gen_impuesto.sql
 @@../database/tables/erp_gen_impuesto_tasa.sql
@@ -29,16 +30,19 @@ prompt == Tablas
 @@../database/tables/erp_stk_deposito.sql
 @@../database/tables/erp_gen_tipo_doc_identidad.sql
 @@../database/tables/erp_gen_persona.sql
+@@../database/tables/erp_gen_persona_documento.sql
 @@../database/tables/erp_gen_persona_direccion.sql
 @@../database/tables/erp_gen_persona_contacto.sql
 @@../database/tables/erp_gen_tipo_rol.sql
 @@../database/tables/erp_gen_persona_rol.sql
 @@../database/tables/erp_gen_parametro.sql
 @@../database/tables/erp_gen_periodo.sql
+@@../database/tables/erp_gen_periodo_habilita.sql
 
 prompt == Triggers
 @@../database/triggers/trg_erp_mon_bu.sql
 @@../database/triggers/trg_erp_pai_bu.sql
+@@../database/triggers/trg_erp_feri_bu.sql
 @@../database/triggers/trg_erp_ubi_bu.sql
 @@../database/triggers/trg_erp_imp_bu.sql
 @@../database/triggers/trg_erp_imta_bu.sql
@@ -58,12 +62,14 @@ prompt == Triggers
 @@../database/triggers/trg_erp_dpo_bu.sql
 @@../database/triggers/trg_erp_tdi_bu.sql
 @@../database/triggers/trg_erp_prs_bu.sql
+@@../database/triggers/trg_erp_prdo_bu.sql
 @@../database/triggers/trg_erp_prdi_bu.sql
 @@../database/triggers/trg_erp_prco_bu.sql
 @@../database/triggers/trg_erp_tirl_bu.sql
 @@../database/triggers/trg_erp_prro_bu.sql
 @@../database/triggers/trg_erp_par_bu.sql
 @@../database/triggers/trg_erp_peri_bu.sql
+@@../database/triggers/trg_erp_peha_bu.sql
 
 prompt == Vistas
 @@../database/views/erp_gen_usuario_empresa_v.sql

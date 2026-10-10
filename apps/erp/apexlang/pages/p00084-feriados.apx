@@ -1,7 +1,7 @@
-page 44 (
-    name: Vigencias de tasas
-    alias: VIGENCIAS
-    title: Vigencias de tasas
+page 84 (
+    name: Feriados
+    alias: FERIADOS
+    title: Feriados
     appearance {
         pageTemplate: @/standard
         templateOptions: #DEFAULT#
@@ -14,13 +14,13 @@ page 44 (
     help {
         helpText:
             ```
-            Porcentaje de cada tasa a lo largo del tiempo. Un cambio de tasa no altera documentos ya emitidos.
-            Use Crear vigencia para agregar o el lápiz de cada fila para editar.
+            Feriados por país. Se usan para calcular vencimientos, plazos e intereses en días hábiles.
+            Use Crear feriado para agregar o el lápiz de cada fila para editar.
             ```
     }
 
     region breadcrumb (
-        name: Vigencias de tasas
+        name: Feriados
         type: breadcrumb
         source {
             breadcrumb: @breadcrumb
@@ -42,20 +42,17 @@ page 44 (
         }
     )
 
-    region vigencias (
-        name: Vigencias de tasas
+    region feriados (
+        name: Feriados
         type: interactiveReport
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select v.impuesto_tasa_vig_id, i.codigo || ' / ' || t.codigo tasa, v.fecha_desde, v.porcentaje,
-                       v.monto_minimo, m.codigo moneda_minimo, v.observacion
-                  from erp_gen_impuesto_tasa_vig v
-                  join erp_gen_impuesto_tasa t on t.impuesto_tasa_id = v.impuesto_tasa_id
-                  join erp_gen_impuesto i on i.impuesto_id = t.impuesto_id
-                  left join erp_gen_moneda m on m.moneda_id = v.moneda_id
+                select f.feriado_id, p.nombre pais, f.fecha, to_char(f.fecha, 'Day', 'nls_date_language=spanish') dia, f.nombre
+                  from erp_gen_feriado f
+                  join erp_gen_pais p on p.pais_id = f.pais_id
                 ```
         }
         layout {
@@ -67,16 +64,16 @@ page 44 (
             templateOptions: #DEFAULT#
         }
         advanced {
-            htmlDomId: vigencias
+            htmlDomId: feriados
         }
         link {
             linkColumn: customTarget
             target: {
-                page: 45
+                page: 85
                 items: {
-                    P45_IMPUESTO_TASA_VIG_ID: #IMPUESTO_TASA_VIG_ID#
+                    P85_FERIADO_ID: #FERIADO_ID#
                 }
-                clearCache: 45
+                clearCache: 85
             }
             linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>
         }
@@ -99,11 +96,11 @@ page 44 (
         comments {
             comments:
                 ```
-                Listado de erp_gen_impuesto_tasa_vig. Alta/edición en la página 45 (guardado automático: catálogo).
+                Listado de erp_gen_feriado. Alta/edición en la página 85 (guardado automático: catálogo).
                 ```
         }
 
-        column IMPUESTO_TASA_VIG_ID (
+        column FERIADO_ID (
             type: hidden
             heading {
                 heading: ID
@@ -116,10 +113,10 @@ page 44 (
             }
         )
 
-        column TASA (
+        column PAIS (
             type: plainText
             heading {
-                heading: Tasa
+                heading: País
             }
             layout {
                 sequence: 20
@@ -128,14 +125,14 @@ page 44 (
                 dataType: STRING
             }
             comments {
-                comments: Display Label: Tasa. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: País. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column FECHA_DESDE (
+        column FECHA (
             type: plainText
             heading {
-                heading: Rige desde
+                heading: Fecha
             }
             layout {
                 sequence: 30
@@ -144,81 +141,49 @@ page 44 (
                 dataType: DATE
             }
             comments {
-                comments: Display Label: Rige desde. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Fecha. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column PORCENTAJE (
+        column DIA (
             type: plainText
             heading {
-                heading: Porcentaje
+                heading: Día
             }
             layout {
                 sequence: 40
             }
             source {
-                dataType: NUMBER
+                dataType: STRING
             }
             comments {
-                comments: Display Label: Porcentaje. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Día. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
 
-        column MONTO_MINIMO (
+        column NOMBRE (
             type: plainText
             heading {
-                heading: Monto mínimo
+                heading: Motivo
             }
             layout {
                 sequence: 50
             }
             source {
-                dataType: NUMBER
-            }
-            comments {
-                comments: Summary: Retenciones: se aplican desde este monto. Display Label: Monto mínimo. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column MONEDA_MINIMO (
-            type: plainText
-            heading {
-                heading: Moneda
-            }
-            layout {
-                sequence: 60
-            }
-            source {
                 dataType: STRING
             }
             comments {
-                comments: Display Label: Moneda. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
-            }
-        )
-
-        column OBSERVACION (
-            type: plainText
-            heading {
-                heading: Norma / observación
-            }
-            layout {
-                sequence: 70
-            }
-            source {
-                dataType: STRING
-            }
-            comments {
-                comments: Display Label: Norma / observación. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+                comments: Display Label: Motivo. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
             }
         )
     )
 
     button crear (
         buttonName: CREAR
-        label: Crear vigencia
+        label: Crear feriado
         layout {
             sequence: 10
-            region: @vigencias
+            region: @feriados
             slot: RIGHT_OF_IR_SEARCH_BAR
         }
         appearance {
@@ -230,8 +195,8 @@ page 44 (
         behavior {
             action: redirectThisApp
             target: {
-                page: 45
-                clearCache: 45
+                page: 85
+                clearCache: 85
             }
         }
     )
@@ -244,14 +209,14 @@ page 44 (
         when {
             event: apexafterclosedialog
             selectionType: region
-            region: @vigencias
+            region: @feriados
         }
 
         action refrescar (
             action: refresh
             affectedElements {
                 selectionType: region
-                region: @vigencias
+                region: @feriados
             }
             execution {
                 sequence: 10

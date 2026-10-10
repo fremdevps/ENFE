@@ -1,7 +1,7 @@
-page 65 (
-    name: Tipo de rol
-    alias: TIPO-ROL
-    title: Tipo de rol
+page 85 (
+    name: Feriado
+    alias: FERIADO
+    title: Feriado
     appearance {
         pageMode: modalDialog
         dialogTemplate: @/drawer
@@ -21,7 +21,7 @@ page 65 (
     help {
         helpText:
             ```
-            Alta y edición: tipo de rol.
+            Alta y edición: feriado.
             Los campos marcados son obligatorios.
             ```
     }
@@ -40,11 +40,11 @@ page 65 (
     )
 
     region formulario (
-        name: Tipo de rol
+        name: Feriado
         type: form
         source {
             location: localDatabase
-            tableName: ERP_GEN_TIPO_ROL
+            tableName: ERP_GEN_FERIADO
         }
         layout {
             sequence: 10
@@ -59,7 +59,7 @@ page 65 (
         }
     )
 
-    pageItem P65_TIPO_ROL_ID (
+    pageItem P85_FERIADO_ID (
         type: hidden
         layout {
             sequence: 10
@@ -68,7 +68,7 @@ page 65 (
         }
         source {
             formRegion: @formulario
-            column: TIPO_ROL_ID
+            column: FERIADO_ID
             dataType: number
             queryOnly: true
             primaryKey: true
@@ -78,10 +78,10 @@ page 65 (
         }
     )
 
-    pageItem P65_CODIGO (
-        type: textField
+    pageItem P85_PAIS_ID (
+        type: selectList
         label {
-            label: Código
+            label: País
         }
         layout {
             sequence: 20
@@ -95,24 +95,56 @@ page 65 (
         validation {
             valueRequired: true
         }
+        lov {
+            type: sharedComponent
+            lov: @paises
+        }
         source {
             formRegion: @formulario
-            column: CODIGO
-            dataType: varchar2
+            column: PAIS_ID
+            dataType: number
         }
         help {
-            inlineHelpText: Ej. CLIENTE
-            helpText: Código corto en mayúsculas.
+            inlineHelpText: País
+            helpText: País donde rige el feriado.
         }
     )
 
-    pageItem P65_NOMBRE (
-        type: textField
+    pageItem P85_FECHA (
+        type: datePicker
         label {
-            label: Nombre
+            label: Fecha
         }
         layout {
             sequence: 30
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @formulario
+            column: FECHA
+            dataType: date
+        }
+        help {
+            inlineHelpText: Día del feriado
+            helpText: Cargue los feriados de cada año (incluidos los trasladables).
+        }
+    )
+
+    pageItem P85_NOMBRE (
+        type: textField
+        label {
+            label: Motivo
+        }
+        layout {
+            sequence: 40
             region: @formulario
             slot: regionBody
         }
@@ -129,224 +161,8 @@ page 65 (
             dataType: varchar2
         }
         help {
-            inlineHelpText: Nombre visible
-            helpText: Nombre del rol.
-        }
-    )
-
-    pageItem P65_ES_VENTAS (
-        type: selectList
-        label {
-            label: Se usa en Ventas
-        }
-        layout {
-            sequence: 40
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
-        }
-        source {
-            formRegion: @formulario
-            column: ES_VENTAS
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Sí / No
-            helpText: Se ofrece en pedidos y facturas de venta.
-        }
-    )
-
-    pageItem P65_ES_COMPRAS (
-        type: selectList
-        label {
-            label: Se usa en Compras
-        }
-        layout {
-            sequence: 50
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
-        }
-        source {
-            formRegion: @formulario
-            column: ES_COMPRAS
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Sí / No
-            helpText: Se ofrece en órdenes y facturas de compra.
-        }
-    )
-
-    pageItem P65_ES_COBRAR (
-        type: selectList
-        label {
-            label: Genera cuentas a cobrar
-        }
-        layout {
-            sequence: 60
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
-        }
-        source {
-            formRegion: @formulario
-            column: ES_COBRAR
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Sí / No
-            helpText: La persona con este rol puede tener deudas con la empresa (clientes, socios).
-        }
-    )
-
-    pageItem P65_ES_PAGAR (
-        type: selectList
-        label {
-            label: Genera cuentas a pagar
-        }
-        layout {
-            sequence: 70
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
-        }
-        source {
-            formRegion: @formulario
-            column: ES_PAGAR
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Sí / No
-            helpText: La empresa puede deberle a la persona con este rol (proveedores, empleados).
-        }
-    )
-
-    pageItem P65_ES_STOCK (
-        type: selectList
-        label {
-            label: Se usa en Inventario
-        }
-        layout {
-            sequence: 80
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
-        }
-        source {
-            formRegion: @formulario
-            column: ES_STOCK
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Sí / No
-            helpText: Se ofrece en remisiones y movimientos (ej. transportistas).
-        }
-    )
-
-    pageItem P65_ESTADO (
-        type: selectList
-        label {
-            label: Estado
-        }
-        layout {
-            sequence: 90
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: A
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @estado-ai
-        }
-        source {
-            formRegion: @formulario
-            column: ESTADO
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Activo o inactivo
-            helpText: Los registros inactivos no se ofrecen en las listas.
+            inlineHelpText: Ej. Independencia
+            helpText: Nombre del feriado.
         }
     )
 
@@ -391,7 +207,7 @@ page 65 (
         }
         serverSideCondition {
             type: itemIsNotNull
-            item: P65_TIPO_ROL_ID
+            item: P85_FERIADO_ID
         }
     )
 
@@ -414,7 +230,7 @@ page 65 (
         }
         serverSideCondition {
             type: itemIsNotNull
-            item: P65_TIPO_ROL_ID
+            item: P85_FERIADO_ID
         }
     )
 
@@ -437,7 +253,7 @@ page 65 (
         }
         serverSideCondition {
             type: itemIsNull
-            item: P65_TIPO_ROL_ID
+            item: P85_FERIADO_ID
         }
     )
 
@@ -462,7 +278,7 @@ page 65 (
     )
 
     process inicializar (
-        name: Inicializar Tipo de rol
+        name: Inicializar Feriado
         type: formInitialization
         formRegion: @formulario
         execution {
@@ -472,7 +288,7 @@ page 65 (
     )
 
     process guardar-datos (
-        name: Guardar Tipo de rol
+        name: Guardar Feriado
         type: formAutoRowProcessing
         formRegion: @formulario
         execution {

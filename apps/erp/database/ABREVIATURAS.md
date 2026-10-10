@@ -9,6 +9,7 @@ Diseño de cada módulo: `docs/arquitectura-erp.md`.
 |---|---|
 | erp_gen_moneda | mon |
 | erp_gen_pais | pai |
+| erp_gen_feriado | feri |
 | erp_gen_ubicacion | ubi |
 | erp_gen_impuesto | imp |
 | erp_gen_impuesto_tasa | imta |
@@ -27,12 +28,14 @@ Diseño de cada módulo: `docs/arquitectura-erp.md`.
 | erp_gen_usuario_sucursal | ussu |
 | erp_gen_tipo_doc_identidad | tdi |
 | erp_gen_persona | prs |
+| erp_gen_persona_documento | prdo |
 | erp_gen_persona_direccion | prdi |
 | erp_gen_persona_contacto | prco |
 | erp_gen_tipo_rol | tirl |
 | erp_gen_persona_rol | prro |
 | erp_gen_parametro | par |
 | erp_gen_periodo | peri |
+| erp_gen_periodo_habilita | peha |
 
 ## Inventario (`stk`)
 

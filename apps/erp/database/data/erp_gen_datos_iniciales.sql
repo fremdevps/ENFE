@@ -177,17 +177,17 @@ using (select r.rubro_id, f.funcionalidad_id
 
 -- Roles de persona ------------------------------------------------------------------------
 merge into erp_gen_tipo_rol t
-using (select 'CLIENTE' codigo, 'Cliente' nombre, 'S' es_ventas, 'N' es_compras, 'S' es_finanzas, 'N' es_stock from dual union all
-       select 'PROVEEDOR',     'Proveedor',      'N', 'S', 'S', 'N' from dual union all
-       select 'EMPLEADO',      'Empleado',       'N', 'N', 'S', 'N' from dual union all
-       select 'VENDEDOR',      'Vendedor',       'S', 'N', 'N', 'N' from dual union all
-       select 'TRANSPORTISTA', 'Transportista',  'S', 'S', 'S', 'S' from dual union all
-       select 'PRODUCTOR',     'Productor',      'S', 'S', 'S', 'S' from dual union all
-       select 'BANCO',         'Banco / financiera', 'N', 'N', 'S', 'N' from dual) s
+using (select 'CLIENTE' codigo, 'Cliente' nombre, 'S' es_ventas, 'N' es_compras, 'S' es_cobrar, 'N' es_pagar, 'N' es_stock from dual union all
+       select 'PROVEEDOR',     'Proveedor',          'N', 'S', 'N', 'S', 'N' from dual union all
+       select 'EMPLEADO',      'Empleado',           'N', 'N', 'S', 'S', 'N' from dual union all
+       select 'VENDEDOR',      'Vendedor',           'S', 'N', 'N', 'S', 'N' from dual union all
+       select 'TRANSPORTISTA', 'Transportista',      'S', 'S', 'N', 'S', 'S' from dual union all
+       select 'PRODUCTOR',     'Productor',          'S', 'S', 'S', 'S', 'S' from dual union all
+       select 'BANCO',         'Banco / financiera', 'N', 'N', 'S', 'S', 'N' from dual) s
    on (t.codigo = s.codigo)
  when not matched then
-    insert (codigo, nombre, es_ventas, es_compras, es_finanzas, es_stock)
-    values (s.codigo, s.nombre, s.es_ventas, s.es_compras, s.es_finanzas, s.es_stock);
+    insert (codigo, nombre, es_ventas, es_compras, es_cobrar, es_pagar, es_stock)
+    values (s.codigo, s.nombre, s.es_ventas, s.es_compras, s.es_cobrar, s.es_pagar, s.es_stock);
 
 -- Parámetros generales (empresa_id null = valor por defecto de todas) -------------------
 merge into erp_gen_parametro t

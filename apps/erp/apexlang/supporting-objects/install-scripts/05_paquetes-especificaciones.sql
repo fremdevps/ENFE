@@ -192,6 +192,8 @@ as
 -- Desc    : Control de períodos abiertos/cerrados por empresa y módulo.
 --           Período sin registro = abierto, salvo que el parámetro
 --           ERP_GEN_PERIODO_ESTRICTO = 'S' (entonces debe existir y estar abierto).
+--           Un período cerrado admite registros del usuario de la sesión si tiene
+--           una habilitación vigente (erp_gen_periodo_habilita).
 -- =============================================================================
 
     c_err_periodo_cerrado     constant pls_integer := -20106;
@@ -449,6 +451,13 @@ as
         i_telefono               in erp_gen_persona.telefono%type,
         i_observacion            in erp_gen_persona.observacion%type,
         i_estado                 in erp_gen_persona.estado%type
+    );
+
+    -- Valida formato y dígito verificador (documentos adicionales de la persona).
+    procedure validar_documento (
+        i_tipo_doc_identidad_id  in number,
+        i_nro_documento          in varchar2,
+        i_dv                     in varchar2
     );
 
     -- Para mostrar el DV sugerido en pantalla.

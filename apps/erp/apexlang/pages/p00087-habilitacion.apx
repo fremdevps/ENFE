@@ -1,7 +1,7 @@
-page 65 (
-    name: Tipo de rol
-    alias: TIPO-ROL
-    title: Tipo de rol
+page 87 (
+    name: Habilitación de período
+    alias: HABILITACION
+    title: Habilitación de período
     appearance {
         pageMode: modalDialog
         dialogTemplate: @/drawer
@@ -14,14 +14,14 @@ page 65 (
         chained: false
     }
     security {
-        authorizationScheme: @erp-gen-catalogo-gestionar
+        authorizationScheme: @erp-gen-periodo-cerrar
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
     help {
         helpText:
             ```
-            Alta y edición: tipo de rol.
+            Alta y edición: habilitación de período.
             Los campos marcados son obligatorios.
             ```
     }
@@ -40,11 +40,11 @@ page 65 (
     )
 
     region formulario (
-        name: Tipo de rol
+        name: Habilitación de período
         type: form
         source {
             location: localDatabase
-            tableName: ERP_GEN_TIPO_ROL
+            tableName: ERP_GEN_PERIODO_HABILITA
         }
         layout {
             sequence: 10
@@ -59,7 +59,7 @@ page 65 (
         }
     )
 
-    pageItem P65_TIPO_ROL_ID (
+    pageItem P87_PERIODO_HABILITA_ID (
         type: hidden
         layout {
             sequence: 10
@@ -68,7 +68,7 @@ page 65 (
         }
         source {
             formRegion: @formulario
-            column: TIPO_ROL_ID
+            column: PERIODO_HABILITA_ID
             dataType: number
             queryOnly: true
             primaryKey: true
@@ -78,10 +78,10 @@ page 65 (
         }
     )
 
-    pageItem P65_CODIGO (
-        type: textField
+    pageItem P87_PERIODO_ID (
+        type: selectList
         label {
-            label: Código
+            label: Período
         }
         layout {
             sequence: 20
@@ -95,21 +95,25 @@ page 65 (
         validation {
             valueRequired: true
         }
+        lov {
+            type: sharedComponent
+            lov: @periodos-cerrados
+        }
         source {
             formRegion: @formulario
-            column: CODIGO
-            dataType: varchar2
+            column: PERIODO_ID
+            dataType: number
         }
         help {
-            inlineHelpText: Ej. CLIENTE
-            helpText: Código corto en mayúsculas.
+            inlineHelpText: Mes cerrado
+            helpText: Período cerrado en el que podrá registrar el usuario.
         }
     )
 
-    pageItem P65_NOMBRE (
-        type: textField
+    pageItem P87_USUARIO_ID (
+        type: popupLov
         label {
-            label: Nombre
+            label: Usuario
         }
         layout {
             sequence: 30
@@ -123,21 +127,25 @@ page 65 (
         validation {
             valueRequired: true
         }
+        lov {
+            type: sharedComponent
+            lov: @usuarios
+        }
         source {
             formRegion: @formulario
-            column: NOMBRE
-            dataType: varchar2
+            column: USUARIO_ID
+            dataType: number
         }
         help {
-            inlineHelpText: Nombre visible
-            helpText: Nombre del rol.
+            inlineHelpText: Usuario habilitado
+            helpText: Solo este usuario podrá registrar en el período.
         }
     )
 
-    pageItem P65_ES_VENTAS (
-        type: selectList
+    pageItem P87_FECHA_HASTA (
+        type: datePicker
         label {
-            label: Se usa en Ventas
+            label: Hasta
         }
         layout {
             sequence: 40
@@ -148,32 +156,24 @@ page 65 (
             template: @/required-floating
             templateOptions: #DEFAULT#
         }
-        default {
-            type: static
-            staticValue: N
-        }
         validation {
             valueRequired: true
         }
-        lov {
-            type: sharedComponent
-            lov: @si-no
-        }
         source {
             formRegion: @formulario
-            column: ES_VENTAS
-            dataType: varchar2
+            column: FECHA_HASTA
+            dataType: date
         }
         help {
-            inlineHelpText: Sí / No
-            helpText: Se ofrece en pedidos y facturas de venta.
+            inlineHelpText: Último día
+            helpText: Después de esta fecha la habilitación deja de valer.
         }
     )
 
-    pageItem P65_ES_COMPRAS (
-        type: selectList
+    pageItem P87_MOTIVO (
+        type: textarea
         label {
-            label: Se usa en Compras
+            label: Motivo
         }
         layout {
             sequence: 50
@@ -181,172 +181,17 @@ page 65 (
             slot: regionBody
         }
         appearance {
-            template: @/required-floating
+            template: @/optional-floating
             templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
         }
         source {
             formRegion: @formulario
-            column: ES_COMPRAS
+            column: MOTIVO
             dataType: varchar2
         }
         help {
-            inlineHelpText: Sí / No
-            helpText: Se ofrece en órdenes y facturas de compra.
-        }
-    )
-
-    pageItem P65_ES_COBRAR (
-        type: selectList
-        label {
-            label: Genera cuentas a cobrar
-        }
-        layout {
-            sequence: 60
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
-        }
-        source {
-            formRegion: @formulario
-            column: ES_COBRAR
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Sí / No
-            helpText: La persona con este rol puede tener deudas con la empresa (clientes, socios).
-        }
-    )
-
-    pageItem P65_ES_PAGAR (
-        type: selectList
-        label {
-            label: Genera cuentas a pagar
-        }
-        layout {
-            sequence: 70
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
-        }
-        source {
-            formRegion: @formulario
-            column: ES_PAGAR
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Sí / No
-            helpText: La empresa puede deberle a la persona con este rol (proveedores, empleados).
-        }
-    )
-
-    pageItem P65_ES_STOCK (
-        type: selectList
-        label {
-            label: Se usa en Inventario
-        }
-        layout {
-            sequence: 80
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
-        }
-        source {
-            formRegion: @formulario
-            column: ES_STOCK
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Sí / No
-            helpText: Se ofrece en remisiones y movimientos (ej. transportistas).
-        }
-    )
-
-    pageItem P65_ESTADO (
-        type: selectList
-        label {
-            label: Estado
-        }
-        layout {
-            sequence: 90
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: A
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @estado-ai
-        }
-        source {
-            formRegion: @formulario
-            column: ESTADO
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Activo o inactivo
-            helpText: Los registros inactivos no se ofrecen en las listas.
+            inlineHelpText: Obligatorio
+            helpText: Por qué se habilita; queda registrado para auditoría.
         }
     )
 
@@ -391,7 +236,7 @@ page 65 (
         }
         serverSideCondition {
             type: itemIsNotNull
-            item: P65_TIPO_ROL_ID
+            item: P87_PERIODO_HABILITA_ID
         }
     )
 
@@ -414,7 +259,7 @@ page 65 (
         }
         serverSideCondition {
             type: itemIsNotNull
-            item: P65_TIPO_ROL_ID
+            item: P87_PERIODO_HABILITA_ID
         }
     )
 
@@ -437,7 +282,7 @@ page 65 (
         }
         serverSideCondition {
             type: itemIsNull
-            item: P65_TIPO_ROL_ID
+            item: P87_PERIODO_HABILITA_ID
         }
     )
 
@@ -462,7 +307,7 @@ page 65 (
     )
 
     process inicializar (
-        name: Inicializar Tipo de rol
+        name: Inicializar Habilitación de período
         type: formInitialization
         formRegion: @formulario
         execution {
@@ -472,7 +317,7 @@ page 65 (
     )
 
     process guardar-datos (
-        name: Guardar Tipo de rol
+        name: Guardar Habilitación de período
         type: formAutoRowProcessing
         formRegion: @formulario
         execution {

@@ -7,6 +7,8 @@ create table erp_gen_impuesto_tasa_vig (
     impuesto_tasa_id      number         not null,
     fecha_desde           date           not null,
     porcentaje            number(9,4)    not null,
+    monto_minimo          number(18,2),
+    moneda_id             number,
     observacion           varchar2(400),
     creado_por            varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
     fecha_creacion        timestamp with local time zone default on null systimestamp not null,
@@ -14,17 +16,22 @@ create table erp_gen_impuesto_tasa_vig (
     fecha_modificacion    timestamp with local time zone,
     constraint pk_erp_itv primary key (impuesto_tasa_vig_id),
     constraint fk_erp_itv_imta foreign key (impuesto_tasa_id) references erp_gen_impuesto_tasa (impuesto_tasa_id) on delete cascade,
+    constraint fk_erp_itv_mon foreign key (moneda_id) references erp_gen_moneda (moneda_id),
     constraint uk_erp_itv_tasa_fecha unique (impuesto_tasa_id, fecha_desde),
-    constraint ck_erp_itv_porcentaje check (porcentaje between 0 and 100)
+    constraint ck_erp_itv_porcentaje check (porcentaje between 0 and 100),
+    constraint ck_erp_itv_minimo check (monto_minimo is null or (monto_minimo >= 0 and moneda_id is not null))
 );
 
 -- (impuesto_tasa_id ya indexado por la PK/UK)
+create index idx_erp_itv_moneda_id on erp_gen_impuesto_tasa_vig (moneda_id);
 
 comment on table  erp_gen_impuesto_tasa_vig is 'Porcentaje de una tasa con vigencia: rige desde fecha_desde hasta la siguiente vigencia. Abrev: itv';
 comment on column erp_gen_impuesto_tasa_vig.impuesto_tasa_vig_id is 'Identificador técnico (PK, identity)';
 comment on column erp_gen_impuesto_tasa_vig.impuesto_tasa_id     is 'Tasa (FK erp_gen_impuesto_tasa)';
 comment on column erp_gen_impuesto_tasa_vig.fecha_desde          is 'Fecha desde la que rige el porcentaje';
 comment on column erp_gen_impuesto_tasa_vig.porcentaje           is 'Porcentaje del impuesto (10 = 10 %)';
+comment on column erp_gen_impuesto_tasa_vig.monto_minimo         is 'Monto mínimo de la operación para aplicar la tasa (retenciones); null = siempre';
+comment on column erp_gen_impuesto_tasa_vig.moneda_id            is 'Moneda del monto mínimo (FK erp_gen_moneda)';
 comment on column erp_gen_impuesto_tasa_vig.observacion          is 'Norma o comentario';
 comment on column erp_gen_impuesto_tasa_vig.creado_por           is 'Usuario que creó el registro (APP_USER o usuario de BD)';
 comment on column erp_gen_impuesto_tasa_vig.fecha_creacion       is 'Fecha y hora de creación (con zona horaria)';

@@ -8,7 +8,8 @@ create table erp_gen_tipo_rol (
     nombre              varchar2(100)  not null,
     es_ventas           varchar2(1)    default on null 'N' not null,
     es_compras          varchar2(1)    default on null 'N' not null,
-    es_finanzas         varchar2(1)    default on null 'N' not null,
+    es_cobrar           varchar2(1)    default on null 'N' not null,
+    es_pagar            varchar2(1)    default on null 'N' not null,
     es_stock            varchar2(1)    default on null 'N' not null,
     estado              varchar2(1)    default on null 'A' not null,
     creado_por          varchar2(100)  default on null coalesce(sys_context('APEX$SESSION','APP_USER'), user) not null,
@@ -18,7 +19,7 @@ create table erp_gen_tipo_rol (
     constraint pk_erp_tirl primary key (tipo_rol_id),
     constraint uk_erp_tirl_codigo unique (codigo),
     constraint ck_erp_tirl_codigo_mayus check (codigo = upper(codigo)),
-    constraint ck_erp_tirl_modulos check (es_ventas in ('S','N') and es_compras in ('S','N') and es_finanzas in ('S','N') and es_stock in ('S','N')),
+    constraint ck_erp_tirl_modulos check (es_ventas in ('S','N') and es_compras in ('S','N') and es_cobrar in ('S','N') and es_pagar in ('S','N') and es_stock in ('S','N')),
     constraint ck_erp_tirl_estado check (estado in ('A','I'))
 );
 
@@ -29,7 +30,8 @@ comment on column erp_gen_tipo_rol.codigo             is 'Código en mayúsculas
 comment on column erp_gen_tipo_rol.nombre             is 'Nombre visible';
 comment on column erp_gen_tipo_rol.es_ventas          is 'S=Se ofrece en Ventas';
 comment on column erp_gen_tipo_rol.es_compras         is 'S=Se ofrece en Compras';
-comment on column erp_gen_tipo_rol.es_finanzas        is 'S=Se ofrece en Finanzas (cuentas a cobrar/pagar)';
+comment on column erp_gen_tipo_rol.es_cobrar          is 'S=Puede tener cuentas a cobrar (clientes, socios…)';
+comment on column erp_gen_tipo_rol.es_pagar           is 'S=Puede tener cuentas a pagar (proveedores, empleados…)';
 comment on column erp_gen_tipo_rol.es_stock           is 'S=Se ofrece en Inventario (transportistas, depositarios)';
 comment on column erp_gen_tipo_rol.estado             is 'A=Activo, I=Inactivo';
 comment on column erp_gen_tipo_rol.creado_por         is 'Usuario que creó el registro (APP_USER o usuario de BD)';

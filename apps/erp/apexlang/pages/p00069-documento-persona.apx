@@ -1,7 +1,7 @@
-page 65 (
-    name: Tipo de rol
-    alias: TIPO-ROL
-    title: Tipo de rol
+page 69 (
+    name: Documento adicional
+    alias: DOCUMENTO-PERSONA
+    title: Documento adicional
     appearance {
         pageMode: modalDialog
         dialogTemplate: @/drawer
@@ -14,15 +14,15 @@ page 65 (
         chained: false
     }
     security {
-        authorizationScheme: @erp-gen-catalogo-gestionar
+        authorizationScheme: @erp-gen-persona-gestionar
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
     help {
         helpText:
             ```
-            Alta y edición: tipo de rol.
-            Los campos marcados son obligatorios.
+            Alta y edición de documentos adicionales.
+            El número se valida (formato y dígito verificador) antes de guardar.
             ```
     }
 
@@ -40,11 +40,11 @@ page 65 (
     )
 
     region formulario (
-        name: Tipo de rol
+        name: Documento adicional
         type: form
         source {
             location: localDatabase
-            tableName: ERP_GEN_TIPO_ROL
+            tableName: ERP_GEN_PERSONA_DOCUMENTO
         }
         layout {
             sequence: 10
@@ -59,7 +59,7 @@ page 65 (
         }
     )
 
-    pageItem P65_TIPO_ROL_ID (
+    pageItem P69_PERSONA_DOCUMENTO_ID (
         type: hidden
         layout {
             sequence: 10
@@ -68,7 +68,7 @@ page 65 (
         }
         source {
             formRegion: @formulario
-            column: TIPO_ROL_ID
+            column: PERSONA_DOCUMENTO_ID
             dataType: number
             queryOnly: true
             primaryKey: true
@@ -78,10 +78,10 @@ page 65 (
         }
     )
 
-    pageItem P65_CODIGO (
-        type: textField
+    pageItem P69_PERSONA_ID (
+        type: popupLov
         label {
-            label: Código
+            label: Persona
         }
         layout {
             sequence: 20
@@ -95,21 +95,25 @@ page 65 (
         validation {
             valueRequired: true
         }
+        lov {
+            type: sharedComponent
+            lov: @personas
+        }
         source {
             formRegion: @formulario
-            column: CODIGO
-            dataType: varchar2
+            column: PERSONA_ID
+            dataType: number
         }
         help {
-            inlineHelpText: Ej. CLIENTE
-            helpText: Código corto en mayúsculas.
+            inlineHelpText: Busque por nombre o documento
+            helpText: Persona a la que pertenece el documento.
         }
     )
 
-    pageItem P65_NOMBRE (
-        type: textField
+    pageItem P69_TIPO_DOC_IDENTIDAD_ID (
+        type: selectList
         label {
-            label: Nombre
+            label: Tipo de documento
         }
         layout {
             sequence: 30
@@ -123,21 +127,25 @@ page 65 (
         validation {
             valueRequired: true
         }
+        lov {
+            type: sharedComponent
+            lov: @tipos-doc-identidad
+        }
         source {
             formRegion: @formulario
-            column: NOMBRE
-            dataType: varchar2
+            column: TIPO_DOC_IDENTIDAD_ID
+            dataType: number
         }
         help {
-            inlineHelpText: Nombre visible
-            helpText: Nombre del rol.
+            inlineHelpText: RUC, cédula…
+            helpText: Tipo del documento adicional.
         }
     )
 
-    pageItem P65_ES_VENTAS (
-        type: selectList
+    pageItem P69_NRO_DOCUMENTO (
+        type: textField
         label {
-            label: Se usa en Ventas
+            label: Número
         }
         layout {
             sequence: 40
@@ -148,32 +156,24 @@ page 65 (
             template: @/required-floating
             templateOptions: #DEFAULT#
         }
-        default {
-            type: static
-            staticValue: N
-        }
         validation {
             valueRequired: true
         }
-        lov {
-            type: sharedComponent
-            lov: @si-no
-        }
         source {
             formRegion: @formulario
-            column: ES_VENTAS
+            column: NRO_DOCUMENTO
             dataType: varchar2
         }
         help {
-            inlineHelpText: Sí / No
-            helpText: Se ofrece en pedidos y facturas de venta.
+            inlineHelpText: Sin puntos
+            helpText: Número del documento, sin dígito verificador.
         }
     )
 
-    pageItem P65_ES_COMPRAS (
-        type: selectList
+    pageItem P69_DV (
+        type: textField
         label {
-            label: Se usa en Compras
+            label: Dígito verificador
         }
         layout {
             sequence: 50
@@ -181,35 +181,24 @@ page 65 (
             slot: regionBody
         }
         appearance {
-            template: @/required-floating
+            template: @/optional-floating
             templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
         }
         source {
             formRegion: @formulario
-            column: ES_COMPRAS
+            column: DV
             dataType: varchar2
         }
         help {
-            inlineHelpText: Sí / No
-            helpText: Se ofrece en órdenes y facturas de compra.
+            inlineHelpText: Solo RUC
+            helpText: Se valida con el algoritmo de la SET.
         }
     )
 
-    pageItem P65_ES_COBRAR (
-        type: selectList
+    pageItem P69_FECHA_DESDE (
+        type: datePicker
         label {
-            label: Genera cuentas a cobrar
+            label: Desde
         }
         layout {
             sequence: 60
@@ -217,35 +206,24 @@ page 65 (
             slot: regionBody
         }
         appearance {
-            template: @/required-floating
+            template: @/optional-floating
             templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
         }
         source {
             formRegion: @formulario
-            column: ES_COBRAR
-            dataType: varchar2
+            column: FECHA_DESDE
+            dataType: date
         }
         help {
-            inlineHelpText: Sí / No
-            helpText: La persona con este rol puede tener deudas con la empresa (clientes, socios).
+            inlineHelpText: Vacío = hoy
+            helpText: Desde cuándo es válido.
         }
     )
 
-    pageItem P65_ES_PAGAR (
-        type: selectList
+    pageItem P69_FECHA_HASTA (
+        type: datePicker
         label {
-            label: Genera cuentas a pagar
+            label: Vence
         }
         layout {
             sequence: 70
@@ -253,100 +231,17 @@ page 65 (
             slot: regionBody
         }
         appearance {
-            template: @/required-floating
+            template: @/optional-floating
             templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
         }
         source {
             formRegion: @formulario
-            column: ES_PAGAR
-            dataType: varchar2
+            column: FECHA_HASTA
+            dataType: date
         }
         help {
-            inlineHelpText: Sí / No
-            helpText: La empresa puede deberle a la persona con este rol (proveedores, empleados).
-        }
-    )
-
-    pageItem P65_ES_STOCK (
-        type: selectList
-        label {
-            label: Se usa en Inventario
-        }
-        layout {
-            sequence: 80
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: N
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @si-no
-        }
-        source {
-            formRegion: @formulario
-            column: ES_STOCK
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Sí / No
-            helpText: Se ofrece en remisiones y movimientos (ej. transportistas).
-        }
-    )
-
-    pageItem P65_ESTADO (
-        type: selectList
-        label {
-            label: Estado
-        }
-        layout {
-            sequence: 90
-            region: @formulario
-            slot: regionBody
-        }
-        appearance {
-            template: @/required-floating
-            templateOptions: #DEFAULT#
-        }
-        default {
-            type: static
-            staticValue: A
-        }
-        validation {
-            valueRequired: true
-        }
-        lov {
-            type: sharedComponent
-            lov: @estado-ai
-        }
-        source {
-            formRegion: @formulario
-            column: ESTADO
-            dataType: varchar2
-        }
-        help {
-            inlineHelpText: Activo o inactivo
-            helpText: Los registros inactivos no se ofrecen en las listas.
+            inlineHelpText: Opcional
+            helpText: Fecha de vencimiento del documento.
         }
     )
 
@@ -391,7 +286,7 @@ page 65 (
         }
         serverSideCondition {
             type: itemIsNotNull
-            item: P65_TIPO_ROL_ID
+            item: P69_PERSONA_DOCUMENTO_ID
         }
     )
 
@@ -414,7 +309,7 @@ page 65 (
         }
         serverSideCondition {
             type: itemIsNotNull
-            item: P65_TIPO_ROL_ID
+            item: P69_PERSONA_DOCUMENTO_ID
         }
     )
 
@@ -437,7 +332,7 @@ page 65 (
         }
         serverSideCondition {
             type: itemIsNull
-            item: P65_TIPO_ROL_ID
+            item: P69_PERSONA_DOCUMENTO_ID
         }
     )
 
@@ -462,7 +357,7 @@ page 65 (
     )
 
     process inicializar (
-        name: Inicializar Tipo de rol
+        name: Inicializar Documento adicional
         type: formInitialization
         formRegion: @formulario
         execution {
@@ -471,8 +366,29 @@ page 65 (
         }
     )
 
+    process validar-documento (
+        name: Validar documento
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                erp_gen_persona_api.validar_documento(
+                    i_tipo_doc_identidad_id => :P69_TIPO_DOC_IDENTIDAD_ID,
+                    i_nro_documento         => :P69_NRO_DOCUMENTO,
+                    i_dv                    => :P69_DV);
+                ```
+        }
+        execution {
+            sequence: 5
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: CREAR,GUARDAR
+        }
+    )
+
     process guardar-datos (
-        name: Guardar Tipo de rol
+        name: Guardar Documento adicional
         type: formAutoRowProcessing
         formRegion: @formulario
         execution {

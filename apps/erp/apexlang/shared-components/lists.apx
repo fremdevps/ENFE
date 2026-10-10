@@ -279,13 +279,32 @@ list navigation-menu (
         }
     )
 
+    entry habilitaciones (
+        label: Habilitaciones de período
+        icon {
+            imageIconCssClasses: fa-unlock
+        }
+        layout {
+            sequence: 30
+            parentEntry: @empresa
+        }
+        link {
+            target: {
+                page: 86
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-periodo-cerrar
+        }
+    )
+
     entry monedas-grp (
         label: Monedas
         icon {
             imageIconCssClasses: fa-money
         }
         layout {
-            sequence: 39
+            sequence: 40
         }
         link {
             target: {
@@ -301,7 +320,7 @@ list navigation-menu (
             imageIconCssClasses: fa-money
         }
         layout {
-            sequence: 40
+            sequence: 41
             parentEntry: @monedas-grp
         }
         link {
@@ -320,7 +339,7 @@ list navigation-menu (
             imageIconCssClasses: fa-line-chart
         }
         layout {
-            sequence: 41
+            sequence: 42
             parentEntry: @monedas-grp
         }
         link {
@@ -339,7 +358,7 @@ list navigation-menu (
             imageIconCssClasses: fa-percent
         }
         layout {
-            sequence: 51
+            sequence: 52
         }
         link {
             target: {
@@ -355,7 +374,7 @@ list navigation-menu (
             imageIconCssClasses: fa-bank
         }
         layout {
-            sequence: 52
+            sequence: 53
             parentEntry: @impuestos-grp
         }
         link {
@@ -374,7 +393,7 @@ list navigation-menu (
             imageIconCssClasses: fa-percent
         }
         layout {
-            sequence: 53
+            sequence: 54
             parentEntry: @impuestos-grp
         }
         link {
@@ -393,7 +412,7 @@ list navigation-menu (
             imageIconCssClasses: fa-calendar-check-o
         }
         layout {
-            sequence: 54
+            sequence: 55
             parentEntry: @impuestos-grp
         }
         link {
@@ -412,7 +431,7 @@ list navigation-menu (
             imageIconCssClasses: fa-tags
         }
         layout {
-            sequence: 55
+            sequence: 56
             parentEntry: @impuestos-grp
         }
         link {
@@ -431,7 +450,7 @@ list navigation-menu (
             imageIconCssClasses: fa-th-list
         }
         layout {
-            sequence: 56
+            sequence: 57
             parentEntry: @impuestos-grp
         }
         link {
@@ -450,7 +469,7 @@ list navigation-menu (
             imageIconCssClasses: fa-calculator
         }
         layout {
-            sequence: 57
+            sequence: 58
             parentEntry: @impuestos-grp
         }
         link {
@@ -469,7 +488,7 @@ list navigation-menu (
             imageIconCssClasses: fa-address-book-o
         }
         layout {
-            sequence: 67
+            sequence: 68
         }
         link {
             target: {
@@ -485,7 +504,7 @@ list navigation-menu (
             imageIconCssClasses: fa-address-book-o
         }
         layout {
-            sequence: 68
+            sequence: 69
             parentEntry: @personas-grp
         }
         link {
@@ -504,7 +523,7 @@ list navigation-menu (
             imageIconCssClasses: fa-user-circle-o
         }
         layout {
-            sequence: 69
+            sequence: 70
             parentEntry: @personas-grp
         }
         link {
@@ -523,7 +542,7 @@ list navigation-menu (
             imageIconCssClasses: fa-tag
         }
         layout {
-            sequence: 70
+            sequence: 71
             parentEntry: @personas-grp
         }
         link {
@@ -542,7 +561,7 @@ list navigation-menu (
             imageIconCssClasses: fa-id-badge
         }
         layout {
-            sequence: 71
+            sequence: 72
             parentEntry: @personas-grp
         }
         link {
@@ -555,13 +574,32 @@ list navigation-menu (
         }
     )
 
+    entry documentos-persona (
+        label: Documentos adicionales
+        icon {
+            imageIconCssClasses: fa-files-o
+        }
+        layout {
+            sequence: 73
+            parentEntry: @personas-grp
+        }
+        link {
+            target: {
+                page: 68
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-persona-ver
+        }
+    )
+
     entry catalogos (
         label: Catálogos
         icon {
             imageIconCssClasses: fa-book
         }
         layout {
-            sequence: 81
+            sequence: 83
         }
         link {
             target: {
@@ -577,7 +615,7 @@ list navigation-menu (
             imageIconCssClasses: fa-globe
         }
         layout {
-            sequence: 82
+            sequence: 84
             parentEntry: @catalogos
         }
         link {
@@ -596,12 +634,31 @@ list navigation-menu (
             imageIconCssClasses: fa-map-o
         }
         layout {
-            sequence: 83
+            sequence: 85
             parentEntry: @catalogos
         }
         link {
             target: {
                 page: 72
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry feriados (
+        label: Feriados
+        icon {
+            imageIconCssClasses: fa-calendar-times-o
+        }
+        layout {
+            sequence: 86
+            parentEntry: @catalogos
+        }
+        link {
+            target: {
+                page: 84
             }
         }
         security {
@@ -615,7 +672,7 @@ list navigation-menu (
             imageIconCssClasses: fa-puzzle-piece
         }
         layout {
-            sequence: 84
+            sequence: 87
             parentEntry: @catalogos
         }
         link {
@@ -634,7 +691,7 @@ list navigation-menu (
             imageIconCssClasses: fa-industry
         }
         layout {
-            sequence: 85
+            sequence: 88
             parentEntry: @catalogos
         }
         link {
@@ -653,7 +710,7 @@ list navigation-menu (
             imageIconCssClasses: fa-th
         }
         layout {
-            sequence: 86
+            sequence: 89
             parentEntry: @catalogos
         }
         link {
@@ -860,13 +917,34 @@ list accesos (
         }
     )
 
+    entry acc-habilitaciones (
+        label: Habilitaciones de período
+        icon {
+            imageIconCssClasses: fa-unlock
+        }
+        layout {
+            sequence: 100
+        }
+        link {
+            target: {
+                page: 86
+            }
+        }
+        userDefinedAttributes {
+            1: Permite a un usuario registrar en un mes cerrado.
+        }
+        security {
+            authorizationScheme: @erp-gen-periodo-cerrar
+        }
+    )
+
     entry acc-monedas (
         label: Monedas
         icon {
             imageIconCssClasses: fa-money
         }
         layout {
-            sequence: 100
+            sequence: 110
         }
         link {
             target: {
@@ -887,7 +965,7 @@ list accesos (
             imageIconCssClasses: fa-line-chart
         }
         layout {
-            sequence: 110
+            sequence: 120
         }
         link {
             target: {
@@ -908,7 +986,7 @@ list accesos (
             imageIconCssClasses: fa-bank
         }
         layout {
-            sequence: 120
+            sequence: 130
         }
         link {
             target: {
@@ -929,7 +1007,7 @@ list accesos (
             imageIconCssClasses: fa-percent
         }
         layout {
-            sequence: 130
+            sequence: 140
         }
         link {
             target: {
@@ -950,7 +1028,7 @@ list accesos (
             imageIconCssClasses: fa-calendar-check-o
         }
         layout {
-            sequence: 140
+            sequence: 150
         }
         link {
             target: {
@@ -971,7 +1049,7 @@ list accesos (
             imageIconCssClasses: fa-tags
         }
         layout {
-            sequence: 150
+            sequence: 160
         }
         link {
             target: {
@@ -992,7 +1070,7 @@ list accesos (
             imageIconCssClasses: fa-th-list
         }
         layout {
-            sequence: 160
+            sequence: 170
         }
         link {
             target: {
@@ -1013,7 +1091,7 @@ list accesos (
             imageIconCssClasses: fa-calculator
         }
         layout {
-            sequence: 170
+            sequence: 180
         }
         link {
             target: {
@@ -1034,7 +1112,7 @@ list accesos (
             imageIconCssClasses: fa-address-book-o
         }
         layout {
-            sequence: 180
+            sequence: 190
         }
         link {
             target: {
@@ -1055,7 +1133,7 @@ list accesos (
             imageIconCssClasses: fa-user-circle-o
         }
         layout {
-            sequence: 190
+            sequence: 200
         }
         link {
             target: {
@@ -1076,7 +1154,7 @@ list accesos (
             imageIconCssClasses: fa-tag
         }
         layout {
-            sequence: 200
+            sequence: 210
         }
         link {
             target: {
@@ -1097,7 +1175,7 @@ list accesos (
             imageIconCssClasses: fa-id-badge
         }
         layout {
-            sequence: 210
+            sequence: 220
         }
         link {
             target: {
@@ -1112,13 +1190,34 @@ list accesos (
         }
     )
 
+    entry acc-documentos-persona (
+        label: Documentos adicionales
+        icon {
+            imageIconCssClasses: fa-files-o
+        }
+        layout {
+            sequence: 230
+        }
+        link {
+            target: {
+                page: 68
+            }
+        }
+        userDefinedAttributes {
+            1: Otros documentos de cada persona.
+        }
+        security {
+            authorizationScheme: @erp-gen-persona-ver
+        }
+    )
+
     entry acc-paises (
         label: Países
         icon {
             imageIconCssClasses: fa-globe
         }
         layout {
-            sequence: 220
+            sequence: 240
         }
         link {
             target: {
@@ -1139,7 +1238,7 @@ list accesos (
             imageIconCssClasses: fa-map-o
         }
         layout {
-            sequence: 230
+            sequence: 250
         }
         link {
             target: {
@@ -1154,13 +1253,34 @@ list accesos (
         }
     )
 
+    entry acc-feriados (
+        label: Feriados
+        icon {
+            imageIconCssClasses: fa-calendar-times-o
+        }
+        layout {
+            sequence: 260
+        }
+        link {
+            target: {
+                page: 84
+            }
+        }
+        userDefinedAttributes {
+            1: Feriados por país para vencimientos.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
     entry acc-funcionalidades (
         label: Funcionalidades
         icon {
             imageIconCssClasses: fa-puzzle-piece
         }
         layout {
-            sequence: 240
+            sequence: 270
         }
         link {
             target: {
@@ -1181,7 +1301,7 @@ list accesos (
             imageIconCssClasses: fa-industry
         }
         layout {
-            sequence: 250
+            sequence: 280
         }
         link {
             target: {
@@ -1202,7 +1322,7 @@ list accesos (
             imageIconCssClasses: fa-th
         }
         layout {
-            sequence: 260
+            sequence: 290
         }
         link {
             target: {

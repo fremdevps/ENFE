@@ -30,6 +30,21 @@ begin
 end trg_erp_pai_bu;
 /
 
+-- >>> apps/erp/database/triggers/trg_erp_feri_bu.sql
+-- =============================================================================
+-- Trigger : trg_erp_feri_bu
+-- Tabla   : erp_gen_feriado
+-- Desc    : Before Update - registra usuario y fecha de modificación.
+-- =============================================================================
+create or replace trigger trg_erp_feri_bu
+    before update on erp_gen_feriado
+    for each row
+begin
+    :new.modificado_por     := coalesce(sys_context('APEX$SESSION','APP_USER'), user);
+    :new.fecha_modificacion := systimestamp;
+end trg_erp_feri_bu;
+/
+
 -- >>> apps/erp/database/triggers/trg_erp_ubi_bu.sql
 -- =============================================================================
 -- Trigger : trg_erp_ubi_bu
@@ -315,6 +330,21 @@ begin
 end trg_erp_prs_bu;
 /
 
+-- >>> apps/erp/database/triggers/trg_erp_prdo_bu.sql
+-- =============================================================================
+-- Trigger : trg_erp_prdo_bu
+-- Tabla   : erp_gen_persona_documento
+-- Desc    : Before Update - registra usuario y fecha de modificación.
+-- =============================================================================
+create or replace trigger trg_erp_prdo_bu
+    before update on erp_gen_persona_documento
+    for each row
+begin
+    :new.modificado_por     := coalesce(sys_context('APEX$SESSION','APP_USER'), user);
+    :new.fecha_modificacion := systimestamp;
+end trg_erp_prdo_bu;
+/
+
 -- >>> apps/erp/database/triggers/trg_erp_prdi_bu.sql
 -- =============================================================================
 -- Trigger : trg_erp_prdi_bu
@@ -403,4 +433,19 @@ begin
     :new.modificado_por     := coalesce(sys_context('APEX$SESSION','APP_USER'), user);
     :new.fecha_modificacion := systimestamp;
 end trg_erp_peri_bu;
+/
+
+-- >>> apps/erp/database/triggers/trg_erp_peha_bu.sql
+-- =============================================================================
+-- Trigger : trg_erp_peha_bu
+-- Tabla   : erp_gen_periodo_habilita
+-- Desc    : Before Update - registra usuario y fecha de modificación.
+-- =============================================================================
+create or replace trigger trg_erp_peha_bu
+    before update on erp_gen_periodo_habilita
+    for each row
+begin
+    :new.modificado_por     := coalesce(sys_context('APEX$SESSION','APP_USER'), user);
+    :new.fecha_modificacion := systimestamp;
+end trg_erp_peha_bu;
 /

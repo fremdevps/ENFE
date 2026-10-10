@@ -94,6 +94,8 @@ DINAMICAS = {
     'puntos-expedicion': (f"select s.establecimiento || '-' || p.codigo || ' ' || p.nombre d, p.punto_expedicion_id r\n"
                           "  from erp_gen_punto_expedicion p\n  join erp_gen_sucursal s on s.sucursal_id = p.sucursal_id\n"
                           f" where s.empresa_id = {EMP}\n   and p.estado = 'A'\n order by s.establecimiento, p.codigo"),
+    'periodos-cerrados': (f"select modulo || ' ' || lpad(mes, 2, '0') || '/' || anio d, periodo_id r\n  from erp_gen_periodo\n"
+                          f" where empresa_id = {EMP}\n   and estado = 'C'\n order by anio desc, mes desc, modulo"),
     'usuarios': "select username || ' - ' || nombres || ' ' || apellidos d, usuario_id r\n  from adm_seg_usuario\n where estado = 'A'\n order by username",
     'personas': ("select p.razon_social || ' (' || p.nro_documento || nvl2(p.dv, '-' || p.dv, null) || ')' d, p.persona_id r\n"
                  "  from erp_gen_persona p\n where p.estado = 'A'\n order by p.razon_social"),
@@ -164,7 +166,8 @@ GRUPOS = [
         ('usuarios-sucursal', 'Usuarios por sucursal', 'fa-users', 20, 'Qué sucursales opera cada usuario.', 'erp-gen-empresa-configurar'),
         ('func-empresa', 'Funcionalidades activas', 'fa-toggle-on', 22, 'Lo que usa la empresa según su rubro.', 'erp-gen-empresa-configurar'),
         ('parametros', 'Parámetros', 'fa-sliders', 80, 'Ajustes del comportamiento del ERP.', 'erp-gen-empresa-configurar'),
-        ('periodos', 'Períodos', 'fa-calendar', 82, 'Apertura y cierre de meses por módulo.', 'erp-gen-periodo-cerrar')]),
+        ('periodos', 'Períodos', 'fa-calendar', 82, 'Apertura y cierre de meses por módulo.', 'erp-gen-periodo-cerrar'),
+        ('habilitaciones', 'Habilitaciones de período', 'fa-unlock', 86, 'Permite a un usuario registrar en un mes cerrado.', 'erp-gen-periodo-cerrar')]),
     ('monedas-grp', 'Monedas', 'fa-money', [
         ('monedas', 'Monedas', 'fa-money', 30, 'Monedas y sus decimales.', 'erp-gen-catalogo-gestionar'),
         ('cotizaciones', 'Cotizaciones', 'fa-line-chart', 32, 'Tipos de cambio por fecha.', 'erp-gen-cotizacion-gestionar')]),
@@ -179,10 +182,12 @@ GRUPOS = [
         ('personas', 'Personas', 'fa-address-book-o', 60, 'Padrón único de personas físicas y jurídicas.', 'erp-gen-persona-ver'),
         ('roles-persona', 'Roles por empresa', 'fa-user-circle-o', 62, 'Clientes, proveedores, empleados… de la empresa activa.', 'erp-gen-persona-ver'),
         ('tipos-rol', 'Tipos de rol', 'fa-tag', 64, 'Roles de persona disponibles.', 'erp-gen-catalogo-gestionar'),
-        ('tipos-documento', 'Tipos de documento', 'fa-id-badge', 66, 'RUC, cédula, pasaporte…', 'erp-gen-catalogo-gestionar')]),
+        ('tipos-documento', 'Tipos de documento', 'fa-id-badge', 66, 'RUC, cédula, pasaporte…', 'erp-gen-catalogo-gestionar'),
+        ('documentos-persona', 'Documentos adicionales', 'fa-files-o', 68, 'Otros documentos de cada persona.', 'erp-gen-persona-ver')]),
     ('catalogos', 'Catálogos', 'fa-book', [
         ('paises', 'Países', 'fa-globe', 70, 'Países y su moneda.', 'erp-gen-catalogo-gestionar'),
         ('ubicaciones', 'Ubicaciones', 'fa-map-o', 72, 'Departamentos, distritos y ciudades.', 'erp-gen-catalogo-gestionar'),
+        ('feriados', 'Feriados', 'fa-calendar-times-o', 84, 'Feriados por país para vencimientos.', 'erp-gen-catalogo-gestionar'),
         ('funcionalidades', 'Funcionalidades', 'fa-puzzle-piece', 74, 'Catálogo de funcionalidades activables.', 'erp-gen-catalogo-gestionar'),
         ('rubros', 'Rubros', 'fa-industry', 76, 'Perfiles de rubro.', 'erp-gen-catalogo-gestionar'),
         ('rubro-func', 'Funcionalidades por rubro', 'fa-th', 78, 'Qué activa cada rubro.', 'erp-gen-catalogo-gestionar')]),
@@ -681,13 +686,17 @@ if __name__ == '__main__':
              "Tasas de cada impuesto. El porcentaje se carga en Vigencias de tasas, con fecha desde.", 'Crear tasa')
 
     catalogo(44, 'VIGENCIAS', 'Vigencias de tasas', 'vigencias', 'IMPUESTO_TASA_VIG_ID', 'erp_gen_impuesto_tasa_vig', 45, 'VIGENCIA', 'Vigencia de tasa', CAT,
-             "select v.impuesto_tasa_vig_id, i.codigo || ' / ' || t.codigo tasa, v.fecha_desde, v.porcentaje, v.observacion\n"
+             "select v.impuesto_tasa_vig_id, i.codigo || ' / ' || t.codigo tasa, v.fecha_desde, v.porcentaje,\n"
+             "       v.monto_minimo, m.codigo moneda_minimo, v.observacion\n"
              "  from erp_gen_impuesto_tasa_vig v\n  join erp_gen_impuesto_tasa t on t.impuesto_tasa_id = v.impuesto_tasa_id\n"
-             "  join erp_gen_impuesto i on i.impuesto_id = t.impuesto_id",
-             [S('TASA', 'Tasa'), D('FECHA_DESDE', 'Rige desde'), N('PORCENTAJE', 'Porcentaje'), S('OBSERVACION', 'Norma / observación')],
+             "  join erp_gen_impuesto i on i.impuesto_id = t.impuesto_id\n  left join erp_gen_moneda m on m.moneda_id = v.moneda_id",
+             [S('TASA', 'Tasa'), D('FECHA_DESDE', 'Rige desde'), N('PORCENTAJE', 'Porcentaje'), N('MONTO_MINIMO', 'Monto mínimo', 'Retenciones: se aplican desde este monto.'),
+              S('MONEDA_MINIMO', 'Moneda'), S('OBSERVACION', 'Norma / observación')],
              [sel('IMPUESTO_TASA_ID', 'Tasa', 'impuesto-tasas', 'Tasa a la que aplica', 'Tasa cuyo porcentaje cambia.'),
               fecha('FECHA_DESDE', 'Rige desde', 'Fecha de inicio', 'El porcentaje rige desde esta fecha hasta la siguiente vigencia.', True),
               num('PORCENTAJE', 'Porcentaje', '10 = 10 %', 'Porcentaje del impuesto.', True),
+              num('MONTO_MINIMO', 'Monto mínimo', 'Vacío = siempre', 'Para retenciones: monto de la operación desde el cual se aplica la tasa.'),
+              sel('MONEDA_ID', 'Moneda del mínimo', 'monedas', 'Si hay mínimo', 'Moneda en la que está expresado el monto mínimo.', req=False, nulo='- Ninguna -'),
               area('OBSERVACION', 'Norma / observación', 'Opcional', 'Ley o resolución que fija el porcentaje.')],
              "Porcentaje de cada tasa a lo largo del tiempo. Un cambio de tasa no altera documentos ya emitidos.", 'Crear vigencia')
 
@@ -786,15 +795,17 @@ if __name__ == '__main__':
 
     catalogo(64, 'TIPOS-ROL', 'Tipos de rol', 'tipos-rol', 'TIPO_ROL_ID', 'erp_gen_tipo_rol', 65, 'TIPO-ROL', 'Tipo de rol', CAT,
              "select tipo_rol_id, codigo, nombre, decode(es_ventas, 'S', 'Sí', 'No') ventas, decode(es_compras, 'S', 'Sí', 'No') compras,\n"
-             "       decode(es_finanzas, 'S', 'Sí', 'No') finanzas, decode(es_stock, 'S', 'Sí', 'No') stock, " + EST_SQL.format(p='') + "\n"
+             "       decode(es_cobrar, 'S', 'Sí', 'No') a_cobrar, decode(es_pagar, 'S', 'Sí', 'No') a_pagar,\n"
+             "       decode(es_stock, 'S', 'Sí', 'No') stock, " + EST_SQL.format(p='') + "\n"
              "  from erp_gen_tipo_rol",
-             [S('CODIGO', 'Código'), S('NOMBRE', 'Nombre'), S('VENTAS', 'Ventas'), S('COMPRAS', 'Compras'), S('FINANZAS', 'Finanzas'),
-              S('STOCK', 'Inventario'), S('ESTADO', 'Estado')],
+             [S('CODIGO', 'Código'), S('NOMBRE', 'Nombre'), S('VENTAS', 'Ventas'), S('COMPRAS', 'Compras'), S('A_COBRAR', 'A cobrar'),
+              S('A_PAGAR', 'A pagar'), S('STOCK', 'Inventario'), S('ESTADO', 'Estado')],
              [txt('CODIGO', 'Código', 'Ej. CLIENTE', 'Código corto en mayúsculas.', True),
               txt('NOMBRE', 'Nombre', 'Nombre visible', 'Nombre del rol.', True),
               sn('ES_VENTAS', 'Se usa en Ventas', 'Sí / No', 'Se ofrece en pedidos y facturas de venta.'),
               sn('ES_COMPRAS', 'Se usa en Compras', 'Sí / No', 'Se ofrece en órdenes y facturas de compra.'),
-              sn('ES_FINANZAS', 'Se usa en Finanzas', 'Sí / No', 'Puede tener cuentas a cobrar o a pagar.'),
+              sn('ES_COBRAR', 'Genera cuentas a cobrar', 'Sí / No', 'La persona con este rol puede tener deudas con la empresa (clientes, socios).'),
+              sn('ES_PAGAR', 'Genera cuentas a pagar', 'Sí / No', 'La empresa puede deberle a la persona con este rol (proveedores, empleados).'),
               sn('ES_STOCK', 'Se usa en Inventario', 'Sí / No', 'Se ofrece en remisiones y movimientos (ej. transportistas).'),
               ESTADO],
              "Roles que puede tener una persona. Agregue los que necesite su rubro (socio, productor, paciente…).", 'Crear tipo de rol')
@@ -815,6 +826,32 @@ if __name__ == '__main__':
               txt('CODIGO_OFICIAL', 'Código oficial', 'SIFEN iTipIDRec', '1=Cédula, 2=Pasaporte, 3=Cédula extranjera, 4=Carnet de residencia, 5=Innominado, 6=Diplomática, 9=Otro.'),
               ESTADO],
              "Tipos de documento de identidad por país.", 'Crear tipo de documento')
+
+    validar_doc = ["", "    process validar-documento (", "        name: Validar documento", "        type: executeCode", "        source {",
+                   "            plsqlCode:" + code('plsql', "erp_gen_persona_api.validar_documento(\n    i_tipo_doc_identidad_id => :P69_TIPO_DOC_IDENTIDAD_ID,\n"
+                                                      "    i_nro_documento         => :P69_NRO_DOCUMENTO,\n    i_dv                    => :P69_DV);", 16),
+                   "        }", "        execution {", "            sequence: 5", "        }", "        serverSideCondition {",
+                   "            type: requestIsContainedInValue", "            value: CREAR,GUARDAR", "        }", "    )"]
+    base.pagina_listado('p00068-documentos-persona.apx', 68, 'DOCUMENTOS-PERSONA', 'Documentos adicionales', 'erp-gen-persona-ver', 'documentos-persona',
+        "select d.persona_documento_id, p.razon_social persona, td.codigo tipo, d.nro_documento || nvl2(d.dv, '-' || d.dv, null) documento,\n"
+        "       d.fecha_desde, d.fecha_hasta\n"
+        "  from erp_gen_persona_documento d\n  join erp_gen_persona p on p.persona_id = d.persona_id\n"
+        "  join erp_gen_tipo_doc_identidad td on td.tipo_doc_identidad_id = d.tipo_doc_identidad_id",
+        'PERSONA_DOCUMENTO_ID', 69,
+        [S('PERSONA', 'Persona'), S('TIPO', 'Tipo'), S('DOCUMENTO', 'Documento'), D('FECHA_DESDE', 'Desde'), D('FECHA_HASTA', 'Vence')],
+        "Documentos de identidad adicionales de las personas (por ejemplo cédula y RUC, o pasaporte y RUC).\n"
+        "El documento principal se carga en la persona.",
+        "Listado de erp_gen_persona_documento. Alta/edición en la página 69 con validación vía erp_gen_persona_api.", 'Agregar documento', 'erp-gen-persona-gestionar')
+    base.pagina_formulario('p00069-documento-persona.apx', 69, 'DOCUMENTO-PERSONA', 'Documento adicional', 'erp-gen-persona-gestionar',
+        'erp_gen_persona_documento', 'PERSONA_DOCUMENTO_ID',
+        [sel('PERSONA_ID', 'Persona', 'personas', 'Busque por nombre o documento', 'Persona a la que pertenece el documento.', popup=True),
+         sel('TIPO_DOC_IDENTIDAD_ID', 'Tipo de documento', 'tipos-doc-identidad', 'RUC, cédula…', 'Tipo del documento adicional.'),
+         txt('NRO_DOCUMENTO', 'Número', 'Sin puntos', 'Número del documento, sin dígito verificador.', True),
+         txt('DV', 'Dígito verificador', 'Solo RUC', 'Se valida con el algoritmo de la SET.'),
+         fecha('FECHA_DESDE', 'Desde', 'Vacío = hoy', 'Desde cuándo es válido.'),
+         fecha('FECHA_HASTA', 'Vence', 'Opcional', 'Fecha de vencimiento del documento.')],
+        "Alta y edición de documentos adicionales.\nEl número se valida (formato y dígito verificador) antes de guardar.",
+        extras=validar_doc)
 
     # ------------------------------------------------------------------ CATÁLOGOS
     catalogo(70, 'PAISES', 'Países', 'paises', 'PAIS_ID', 'erp_gen_pais', 71, 'PAIS', 'País', CAT,
@@ -874,6 +911,15 @@ if __name__ == '__main__':
               sel('FUNCIONALIDAD_ID', 'Funcionalidad', 'funcionalidades', 'Qué activa', 'Funcionalidad que el rubro sugiere activar.')],
              "Qué funcionalidades sugiere cada rubro.", 'Agregar funcionalidad')
 
+    catalogo(84, 'FERIADOS', 'Feriados', 'feriados', 'FERIADO_ID', 'erp_gen_feriado', 85, 'FERIADO', 'Feriado', CAT,
+             "select f.feriado_id, p.nombre pais, f.fecha, to_char(f.fecha, 'Day', 'nls_date_language=spanish') dia, f.nombre\n"
+             "  from erp_gen_feriado f\n  join erp_gen_pais p on p.pais_id = f.pais_id",
+             [S('PAIS', 'País'), D('FECHA', 'Fecha'), S('DIA', 'Día'), S('NOMBRE', 'Motivo')],
+             [sel('PAIS_ID', 'País', 'paises', 'País', 'País donde rige el feriado.'),
+              fecha('FECHA', 'Fecha', 'Día del feriado', 'Cargue los feriados de cada año (incluidos los trasladables).', True),
+              txt('NOMBRE', 'Motivo', 'Ej. Independencia', 'Nombre del feriado.', True)],
+             "Feriados por país. Se usan para calcular vencimientos, plazos e intereses en días hábiles.", 'Crear feriado')
+
     # ------------------------------------------------------------------ PARÁMETROS Y PERÍODOS
     catalogo(80, 'PARAMETROS', 'Parámetros', 'parametros', 'PARAMETRO_ID', 'erp_gen_parametro', 81, 'PARAMETRO', 'Parámetro', CFG,
              "select pa.parametro_id, pa.codigo, pa.valor,\n"
@@ -919,6 +965,20 @@ if __name__ == '__main__':
                                                       "    :P83_MODULO := r.modulo;\n    :P83_ANIO   := r.anio;\n    :P83_MES    := r.mes;\nend loop;", 16),
                 "        }", "        execution {", "            sequence: 10", "            point: beforeHeader", "        }",
                 "        serverSideCondition {", "            type: itemIsNotNull", "            item: P83_PERIODO_ID", "        }", "    )"])
+
+    catalogo(86, 'HABILITACIONES', 'Habilitaciones de período', 'habilitaciones', 'PERIODO_HABILITA_ID', 'erp_gen_periodo_habilita', 87,
+             'HABILITACION', 'Habilitación de período', 'erp-gen-periodo-cerrar',
+             "select h.periodo_habilita_id, pe.modulo, pe.anio, pe.mes, u.username usuario, h.fecha_hasta, h.motivo\n"
+             "  from erp_gen_periodo_habilita h\n  join erp_gen_periodo pe on pe.periodo_id = h.periodo_id\n"
+             "  join adm_seg_usuario u on u.usuario_id = h.usuario_id\n"
+             f" where pe.empresa_id = {EMP}",
+             [S('MODULO', 'Módulo'), N('ANIO', 'Año'), N('MES', 'Mes'), S('USUARIO', 'Usuario'), D('FECHA_HASTA', 'Hasta'), S('MOTIVO', 'Motivo')],
+             [sel('PERIODO_ID', 'Período', 'periodos-cerrados', 'Mes cerrado', 'Período cerrado en el que podrá registrar el usuario.'),
+              sel('USUARIO_ID', 'Usuario', 'usuarios', 'Usuario habilitado', 'Solo este usuario podrá registrar en el período.', popup=True),
+              fecha('FECHA_HASTA', 'Hasta', 'Último día', 'Después de esta fecha la habilitación deja de valer.', True),
+              area('MOTIVO', 'Motivo', 'Obligatorio', 'Por qué se habilita; queda registrado para auditoría.')],
+             "Habilitaciones puntuales: permiten a un usuario registrar documentos en un período cerrado hasta una fecha, sin reabrirlo para todos.",
+             'Crear habilitación')
 
     pagina_inicio()
     pagina_cambiar_empresa()

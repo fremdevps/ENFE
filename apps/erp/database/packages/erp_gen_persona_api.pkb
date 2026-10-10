@@ -127,6 +127,17 @@ as
                              i_estado                => i_estado));
     end modificar;
 
+    procedure validar_documento (
+        i_tipo_doc_identidad_id  in number,
+        i_nro_documento          in varchar2,
+        i_dv                     in varchar2
+    ) is
+    begin
+        erp_gen_persona_reg.validar_documento(i_tipo_doc_identidad_id => i_tipo_doc_identidad_id,
+                                              i_nro_documento         => i_nro_documento,
+                                              i_dv                    => i_dv);
+    end validar_documento;
+
     function obtener_dv_ruc (
         i_numero  in varchar2
     ) return varchar2 is

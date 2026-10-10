@@ -65,7 +65,12 @@ using (
     select 'FK_ERP_PTEX_DPTO',                      'No se puede eliminar el departamento: tiene puntos de expedición.' from dual union all
     select 'FK_ERP_DPO_DPTO',                       'No se puede eliminar el departamento: tiene depósitos.' from dual union all
     select 'FK_ERP_PRRO_TIRL',                      'No se puede eliminar el rol: lo tienen personas.' from dual union all
-    select 'FK_ERP_EMCF_RUB',                       'No se puede eliminar el rubro: lo usa una empresa.' from dual
+    select 'FK_ERP_EMCF_RUB',                       'No se puede eliminar el rubro: lo usa una empresa.' from dual union all
+    select 'UK_ERP_PRDO_TDI_NRO',                   'Ya existe una persona con ese tipo y número de documento.' from dual union all
+    select 'CK_ERP_PRDO_VIGENCIA',                  'La fecha de vencimiento debe ser igual o posterior a la fecha desde.' from dual union all
+    select 'UK_ERP_FERI_PAIS_FECHA',                'Ya hay un feriado cargado en esa fecha para el país.' from dual union all
+    select 'UK_ERP_PEHA_PERI_USU',                  'El usuario ya tiene una habilitación para ese período.' from dual union all
+    select 'CK_ERP_ITV_MINIMO',                     'El monto mínimo debe ser positivo e indicar su moneda.' from dual
 ) s
    on (t.codigo = s.codigo)
  when matched then

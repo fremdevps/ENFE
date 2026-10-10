@@ -166,13 +166,69 @@ page 45 (
         }
     )
 
+    pageItem P45_MONTO_MINIMO (
+        type: numberField
+        label {
+            label: Monto mínimo
+        }
+        layout {
+            sequence: 50
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @formulario
+            column: MONTO_MINIMO
+            dataType: number
+        }
+        help {
+            inlineHelpText: Vacío = siempre
+            helpText: Para retenciones: monto de la operación desde el cual se aplica la tasa.
+        }
+    )
+
+    pageItem P45_MONEDA_ID (
+        type: selectList
+        label {
+            label: Moneda del mínimo
+        }
+        layout {
+            sequence: 60
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        lov {
+            type: sharedComponent
+            lov: @monedas
+            displayNullValue: true
+            nullDisplayValue: - Ninguna -
+        }
+        source {
+            formRegion: @formulario
+            column: MONEDA_ID
+            dataType: number
+        }
+        help {
+            inlineHelpText: Si hay mínimo
+            helpText: Moneda en la que está expresado el monto mínimo.
+        }
+    )
+
     pageItem P45_OBSERVACION (
         type: textarea
         label {
             label: Norma / observación
         }
         layout {
-            sequence: 50
+            sequence: 70
             region: @formulario
             slot: regionBody
         }

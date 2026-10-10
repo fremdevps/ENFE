@@ -382,6 +382,25 @@ lov paises (
     }
 )
 
+lov periodos-cerrados (
+    name: PERIODOS_CERRADOS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select modulo || ' ' || lpad(mes, 2, '0') || '/' || anio d, periodo_id r
+              from erp_gen_periodo
+             where empresa_id = :APP_EMPRESA_ID
+               and estado = 'C'
+             order by anio desc, mes desc, modulo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
 lov personas (
     name: PERSONAS
     source {

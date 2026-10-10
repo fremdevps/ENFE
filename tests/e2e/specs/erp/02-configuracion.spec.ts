@@ -20,13 +20,16 @@ const LISTADOS: [string, string][] = [
   ['roles-persona', 'Roles por empresa'],
   ['tipos-rol', 'Tipos de rol'],
   ['tipos-documento', 'Tipos de documento'],
+  ['documentos-persona', 'Documentos adicionales'],
   ['paises', 'Países'],
   ['ubicaciones', 'Ubicaciones'],
+  ['feriados', 'Feriados'],
   ['funcionalidades', 'Funcionalidades'],
   ['rubros', 'Rubros'],
   ['rubro-funcionalidades', 'Funcionalidades por rubro'],
   ['parametros', 'Parámetros'],
   ['periodos', 'Períodos'],
+  ['habilitaciones', 'Habilitaciones de período'],
 ];
 
 test.describe('ERP · Pantallas de configuración', () => {
