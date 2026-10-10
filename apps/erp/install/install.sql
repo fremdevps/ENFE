@@ -17,12 +17,22 @@ prompt == Tablas
 @@../database/tables/erp_gen_categoria_fiscal.sql
 @@../database/tables/erp_gen_categoria_tasa.sql
 @@../database/tables/erp_gen_cotizacion.sql
+@@../database/tables/erp_gen_funcionalidad.sql
+@@../database/tables/erp_gen_rubro.sql
+@@../database/tables/erp_gen_rubro_func.sql
 @@../database/tables/erp_gen_empresa_config.sql
+@@../database/tables/erp_gen_empresa_func.sql
 @@../database/tables/erp_gen_sucursal.sql
+@@../database/tables/erp_gen_departamento.sql
+@@../database/tables/erp_gen_punto_expedicion.sql
+@@../database/tables/erp_gen_usuario_sucursal.sql
+@@../database/tables/erp_stk_deposito.sql
 @@../database/tables/erp_gen_tipo_doc_identidad.sql
 @@../database/tables/erp_gen_persona.sql
 @@../database/tables/erp_gen_persona_direccion.sql
 @@../database/tables/erp_gen_persona_contacto.sql
+@@../database/tables/erp_gen_tipo_rol.sql
+@@../database/tables/erp_gen_persona_rol.sql
 @@../database/tables/erp_gen_parametro.sql
 @@../database/tables/erp_gen_periodo.sql
 
@@ -36,12 +46,22 @@ prompt == Triggers
 @@../database/triggers/trg_erp_cafi_bu.sql
 @@../database/triggers/trg_erp_cata_bu.sql
 @@../database/triggers/trg_erp_cot_bu.sql
+@@../database/triggers/trg_erp_func_bu.sql
+@@../database/triggers/trg_erp_rub_bu.sql
+@@../database/triggers/trg_erp_rufu_bu.sql
 @@../database/triggers/trg_erp_emcf_bu.sql
+@@../database/triggers/trg_erp_emfu_bu.sql
 @@../database/triggers/trg_erp_suc_bu.sql
+@@../database/triggers/trg_erp_dpto_bu.sql
+@@../database/triggers/trg_erp_ptex_bu.sql
+@@../database/triggers/trg_erp_ussu_bu.sql
+@@../database/triggers/trg_erp_dpo_bu.sql
 @@../database/triggers/trg_erp_tdi_bu.sql
 @@../database/triggers/trg_erp_prs_bu.sql
 @@../database/triggers/trg_erp_prdi_bu.sql
 @@../database/triggers/trg_erp_prco_bu.sql
+@@../database/triggers/trg_erp_tirl_bu.sql
+@@../database/triggers/trg_erp_prro_bu.sql
 @@../database/triggers/trg_erp_par_bu.sql
 @@../database/triggers/trg_erp_peri_bu.sql
 
@@ -56,6 +76,7 @@ prompt == Paquetes (especificaciones)
 @@../database/packages/erp_gen_parametro_ctr.pks
 @@../database/packages/erp_gen_periodo_ctr.pks
 @@../database/packages/erp_gen_persona_ctr.pks
+@@../database/packages/erp_gen_empresa_func_ctr.pks
 @@../database/packages/erp_gen_moneda_reg.pks
 @@../database/packages/erp_gen_impuesto_reg.pks
 @@../database/packages/erp_gen_periodo_reg.pks
@@ -65,11 +86,13 @@ prompt == Paquetes (especificaciones)
 @@../database/packages/erp_gen_impuesto_api.pks
 @@../database/packages/erp_gen_periodo_api.pks
 @@../database/packages/erp_gen_persona_api.pks
+@@../database/packages/erp_gen_funcionalidad_api.pks
 
 prompt == Paquetes (cuerpos)
 @@../database/packages/erp_gen_parametro_ctr.pkb
 @@../database/packages/erp_gen_periodo_ctr.pkb
 @@../database/packages/erp_gen_persona_ctr.pkb
+@@../database/packages/erp_gen_empresa_func_ctr.pkb
 @@../database/packages/erp_gen_moneda_reg.pkb
 @@../database/packages/erp_gen_impuesto_reg.pkb
 @@../database/packages/erp_gen_periodo_reg.pkb
@@ -79,6 +102,7 @@ prompt == Paquetes (cuerpos)
 @@../database/packages/erp_gen_impuesto_api.pkb
 @@../database/packages/erp_gen_periodo_api.pkb
 @@../database/packages/erp_gen_persona_api.pkb
+@@../database/packages/erp_gen_funcionalidad_api.pkb
 
 prompt == Registro en seguridad central
 @@../database/data/erp_seg_registro.sql

@@ -15,9 +15,10 @@ declare
 begin
     for r in (select column_value nombre
                 from table(sys.odcivarchar2list(
-                         'erp_gen_persona_api', 'erp_gen_periodo_api', 'erp_gen_impuesto_api', 'erp_gen_moneda_api',
-                         'erp_gen_parametro_api', 'erp_gen_persona_reg', 'erp_gen_periodo_reg', 'erp_gen_impuesto_reg',
-                         'erp_gen_moneda_reg', 'erp_gen_persona_ctr', 'erp_gen_periodo_ctr', 'erp_gen_parametro_ctr'))) loop
+                         'erp_gen_funcionalidad_api', 'erp_gen_persona_api', 'erp_gen_periodo_api', 'erp_gen_impuesto_api',
+                         'erp_gen_moneda_api', 'erp_gen_parametro_api', 'erp_gen_persona_reg', 'erp_gen_periodo_reg',
+                         'erp_gen_impuesto_reg', 'erp_gen_moneda_reg', 'erp_gen_empresa_func_ctr', 'erp_gen_persona_ctr',
+                         'erp_gen_periodo_ctr', 'erp_gen_parametro_ctr'))) loop
         ejecutar('drop package ' || r.nombre);
     end loop;
 
@@ -27,10 +28,13 @@ begin
 
     for r in (select column_value nombre
                 from table(sys.odcivarchar2list(
-                         'erp_gen_periodo', 'erp_gen_parametro', 'erp_gen_persona_contacto', 'erp_gen_persona_direccion',
-                         'erp_gen_persona', 'erp_gen_tipo_doc_identidad', 'erp_gen_sucursal', 'erp_gen_empresa_config',
-                         'erp_gen_cotizacion', 'erp_gen_categoria_tasa', 'erp_gen_categoria_fiscal', 'erp_gen_impuesto_tasa_vig',
-                         'erp_gen_impuesto_tasa', 'erp_gen_impuesto', 'erp_gen_ubicacion', 'erp_gen_pais', 'erp_gen_moneda'))) loop
+                         'erp_gen_periodo', 'erp_gen_parametro', 'erp_gen_persona_rol', 'erp_gen_tipo_rol',
+                         'erp_gen_persona_contacto', 'erp_gen_persona_direccion', 'erp_gen_persona', 'erp_gen_tipo_doc_identidad',
+                         'erp_stk_deposito', 'erp_gen_usuario_sucursal', 'erp_gen_punto_expedicion', 'erp_gen_departamento',
+                         'erp_gen_sucursal', 'erp_gen_empresa_func', 'erp_gen_empresa_config', 'erp_gen_rubro_func',
+                         'erp_gen_rubro', 'erp_gen_funcionalidad', 'erp_gen_cotizacion', 'erp_gen_categoria_tasa',
+                         'erp_gen_categoria_fiscal', 'erp_gen_impuesto_tasa_vig', 'erp_gen_impuesto_tasa', 'erp_gen_impuesto',
+                         'erp_gen_ubicacion', 'erp_gen_pais', 'erp_gen_moneda'))) loop
         ejecutar('drop table ' || r.nombre || ' cascade constraints purge');
     end loop;
 end;

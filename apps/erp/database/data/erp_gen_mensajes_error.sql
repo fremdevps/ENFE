@@ -47,7 +47,25 @@ using (
     select 'FK_ERP_CATA_IMTA',                      'No se puede eliminar la tasa: la usa una categoría fiscal.' from dual union all
     select 'FK_ERP_PRS_TDI',                        'No se puede eliminar el tipo de documento: lo usan personas.' from dual union all
     select 'FK_ERP_PRS_PAI',                        'No se puede eliminar el país: lo usan personas.' from dual union all
-    select 'FK_ERP_SUC_UBI',                        'No se puede eliminar la ubicación: la usa una sucursal.' from dual
+    select 'FK_ERP_SUC_UBI',                        'No se puede eliminar la ubicación: la usa una sucursal.' from dual union all
+    select 'UK_ERP_FUNC_CODIGO',                    'Ya existe una funcionalidad con ese código.' from dual union all
+    select 'UK_ERP_RUB_CODIGO',                     'Ya existe un rubro con ese código.' from dual union all
+    select 'UK_ERP_RUFU_RUB_FUNC',                  'El rubro ya incluye esa funcionalidad.' from dual union all
+    select 'UK_ERP_EMFU_EMP_FUNC',                  'La empresa ya tiene esa funcionalidad.' from dual union all
+    select 'UK_ERP_DPTO_EMP_CODIGO',                'Ya existe un departamento con ese código en la empresa.' from dual union all
+    select 'UK_ERP_PTEX_SUC_CODIGO',                'La sucursal ya tiene un punto de expedición con ese código.' from dual union all
+    select 'CK_ERP_PTEX_CODIGO',                    'El punto de expedición debe tener 3 dígitos (ej. 001).' from dual union all
+    select 'UK_ERP_USSU_USU_SUC_DPTO',              'El usuario ya tiene asignada esa sucursal (y departamento).' from dual union all
+    select 'UK_ERP_DPO_SUC_CODIGO',                 'La sucursal ya tiene un depósito con ese código.' from dual union all
+    select 'UK_ERP_TIRL_CODIGO',                    'Ya existe un rol de persona con ese código.' from dual union all
+    select 'UK_ERP_PRRO_PRS_EMP_ROL',               'La persona ya tiene ese rol en la empresa.' from dual union all
+    select 'FK_ERP_DPTO_SUC',                       'No se puede eliminar la sucursal: tiene departamentos.' from dual union all
+    select 'FK_ERP_PTEX_SUC',                       'No se puede eliminar la sucursal: tiene puntos de expedición.' from dual union all
+    select 'FK_ERP_DPO_SUC',                        'No se puede eliminar la sucursal: tiene depósitos.' from dual union all
+    select 'FK_ERP_PTEX_DPTO',                      'No se puede eliminar el departamento: tiene puntos de expedición.' from dual union all
+    select 'FK_ERP_DPO_DPTO',                       'No se puede eliminar el departamento: tiene depósitos.' from dual union all
+    select 'FK_ERP_PRRO_TIRL',                      'No se puede eliminar el rol: lo tienen personas.' from dual union all
+    select 'FK_ERP_EMCF_RUB',                       'No se puede eliminar el rubro: lo usa una empresa.' from dual
 ) s
    on (t.codigo = s.codigo)
  when matched then

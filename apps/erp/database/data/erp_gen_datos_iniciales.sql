@@ -114,12 +114,89 @@ using (select p.pais_id, d.codigo, d.nombre, d.es_tributario, d.tiene_dv, d.form
     insert (pais_id, codigo, nombre, es_tributario, tiene_dv, formato_regexp, codigo_oficial)
     values (s.pais_id, s.codigo, s.nombre, s.es_tributario, s.tiene_dv, s.formato_regexp, s.codigo_oficial);
 
+-- Funcionalidades activables (adaptación por rubro) -------------------------------------
+merge into erp_gen_funcionalidad t
+using (select 'DEPARTAMENTO' codigo, 'Departamentos / unidades de negocio' nombre, 'GEN' modulo,
+              'Pide el departamento en documentos, stock y finanzas para reportes por unidad de negocio.' descripcion from dual union all
+       select 'VENDEDOR',     'Vendedores y comisiones',        'VEN', 'Asigna vendedor a clientes, pedidos y facturas.' from dual union all
+       select 'LOTE',         'Control por lote',               'STK', 'Registra el lote en entradas y salidas de stock.' from dual union all
+       select 'VENCIMIENTO',  'Fecha de vencimiento de lotes',  'STK', 'Controla vencimientos (farmacia, alimentos, agroquímicos).' from dual union all
+       select 'SERIE',        'Número de serie',                'STK', 'Registra números de serie por unidad (equipos, vehículos).' from dual union all
+       select 'CONSIGNACION', 'Consignación',                   'STK', 'Stock propio en poder de terceros y de terceros en poder de la empresa.' from dual union all
+       select 'CENTRO_COSTO', 'Centros de costo',               'CNT', 'Distribuye gastos e ingresos por centro de costo.' from dual union all
+       select 'SAFRA',        'Safra / zafra agrícola',         'COM', 'Asocia documentos y financiaciones a la safra (agro, cooperativas).' from dual union all
+       select 'PESAJE',       'Báscula / pesaje',               'STK', 'Entradas y salidas por peso con descuentos por humedad e impurezas.' from dual union all
+       select 'FLETE',        'Fletes y transporte',            'VEN', 'Transportista, vehículo y costo de flete en remisiones.' from dual union all
+       select 'PRODUCCION',   'Producción / fórmulas',          'PRD', 'Órdenes de producción con consumo de insumos.' from dual union all
+       select 'IMPORTACION',  'Importación / despacho',         'COM', 'Costeo de importaciones y gastos de despacho.' from dual) s
+   on (t.codigo = s.codigo)
+ when not matched then
+    insert (codigo, nombre, modulo, descripcion)
+    values (s.codigo, s.nombre, s.modulo, s.descripcion);
+
+merge into erp_gen_rubro t
+using (select 'COMERCIO'      codigo, 'Comercio minorista / mayorista' nombre, 'Ventas al contado y crédito con stock simple.' descripcion from dual union all
+       select 'DISTRIBUIDORA',        'Distribuidora',                          'Reparto con vendedores, lotes, vencimientos y fletes.' from dual union all
+       select 'AGRO',                 'Agro / cooperativa / acopio',             'Safra, báscula, financiación a productores y lotes.' from dual union all
+       select 'INDUSTRIA',            'Industria',                               'Producción, lotes y centros de costo por planta.' from dual union all
+       select 'SERVICIOS',            'Servicios',                               'Sin stock o con stock mínimo; centros de costo.' from dual union all
+       select 'FARMACIA',             'Farmacia / salud',                        'Lotes y vencimientos obligatorios.' from dual union all
+       select 'IMPORTADORA',          'Importadora',                             'Importación, multimoneda, lotes y series.' from dual) s
+   on (t.codigo = s.codigo)
+ when not matched then
+    insert (codigo, nombre, descripcion)
+    values (s.codigo, s.nombre, s.descripcion);
+
+merge into erp_gen_rubro_func t
+using (select r.rubro_id, f.funcionalidad_id
+         from (select 'COMERCIO' rubro, 'VENDEDOR' func from dual union all
+               select 'DISTRIBUIDORA', 'VENDEDOR'     from dual union all
+               select 'DISTRIBUIDORA', 'LOTE'         from dual union all
+               select 'DISTRIBUIDORA', 'VENCIMIENTO'  from dual union all
+               select 'DISTRIBUIDORA', 'FLETE'        from dual union all
+               select 'AGRO',          'SAFRA'        from dual union all
+               select 'AGRO',          'PESAJE'       from dual union all
+               select 'AGRO',          'LOTE'         from dual union all
+               select 'AGRO',          'DEPARTAMENTO' from dual union all
+               select 'AGRO',          'CENTRO_COSTO' from dual union all
+               select 'INDUSTRIA',     'PRODUCCION'   from dual union all
+               select 'INDUSTRIA',     'LOTE'         from dual union all
+               select 'INDUSTRIA',     'CENTRO_COSTO' from dual union all
+               select 'INDUSTRIA',     'DEPARTAMENTO' from dual union all
+               select 'SERVICIOS',     'CENTRO_COSTO' from dual union all
+               select 'FARMACIA',      'LOTE'         from dual union all
+               select 'FARMACIA',      'VENCIMIENTO'  from dual union all
+               select 'IMPORTADORA',   'IMPORTACION'  from dual union all
+               select 'IMPORTADORA',   'LOTE'         from dual union all
+               select 'IMPORTADORA',   'SERIE'        from dual) x
+         join erp_gen_rubro r on r.codigo = x.rubro
+         join erp_gen_funcionalidad f on f.codigo = x.func) s
+   on (t.rubro_id = s.rubro_id and t.funcionalidad_id = s.funcionalidad_id)
+ when not matched then
+    insert (rubro_id, funcionalidad_id) values (s.rubro_id, s.funcionalidad_id);
+
+-- Roles de persona ------------------------------------------------------------------------
+merge into erp_gen_tipo_rol t
+using (select 'CLIENTE' codigo, 'Cliente' nombre, 'S' es_ventas, 'N' es_compras, 'S' es_finanzas, 'N' es_stock from dual union all
+       select 'PROVEEDOR',     'Proveedor',      'N', 'S', 'S', 'N' from dual union all
+       select 'EMPLEADO',      'Empleado',       'N', 'N', 'S', 'N' from dual union all
+       select 'VENDEDOR',      'Vendedor',       'S', 'N', 'N', 'N' from dual union all
+       select 'TRANSPORTISTA', 'Transportista',  'S', 'S', 'S', 'S' from dual union all
+       select 'PRODUCTOR',     'Productor',      'S', 'S', 'S', 'S' from dual union all
+       select 'BANCO',         'Banco / financiera', 'N', 'N', 'S', 'N' from dual) s
+   on (t.codigo = s.codigo)
+ when not matched then
+    insert (codigo, nombre, es_ventas, es_compras, es_finanzas, es_stock)
+    values (s.codigo, s.nombre, s.es_ventas, s.es_compras, s.es_finanzas, s.es_stock);
+
 -- Parámetros generales (empresa_id null = valor por defecto de todas) -------------------
 merge into erp_gen_parametro t
 using (select 'ERP_GEN_COTIZACION_DIAS_MAX' codigo, null valor, 'N' tipo_dato,
               'Antigüedad máxima (días) de la cotización usada. Vacío = sin límite.' descripcion from dual union all
        select 'ERP_GEN_PERIODO_ESTRICTO', 'N', 'S',
-              'S = solo se registran documentos en períodos creados y abiertos. N = período sin crear se considera abierto.' from dual) s
+              'S = solo se registran documentos en períodos creados y abiertos. N = período sin crear se considera abierto.' from dual union all
+       select 'ERP_GEN_ACCESO_SUCURSAL_ESTRICTO', 'N', 'S',
+              'S = el usuario solo opera las sucursales asignadas. N = sin asignaciones opera todas las de la empresa.' from dual) s
    on (t.codigo = s.codigo and t.empresa_id is null)
  when not matched then
     insert (empresa_id, codigo, valor, tipo_dato, descripcion)
