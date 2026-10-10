@@ -145,11 +145,26 @@ def pagina_formulario(archivo, num, alias, titulo, auth, tabla, pk, items, ayuda
           "            sessionStateProtection: checksumRequiredSessionLevel", "        }", "    )"]
     for i, it in enumerate(items):
         nombre = f"P{num}_{it['n']}"
+        if it['tipo'] == 'hidden':
+            # Columna que se completa sola (ej. empresa_id = empresa activa); opcional: defecto=(tipo, valor)
+            o += ["", f"    pageItem {nombre} (", "        type: hidden", "        layout {", f"            sequence: {(i + 2) * 10}",
+                  "            region: @formulario", "            slot: regionBody", "        }",
+                  "        source {", "            formRegion: @formulario", f"            column: {it['n']}",
+                  f"            dataType: {it.get('dt', 'varchar2')}", "        }"]
+            if it.get('defecto'):
+                clave = 'staticValue' if it['defecto'][0] == 'static' else it['defecto'][0]
+                o += ["        default {", f"            type: {it['defecto'][0]}", f"            {clave}: {it['defecto'][1]}", "        }"]
+            o += ["        security {", "            sessionStateProtection: checksumRequiredSessionLevel", "        }", "    )"]
+            continue
         o += ["", f"    pageItem {nombre} (", f"        type: {it['tipo']}", "        label {",
               f"            label: {it['etiqueta']}", "        }", "        layout {", f"            sequence: {(i + 2) * 10}",
               "            region: @formulario", "            slot: regionBody", "        }", "        appearance {",
               f"            template: @/{'required-floating' if it.get('req') else 'optional-floating'}",
               "            templateOptions: #DEFAULT#", "        }"]
+        if it.get('defecto'):
+            # defecto=('static', 'A') | ('item', 'APP_EMPRESA_ID')
+            clave = 'staticValue' if it['defecto'][0] == 'static' else it['defecto'][0]
+            o += ["        default {", f"            type: {it['defecto'][0]}", f"            {clave}: {it['defecto'][1]}", "        }"]
         if it.get('req'):
             o += ["        validation {", "            valueRequired: true", "        }"]
         if it.get('lov'):
@@ -220,7 +235,7 @@ def pagina_formulario(archivo, num, alias, titulo, auth, tabla, pk, items, ayuda
     guardar(archivo, o)
 
 
-def pagina_accion(archivo, num, alias, titulo, auth, ayuda, items, botones, procesos):
+def pagina_accion(archivo, num, alias, titulo, auth, ayuda, items, botones, procesos, extras=None):
     """Modal (drawer) para una acción puntual, sin tabla asociada.
        items: dict(n, tipo, etiqueta, req, lov, nulo, inline, ayuda) — tipo 'hidden' para parámetros.
        botones: (id, NOMBRE, etiqueta, hot, mensaje_confirmacion|None)   procesos: (id_boton, plsql, mensaje)"""
@@ -273,6 +288,8 @@ def pagina_accion(archivo, num, alias, titulo, auth, ayuda, items, botones, proc
           "        }", "        when {", "            event: click", "            selectionType: button", "            button: @cancelar",
           "        }", "", "        action cancelar-dialogo (", "            action: cancelDialog", "            execution {",
           "                sequence: 10", "                fireOnInit: false", "            }", "        )", "    )"]
+    if extras:
+        o += extras
     for i, (bid, plsql, mensaje) in enumerate(procesos):
         o += ["", f"    process {bid}-proceso (", f"        name: {bid.capitalize()}", "        type: executeCode",
               "        source {", "            plsqlCode:" + code('plsql', plsql, 16), "        }",
