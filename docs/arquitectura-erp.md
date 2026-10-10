@@ -183,6 +183,9 @@ Nada de tablas por cliente ni triggers por cliente. La adaptación es por **dato
 4. **Parámetros** (`erp_gen_parametro`) para comportamientos puntuales.
 5. **Apps verticales** (260–299) para rubros con procesos propios, que reutilizan el núcleo.
 
+Funcionalidades previstas además de las iniciales: `REPARTO`, `LINEA_NEGOCIO`, `COMISION`, `INTERCOMPANY`, `UBICACION`.
+La **línea de negocio** es una dimensión comercial distinta del departamento (unidad organizativa).
+
 ### 3.6 Períodos
 
 `erp_gen_periodo (empresa, modulo, anio, mes, estado)`. Toda API que registra un documento llama
@@ -199,6 +202,7 @@ remisión, recibo, autofactura y orden de pago son configuraciones, no tablas de
 
 | Tabla | Para qué |
 |---|---|
+| `erp_doc_clase_documento` | Catálogo global de sistema (factura, nota de crédito, nota de débito, remisión, recibo, orden de pago, anticipo, autofactura, retención, ajuste…). **Es lo único que el código puede consultar**: el código nunca compara por código de tipo de documento |
 | `erp_doc_tipo_documento` | Códigos fiscales como datos (`codigo_sifen`, `codigo_registro_fiscal` del registro mensual de comprobantes), `max_items` (preimpresos), exige vendedor / RUC / documento de origen. Comportamiento: `signo_stock` (+1/−1/0), `signo_cuenta` (D/C/N), `es_legal`, `tipo_emision` (E electrónico / P preimpreso / I interno), `codigo_sifen` (1 FE, 4 AFE, 5 NCE, 6 NDE, 7 NRE), `requiere_documento_origen`, `regla_contable` |
 | `erp_doc_timbrado` | Timbrado (número, vigencia desde/hasta, electrónico o preimpreso) por empresa |
 | `erp_doc_numerador` | Correlativo por empresa + timbrado + establecimiento + punto + tipo de documento, con `numero_desde`/`numero_hasta`/`numero_actual` (rango obligatorio en preimpreso y autoimpresor), avisos por días al vencimiento y % de rango usado, y usuarios autorizados. Se toma con `select … for update` **en la misma transacción** del documento (nunca en transacción autónoma: quemaría números) |
@@ -253,6 +257,23 @@ APEX / REST ──► erp_*_api.emitir ──► erp_doc_fe_documento (estado P,
   paso queda como API externa futura, con el resto del flujo igual.
 - El documento comercial (factura) y el documento electrónico son entidades separadas: la factura
   existe aunque SIFEN esté caído (**contingencia**, tipo de emisión 2) y se reenvía después.
+- **Atributos de comportamiento del tipo de documento** (por empresa; todos los indicadores `not null` con CK):
+
+  | Grupo | Atributos |
+  |---|---|
+  | Identidad | clase, código, nombre, abreviatura, módulo, origen (emitido / recibido), estado |
+  | Cuenta corriente | tipo de cuenta (cobrar / pagar / ninguna), signo (débito / crédito), tiene saldo aplicable, se excluye del límite de crédito |
+  | Stock | signo de stock (+1 / −1 / 0), valoriza costo |
+  | Fiscal | es legal, tipo de emisión, exige timbrado, código SIFEN, libro IVA (ventas / compras / ninguno) y su signo, calcula impuesto, máximo de ítems, exige RUC, exige motivo |
+  | Tesorería | exige cuenta de fondos, tipo de cotización (compra / venta; vacío hereda de la empresa) |
+  | Control | requiere documento de origen, exige vendedor, exige adjunto, exige aprobación, días máximos de antigüedad, permite carga manual, es intercompany |
+  | Análisis | grupo estadístico y signo |
+  | Contabilidad | genera asiento, regla contable |
+
+  El código del registro mensual de comprobantes va en una tabla hija con `fecha_desde`, porque cambia con el tiempo.
+  Catálogo de motivos tipificado (anulación, nota de crédito o débito, inutilización, rechazo).
+- Comprobantes **recibidos**: únicos por empresa + persona + tipo + timbrado + establecimiento + punto + número. Sin
+  timbrados "comodín": un documento sin timbrado usa un tipo que no lo exige.
 - Los documentos aprobados son **inmutables**; se corrigen con NCE/NDE o se cancelan por evento.
 - La regla de inmutabilidad vive en la **API de anulación** de cada módulo (y en las anulaciones en cascada), nunca solo en pantallas: si el documento tiene un DE aprobado, se exige el evento de cancelación dentro del plazo parametrizado.
 - `erp_doc_fe_documento`: **UK sobre `cdc`** y **UK sobre (documento de origen, tipo)**: un solo DE por documento comercial. Origen genérico (`origen_modulo`, `origen_id`): facturas, notas, remisiones y movimientos de stock.
@@ -274,6 +295,18 @@ ponderado en moneda funcional **y de reporte** en `erp_stk_saldo` (costo contabl
 en la transacción y movimientos con costo unitario guardado; el costo histórico, si se necesita, sale de un cierre mensual
 (`erp_stk_saldo_periodo`). No se admiten movimientos con fecha anterior a un período cerrado (evita reprocesos).
 
+Reglas del maestro de productos:
+
+- **Producto delgado y tablas hermanas**: categoría en árbol (con línea de negocio y grupo contable por defecto), códigos
+  (barras de unidad y de bulto, del proveedor, de sistemas externos), equivalentes y sustitutos, parámetros por depósito
+  (mínimo, máximo, punto de pedido), datos por proveedor (mínimo, múltiplo, plazo), kit. Atributos propios de un rubro
+  como JSON validado por categoría o en la app vertical; nunca columnas por rubro o por cliente en el maestro.
+- El costo vive solo en el saldo y en los movimientos, no en el maestro. `metodo_costo` por producto (promedio ponderado;
+  último costo queda previsto). Lote siempre como entidad.
+- Vehículos como maestro (chapa, capacidad, tara y tolerancia, transportista y conductor habitual): los pide la nota de remisión.
+- Previsto como funcionalidad activable `REPARTO`: orden de carga que agrupa pedidos, facturas o traslados en un vehículo,
+  con pesajes en filas y aprobación de peso fuera de tolerancia.
+
 ## 6. Ventas y compras (`ven` / `com`) — fase 4
 
 - Cliente / proveedor por empresa (sobre `erp_gen_persona`): condición de pago, límite de
@@ -288,6 +321,17 @@ en la transacción y movimientos con costo unitario guardado; el costo históric
 - Pedido: cantidad pendiente por ítem (facturación parcial), plan de vencimientos, motivo de cancelación, descuentos autorizados con usuario y límite.
 - Línea de crédito por cliente con vigencia y monto por moneda.
 - Maestro-detalle en APEX: colección de APEX con **vista tipada** sobre ella (nombre de colección provisto por la API) antes de grabar.
+- **Foto del receptor** en la cabecera (nombre, documento, dirección) aunque exista la persona: el comprobante no cambia si
+  después cambia el padrón.
+- **Descuentos separados**: de línea y de cabecera prorrateado, con su origen (promoción o contrato de descuento) y topes
+  (porcentaje máximo por producto, autorización por usuario). Precio y promoción se revalidan al facturar.
+- Ítem con unidad, factor de conversión y cantidad en unidad base; vínculo al ítem de pedido y de remisión; línea de negocio.
+- **Comisiones por regla** (tramos, sobre lo vendido o lo cobrado, por producto) y liquidación; nunca un porcentaje digitado por línea.
+- Canal de venta, zona y vendedor (persona con rol). Cliente bloqueado y **autorizaciones** como entidad (tipo, motivo, usuario, vigencia).
+- **Un solo pedido multi-origen** (interno, móvil, API) con identificador externo único para no duplicar; la división por
+  máximo de ítems se resuelve al facturar.
+- Compras: líneas de **concepto** (gastos y servicios sin stock) con su foto de impuestos, tipo de crédito fiscal (directo,
+  indirecto o sin crédito) y dimensiones; **costo de nacionalización**: gastos de importación que se reparten al costo.
 
 ## 7. Finanzas (`fin`) — fase 5
 
@@ -305,6 +349,19 @@ en la transacción y movimientos con costo unitario guardado; el costo históric
   base sobre la foto de impuestos del documento, excepciones por persona, comprobante de retención (emitido o recibido) con
   respuesta de la DNIT; la retención recibida es un medio de cobro.
 - Aprobación de órdenes de pago por niveles; descuento de cheques y documentos.
+- **Fecha del documento y fecha contable** en toda cabecera; el período se valida contra la contable.
+- **Componentes de saldo** en la cuota (capital, interés, gastos) para préstamos y refinanciaciones. La refinanciación es
+  un documento nuevo que cancela los anteriores por aplicación; los cambios de vencimiento quedan como eventos.
+- **Grupo de transacción**: los documentos que nacen juntos se anulan juntos desde la API.
+- **Saldo por período** (persona, moneda, mes) generado en el cierre, para extractos y antigüedad de saldos; la diferencia
+  de cambio no realizada es un movimiento mensual propio.
+- **Cuenta de fondos** (caja, banco, tarjeta; moneda; sucursal) y **sesión de caja** (apertura, cierre, arqueo por forma de
+  pago y denominación, diferencia).
+- **Concepto financiero** como catálogo (naturaleza, categoría fiscal por defecto, exige centro de costo, es gasto de importación).
+- Política de mora por línea de negocio o categoría de cliente (tasa con vigencia, desde emisión o vencimiento, días de
+  gracia, producto con el que se factura el interés).
+- Devengamiento de gastos pagados por adelantado (alquileres, seguros) en N meses.
+- Control de "original recibido y verificado" que habilita la orden de pago, según el tipo de documento.
 
 ## 8. Contabilidad (`cnt`) — fase 6
 
@@ -320,6 +377,9 @@ reglas.
 - Plan de cuentas con clasificación corto/largo plazo y cuentas que controlan diferencia de cambio (revalúo solo en esas).
 - Ninguna cuenta contable fija en columnas: IVA débito/crédito por tasa, retenciones, redondeo, diferencia de cambio e intereses salen de reglas por concepto.
 - Libros legales (compras, ventas, diario, mayor, balance) como funciones o vistas parametrizadas por empresa, período y moneda.
+- **Dimensiones analíticas** en las líneas de asiento desde el inicio: centro de costo, departamento, línea de negocio, canal, sucursal.
+- **Distribución** de un importe entre valores de una dimensión por porcentaje (suma 100, validada en la API) y reglas de
+  prorrateo de gastos indirectos con vigencia.
 
 ## 9. Escalabilidad y volumen
 
