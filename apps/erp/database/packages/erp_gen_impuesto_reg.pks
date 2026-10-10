@@ -24,6 +24,7 @@ as
     -- Devuelve una línea por tasa y, si una parte del monto no está gravada por
     -- un impuesto, una línea con impuesto_tasa_id null (exento). Categoría sin
     -- tasas: una sola línea exenta con impuesto_id null.
+    -- Sin categoría, monto o moneda devuelve una colección vacía.
     function calcular_impuestos (
         i_categoria_fiscal_id  in erp_gen_categoria_fiscal.categoria_fiscal_id%type,
         i_fecha                in date,

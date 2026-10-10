@@ -257,7 +257,8 @@ def region_reporte(rid, titulo, sql, columnas, seq, cond=None, plantilla='standa
     o = ["", f"    region {rid} (", f"        name: {titulo}", "        type: classicReport", "        source {",
          "            location: localDatabase", "            type: sqlQuery", "            sqlQuery:" + code('sql', sql, 16), "        }",
          "        layout {", f"            sequence: {seq}", "            slot: BODY", "        }", "        appearance {",
-         f"            template: @/{plantilla}", "            templateOptions: #DEFAULT#", "        }", "        componentAppearance {",
+         f"            template: @/{plantilla}", "            templateOptions: #DEFAULT#", "        }", "        advanced {",
+         f"            htmlDomId: {rid}", "        }", "        componentAppearance {",
          "            template: @/standard", "            templateOptions: #DEFAULT#", "        }"]
     if cond:
         o += ["        serverSideCondition {", "            type: expression", "            language: plsql",
@@ -316,7 +317,8 @@ select 7, 'Períodos del año creados',
     o += region_reporte('puesta-en-marcha', 'Puesta en marcha', pasos, [('ORDEN', 'Paso'), ('PASO', 'Qué configurar'), ('ESTADO', 'Estado')], 20)
     o += ["", "    region accesos (", "        name: Configuración", "        type: list", "        source {", "            list: @accesos",
           "        }", "        layout {", "            sequence: 30", "            slot: BODY", "        }", "        appearance {",
-          "            template: @/standard", "            templateOptions: #DEFAULT#", "        }", "        componentAppearance {",
+          "            template: @/standard", "            templateOptions: #DEFAULT#", "        }", "        advanced {",
+          "            htmlDomId: accesos", "        }", "        componentAppearance {",
           "            listTemplate: @/cards", "            templateOptions: [", "                #DEFAULT#",
           "                t-Cards--featured force-fa-lg", "                t-Cards--displayIcons", "                t-Cards--3cols", "                t-Cards--desc-2ln",
           "                t-Cards--animColorFill", "            ]", "        }", "    )", ")"]

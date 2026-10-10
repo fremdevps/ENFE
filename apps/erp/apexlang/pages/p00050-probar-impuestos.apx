@@ -233,6 +233,9 @@ page 50 (
             template: @/standard
             templateOptions: #DEFAULT#
         }
+        advanced {
+            htmlDomId: resultado
+        }
         componentAppearance {
             template: @/standard
             templateOptions: #DEFAULT#

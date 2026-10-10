@@ -97,6 +97,9 @@ page 1 (
             template: @/standard
             templateOptions: #DEFAULT#
         }
+        advanced {
+            htmlDomId: puesta-en-marcha
+        }
         componentAppearance {
             template: @/standard
             templateOptions: #DEFAULT#
@@ -155,6 +158,9 @@ page 1 (
         appearance {
             template: @/standard
             templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: accesos
         }
         componentAppearance {
             listTemplate: @/cards
