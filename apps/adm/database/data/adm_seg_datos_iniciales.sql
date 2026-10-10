@@ -45,7 +45,8 @@ using (select m.modulo_id, p.codigo, p.nombre, p.tipo
                select 'GEN',        'ADM_GEN_EMPRESA_GESTIONAR',         'Gestionar empresas',                 'ACCION'      from dual union all
                select 'GEN',        'ADM_GEN_MENSAJE_GESTIONAR',         'Gestionar mensajes de error',        'ACCION'      from dual union all
                select 'AUD',        'ADM_AUD_LOGIN_VER',                 'Ver bitácora de accesos',            'REPORTE'     from dual union all
-               select 'AUD',        'ADM_AUD_ERROR_VER',                 'Ver bitácora de errores',            'REPORTE'     from dual) p
+               select 'AUD',        'ADM_AUD_ERROR_VER',                 'Ver bitácora de errores',            'REPORTE'     from dual union all
+               select 'AUD',        'ADM_AUD_CAMBIO_VER',                'Ver historial de cambios',           'REPORTE'     from dual) p
            on p.modulo = m.codigo) s
    on (t.codigo = s.codigo)
  when not matched then
