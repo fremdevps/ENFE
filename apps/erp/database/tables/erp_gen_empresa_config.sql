@@ -8,6 +8,7 @@ create table erp_gen_empresa_config (
     pais_id                  number         not null,
     moneda_id_funcional      number         not null,
     moneda_id_reporte        number,
+    rubro_id                 number,
     precio_incluye_impuesto  varchar2(1)    default on null 'S' not null,
     tipo_cotizacion          varchar2(1)    default on null 'V' not null,
     tipo_contribuyente       varchar2(1)    default on null 'J' not null,
@@ -28,6 +29,7 @@ create table erp_gen_empresa_config (
     constraint fk_erp_emcf_mon_func foreign key (moneda_id_funcional) references erp_gen_moneda (moneda_id),
     constraint fk_erp_emcf_mon_rep foreign key (moneda_id_reporte) references erp_gen_moneda (moneda_id),
     constraint fk_erp_emcf_ubi foreign key (ubicacion_id) references erp_gen_ubicacion (ubicacion_id),
+    constraint fk_erp_emcf_rub foreign key (rubro_id) references erp_gen_rubro (rubro_id),
     constraint uk_erp_emcf_empresa unique (empresa_id),
     constraint ck_erp_emcf_precio_inc check (precio_incluye_impuesto in ('S','N')),
     constraint ck_erp_emcf_tipo_cotizacion check (tipo_cotizacion in ('C','V')),
@@ -41,6 +43,7 @@ create index idx_erp_emcf_pais_id on erp_gen_empresa_config (pais_id);
 create index idx_erp_emcf_mon_func on erp_gen_empresa_config (moneda_id_funcional);
 create index idx_erp_emcf_moneda_id_reporte on erp_gen_empresa_config (moneda_id_reporte);
 create index idx_erp_emcf_ubicacion_id on erp_gen_empresa_config (ubicacion_id);
+create index idx_erp_emcf_rubro_id on erp_gen_empresa_config (rubro_id);
 
 comment on table  erp_gen_empresa_config is 'Configuración ERP de cada empresa de ADM: país, moneda funcional, impuestos y datos fiscales. Abrev: emcf';
 comment on column erp_gen_empresa_config.empresa_config_id       is 'Identificador técnico (PK, identity)';
@@ -48,6 +51,7 @@ comment on column erp_gen_empresa_config.empresa_id              is 'Empresa (FK
 comment on column erp_gen_empresa_config.pais_id                 is 'País fiscal de la empresa (FK erp_gen_pais)';
 comment on column erp_gen_empresa_config.moneda_id_funcional     is 'Moneda contable/funcional (FK erp_gen_moneda)';
 comment on column erp_gen_empresa_config.moneda_id_reporte       is 'Moneda alternativa para reportes de grupo (FK erp_gen_moneda)';
+comment on column erp_gen_empresa_config.rubro_id                is 'Perfil de rubro de la empresa (FK erp_gen_rubro)';
 comment on column erp_gen_empresa_config.precio_incluye_impuesto is 'S=Los precios se cargan con impuesto incluido';
 comment on column erp_gen_empresa_config.tipo_cotizacion         is 'Tasa por defecto para convertir: C=Compra, V=Venta';
 comment on column erp_gen_empresa_config.tipo_contribuyente      is 'F=Persona física, J=Persona jurídica (SIFEN iTipCont)';

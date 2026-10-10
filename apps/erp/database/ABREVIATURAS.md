@@ -16,13 +16,28 @@ Diseño de cada módulo: `docs/arquitectura-erp.md`.
 | erp_gen_categoria_fiscal | cafi |
 | erp_gen_categoria_tasa | cata |
 | erp_gen_cotizacion | cot |
+| erp_gen_funcionalidad | func |
+| erp_gen_rubro | rub |
+| erp_gen_rubro_func | rufu |
 | erp_gen_empresa_config | emcf |
+| erp_gen_empresa_func | emfu |
 | erp_gen_sucursal | suc |
+| erp_gen_departamento | dpto |
+| erp_gen_punto_expedicion | ptex |
+| erp_gen_usuario_sucursal | ussu |
 | erp_gen_tipo_doc_identidad | tdi |
 | erp_gen_persona | prs |
 | erp_gen_persona_direccion | prdi |
 | erp_gen_persona_contacto | prco |
+| erp_gen_tipo_rol | tirl |
+| erp_gen_persona_rol | prro |
 | erp_gen_parametro | par |
 | erp_gen_periodo | peri |
 
-Referencias a ADM: `adm_gen_empresa` → `emp` (ej. `fk_erp_suc_emp`).
+## Inventario (`stk`)
+
+| Tabla | Abrev. |
+|---|---|
+| erp_stk_deposito | dpo |
+
+Referencias a ADM: `adm_gen_empresa` → `emp`, `adm_seg_usuario` → `usu` (ej. `fk_erp_suc_emp`).
