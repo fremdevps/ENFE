@@ -63,3 +63,6 @@ tests/e2e/.auth/
 
 # ===== Secretos locales (credenciales de ambientes) =====
 .secrets/
+
+# Python
+__pycache__/

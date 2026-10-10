@@ -22,7 +22,8 @@ consumen esa seguridad. Workspace `DEV`, esquema `WKSP_DEV` (OCI).
 1. Rama desde `develop`: `feature/<app>-<tema>` (ver git-flujo). Nunca en `main`/`develop`.
 2. Cambios de BD en `apps/<app>/database/...` (un objeto por archivo) + agregarlos a
    `apps/<app>/install/install.sql` y `deinstall.sql`.
-3. Pantallas de ADM: se generan con `python tools/apexlang/adm_paginas.py`
+3. Pantallas de ADM: se generan con `python tools/apexlang/adm_paginas.py`; las de ERP Configuración (app 200)
+   con `python tools/apexlang/erp_paginas.py`
    (no editar a mano los `.apx` que genera). Otras apps: editar sus `.apx`.
 4. Supporting Objects: `powershell -File tools/build-supporting-objects.ps1 -App <app>`.
 5. **Verificar (ver "Definición de terminado")**.

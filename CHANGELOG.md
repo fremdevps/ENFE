@@ -2,6 +2,16 @@
 
 Formato: [SemVer](https://semver.org/lang/es/). Ver `.claude/skills/git-flujo/SKILL.md`.
 
+## [Sin publicar]
+### Agregado
+- **ERP modular**: diseño de una app APEX por módulo con sesión compartida y app maestra (200 ERP Configuración); `docs/arquitectura-erp.md`.
+- Análisis de los ERP legados SCV y Dolphin (`docs/analisis-erp-legados.md`).
+- Módulo General del ERP (27 tablas): monedas y cotizaciones, motor de impuestos configurable con vigencias y categorías fiscales, estructura organizativa (sucursal, departamento, punto de expedición, depósito, acceso por sucursal), personas con roles por empresa y validación de RUC, funcionalidades por rubro, parámetros y períodos.
+- App 200 **ERP Configuración** con 56 páginas, empresa activa en la sesión (`APP_EMPRESA_ID`) y página para probar el cálculo de impuestos.
+- Pruebas E2E del ERP (apertura de pantallas y motor de impuestos).
+### Pendiente de verificar
+- Instalación en DEV, `verificar_consultas.sql` y suite con login: no se corrieron (sin conexión a la base desde el asistente).
+
 ## [v0.3.0] - 2026-10-03
 ### Cambiado
 - ADM rediseñado con el patrón recomendado por APEX para usuarios no técnicos: **listado (Interactive Report) + formulario en panel lateral**; modales para acciones puntuales.
