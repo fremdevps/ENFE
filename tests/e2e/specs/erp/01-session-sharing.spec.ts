@@ -6,9 +6,9 @@ test.describe('ERP · Sesión compartida con ADM', () => {
     await page.goto(`${env('APEX_BASE_URL')}/erp/home?session=${sid}`);
     await waitForApex(page);
     await expect(page).not.toHaveURL(/\/login/i);
-    await expect(page.getByText('Mis módulos')).toBeVisible();
-    for (const mod of ['Finanzas', 'Inventario', 'Compras', 'Ventas', 'Producción']) {
-      await expect(page.getByRole('cell', { name: mod })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Puesta en marcha' })).toBeVisible();
+    for (const tarjeta of ['Datos de la empresa', 'Sucursales', 'Puntos de expedición', 'Depósitos', 'Monedas', 'Personas']) {
+      await expect(page.locator('#accesos').getByText(tarjeta, { exact: true })).toBeVisible();
     }
   });
 });
