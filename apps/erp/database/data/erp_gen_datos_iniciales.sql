@@ -60,9 +60,10 @@ using (select i.impuesto_id, x.codigo, x.nombre, x.codigo_oficial
     insert (impuesto_id, codigo, nombre, codigo_oficial)
     values (s.impuesto_id, s.codigo, s.nombre, s.codigo_oficial);
 
--- Vigencia inicial de carga: ajustar fecha_desde a la norma si se migran documentos antiguos.
+-- Vigencia desde la Ley 6380/2019 (rige desde 2020-01-01). Si se migran documentos anteriores,
+-- agregar las vigencias históricas que correspondan.
 merge into erp_gen_impuesto_tasa_vig t
-using (select ta.impuesto_tasa_id, date '2000-01-01' fecha_desde,
+using (select ta.impuesto_tasa_id, date '2020-01-01' fecha_desde,
               case ta.codigo when 'IVA10' then 10 when 'IVA5' then 5 end porcentaje
          from erp_gen_impuesto_tasa ta
          join erp_gen_impuesto i on i.impuesto_id = ta.impuesto_id and i.codigo = 'IVA'
@@ -71,16 +72,19 @@ using (select ta.impuesto_tasa_id, date '2000-01-01' fecha_desde,
    on (t.impuesto_tasa_id = s.impuesto_tasa_id and t.fecha_desde = s.fecha_desde)
  when not matched then
     insert (impuesto_tasa_id, fecha_desde, porcentaje, observacion)
-    values (s.impuesto_tasa_id, s.fecha_desde, s.porcentaje, 'Carga inicial: verificar contra la norma vigente');
+    values (s.impuesto_tasa_id, s.fecha_desde, s.porcentaje, 'Ley 6380/2019, art. 90');
 
 -- Categorías fiscales ------------------------------------------------------------------
 merge into erp_gen_categoria_fiscal t
 using (select p.pais_id, c.codigo, c.nombre, c.codigo_oficial, c.descripcion
          from erp_gen_pais p
         cross join (select 'GRAV10' codigo, 'Gravado 10 %'  nombre, '1' codigo_oficial, 'Tasa general de IVA' descripcion from dual union all
-                    select 'GRAV5',         'Gravado 5 %',          '1',                'Tasa reducida de IVA (canasta básica, inmuebles, medicamentos…)' from dual union all
+                    select 'GRAV5',         'Gravado 5 %',          '1',                'Canasta familiar, productos agrícolas y pecuarios listados, medicamentos de uso humano, alquiler de inmuebles para vivienda' from dual union all
+                    select 'INM_30_5',      'Enajenación de inmuebles (5 % sobre 30 %)', '4', 'Gravado parcial: el IVA 5 % se aplica sobre el 30 % del valor (Ley 6380, art. 85)' from dual union all
+                    select 'MUE_SP_30_10',  'Bienes muebles de servicios personales (10 % sobre 30 %)', '4', 'Gravado parcial: enajenación de bienes muebles por prestadores de servicios personales' from dual union all
+                    select 'FLETE_INT_25_10', 'Transporte internacional (10 % sobre 25 %)', '4', 'Gravado parcial: el IVA se aplica sobre el 25 % del flete o pasaje internacional' from dual union all
                     select 'EXENTO',        'Exento',               '3',                'Operaciones exentas de IVA' from dual union all
-                    select 'EXONERADO',     'Exonerado',            '2',                'Operaciones exoneradas de IVA' from dual) c
+                    select 'EXONERADO',     'Exonerado',            '2',                'Operaciones exoneradas de IVA (Ley 6380, art. 100)' from dual) c
         where p.codigo = 'PY') s
    on (t.pais_id = s.pais_id and t.codigo = s.codigo)
  when not matched then
@@ -88,17 +92,20 @@ using (select p.pais_id, c.codigo, c.nombre, c.codigo_oficial, c.descripcion
     values (s.pais_id, s.codigo, s.nombre, s.codigo_oficial, s.descripcion);
 
 merge into erp_gen_categoria_tasa t
-using (select c.categoria_fiscal_id, ta.impuesto_tasa_id
-         from erp_gen_categoria_fiscal c
-         join erp_gen_pais p on p.pais_id = c.pais_id and p.codigo = 'PY'
+using (select c.categoria_fiscal_id, ta.impuesto_tasa_id, x.porcentaje_base
+         from (select 'GRAV10' categoria, 'IVA10' tasa, 100 porcentaje_base from dual union all
+               select 'GRAV5',           'IVA5',        100                 from dual union all
+               select 'INM_30_5',        'IVA5',         30                 from dual union all
+               select 'MUE_SP_30_10',    'IVA10',        30                 from dual union all
+               select 'FLETE_INT_25_10', 'IVA10',        25                 from dual) x
+         join erp_gen_pais p on p.codigo = 'PY'
+         join erp_gen_categoria_fiscal c on c.pais_id = p.pais_id and c.codigo = x.categoria
          join erp_gen_impuesto i on i.pais_id = p.pais_id and i.codigo = 'IVA'
-         join erp_gen_impuesto_tasa ta on ta.impuesto_id = i.impuesto_id
-        where (c.codigo = 'GRAV10' and ta.codigo = 'IVA10')
-           or (c.codigo = 'GRAV5'  and ta.codigo = 'IVA5')) s
+         join erp_gen_impuesto_tasa ta on ta.impuesto_id = i.impuesto_id and ta.codigo = x.tasa) s
    on (t.categoria_fiscal_id = s.categoria_fiscal_id and t.impuesto_tasa_id = s.impuesto_tasa_id)
  when not matched then
     insert (categoria_fiscal_id, impuesto_tasa_id, porcentaje_base)
-    values (s.categoria_fiscal_id, s.impuesto_tasa_id, 100);
+    values (s.categoria_fiscal_id, s.impuesto_tasa_id, s.porcentaje_base);
 
 -- Tipos de documento de identidad (Paraguay) --------------------------------------------
 merge into erp_gen_tipo_doc_identidad t

@@ -34,12 +34,26 @@ as
         v_decimales     pls_integer := i_decimales;
         v_estado        erp_gen_categoria_fiscal.estado%type;
         v_impuesto_id   number := -1;
+        v_divisor       number;
+        v_base_neta     number;
         v_resto_base    number;
         v_resto_monto   number;
         v_monto         number;
-        v_porcentaje    number;
         v_base          number;
         v_impuesto      number;
+
+        type t_tasa is record (
+            impuesto_id       number,
+            impuesto_tasa_id  number,
+            codigo            erp_gen_impuesto_tasa.codigo%type,
+            porcentaje_base   number,
+            nro               pls_integer,
+            cantidad          pls_integer,
+            total_base        number,
+            porcentaje        number
+        );
+        type t_tasas is table of t_tasa index by pls_integer;
+        v_tasas  t_tasas;
 
         procedure agregar_exento (
             i_impuesto_id  in number,
@@ -84,43 +98,68 @@ as
                and t.estado = 'A'
              order by t.impuesto_id, nro
         ) loop
-            if r_tasa.impuesto_id <> v_impuesto_id then
-                v_impuesto_id := r_tasa.impuesto_id;
+            if r_tasa.total_base > 100 then
+                raise_application_error(c_err_base_excedida,
+                    'La categoría fiscal asigna más del 100 % de la base a un mismo impuesto.');
+            end if;
+            v_tasas(v_tasas.count + 1).impuesto_id := r_tasa.impuesto_id;
+            v_tasas(v_tasas.count).impuesto_tasa_id := r_tasa.impuesto_tasa_id;
+            v_tasas(v_tasas.count).codigo           := r_tasa.codigo;
+            v_tasas(v_tasas.count).porcentaje_base  := r_tasa.porcentaje_base;
+            v_tasas(v_tasas.count).nro              := r_tasa.nro;
+            v_tasas(v_tasas.count).cantidad         := r_tasa.cantidad;
+            v_tasas(v_tasas.count).total_base       := r_tasa.total_base;
+            v_tasas(v_tasas.count).porcentaje       :=
+                calcular_porcentaje(i_impuesto_tasa_id => r_tasa.impuesto_tasa_id, i_fecha => i_fecha);
+        end loop;
+
+        for i in 1 .. v_tasas.count loop
+            if v_tasas(i).impuesto_id <> v_impuesto_id then
+                v_impuesto_id := v_tasas(i).impuesto_id;
                 v_resto_base  := 100;
                 v_resto_monto := i_monto;
-                if r_tasa.total_base > 100 then
-                    raise_application_error(c_err_base_excedida,
-                        'La categoría fiscal asigna más del 100 % de la base a un mismo impuesto.');
+                -- Base neta total del impuesto. Con impuesto incluido:
+                --   monto = base_neta x (1 + suma(%base x tasa) / 10000)
+                -- (fórmula de la DNIT para gravado parcial: base = 100·M·P / (10000 + T·P)).
+                if i_incluye_impuesto = 'S' then
+                    v_divisor := 0;
+                    for j in i .. v_tasas.count loop
+                        exit when v_tasas(j).impuesto_id <> v_impuesto_id;
+                        v_divisor := v_divisor + v_tasas(j).porcentaje_base * v_tasas(j).porcentaje;
+                    end loop;
+                    v_base_neta := i_monto / (1 + v_divisor / 10000);
+                else
+                    v_base_neta := i_monto;
                 end if;
             end if;
 
-            -- La última tasa de un impuesto que cubre el 100 % toma el resto, para que
-            -- la suma de las partes sea exactamente el monto (sin diferencias de redondeo).
-            if r_tasa.nro = r_tasa.cantidad and r_tasa.total_base = 100 then
-                v_monto := v_resto_monto;
-            else
-                v_monto := round(i_monto * r_tasa.porcentaje_base / 100, v_decimales);
-            end if;
-
-            v_porcentaje := calcular_porcentaje(i_impuesto_tasa_id => r_tasa.impuesto_tasa_id, i_fecha => i_fecha);
+            v_base     := round(v_base_neta * v_tasas(i).porcentaje_base / 100, v_decimales);
+            v_impuesto := round(v_base * v_tasas(i).porcentaje / 100, v_decimales);
             if i_incluye_impuesto = 'S' then
-                v_base     := round(v_monto / (1 + v_porcentaje / 100), v_decimales);
-                v_impuesto := v_monto - v_base;
+                -- La última tasa de un impuesto que cubre el 100 % absorbe el redondeo,
+                -- para que base + impuesto sume exactamente el monto.
+                if v_tasas(i).nro = v_tasas(i).cantidad and v_tasas(i).total_base = 100 then
+                    v_impuesto := v_resto_monto - v_base;
+                end if;
+                v_monto := v_base + v_impuesto;
             else
-                v_base     := v_monto;
-                v_impuesto := round(v_monto * v_porcentaje / 100, v_decimales);
+                if v_tasas(i).nro = v_tasas(i).cantidad and v_tasas(i).total_base = 100 then
+                    v_base     := v_resto_monto;
+                    v_impuesto := round(v_base * v_tasas(i).porcentaje / 100, v_decimales);
+                end if;
+                v_monto := v_base;
             end if;
 
             v_resultado.extend;
             v_resultado(v_resultado.count) := erp_impuesto_calc_typ(
-                r_tasa.impuesto_id, r_tasa.impuesto_tasa_id, r_tasa.codigo, v_porcentaje,
-                r_tasa.porcentaje_base, v_monto, v_base, v_impuesto);
+                v_tasas(i).impuesto_id, v_tasas(i).impuesto_tasa_id, v_tasas(i).codigo, v_tasas(i).porcentaje,
+                v_tasas(i).porcentaje_base, v_monto, v_base, v_impuesto);
 
-            v_resto_base  := v_resto_base - r_tasa.porcentaje_base;
+            v_resto_base  := v_resto_base - v_tasas(i).porcentaje_base;
             v_resto_monto := v_resto_monto - v_monto;
 
-            if r_tasa.nro = r_tasa.cantidad and v_resto_base > 0 then
-                agregar_exento(i_impuesto_id => r_tasa.impuesto_id, i_pct_base => v_resto_base, i_monto_exento => v_resto_monto);
+            if v_tasas(i).nro = v_tasas(i).cantidad and v_resto_base > 0 then
+                agregar_exento(i_impuesto_id => v_tasas(i).impuesto_id, i_pct_base => v_resto_base, i_monto_exento => v_resto_monto);
             end if;
         end loop;
 
