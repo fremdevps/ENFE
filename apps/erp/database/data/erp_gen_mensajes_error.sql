@@ -2,6 +2,10 @@
 -- Mensajes de error por constraint del módulo General del ERP (idempotente).
 -- Los usa el manejador central adm_gen_error_api.
 -- =============================================================================
+
+-- Autonomous Database habilita DML paralelo por defecto: varios merge sobre tablas
+-- relacionadas en la misma transacción darían ORA-12839.
+alter session disable parallel dml;
 merge into adm_gen_mensaje_error t
 using (
     select 'UK_ERP_MON_CODIGO'              codigo, 'Ya existe una moneda con ese código.' mensaje from dual union all
