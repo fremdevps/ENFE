@@ -85,7 +85,7 @@ erp_gen_categoria_fiscal (GRAV10, GRAV5, EXENTO, PARCIAL_30_5 …)
 ```
 
 - Un producto tiene **categoría fiscal**, nunca una tasa.
-- `erp_gen_impuesto_api.calcular(categoria, fecha, monto, incluye_impuesto, moneda)` devuelve una
+- `erp_gen_impuesto_api.obtener_calculo(categoria, fecha, monto, incluye_impuesto, moneda)` devuelve una
   colección `erp_impuesto_calc_tab` con una fila por tasa: base imponible, impuesto, y la parte
   exenta/no gravada. Se resuelve la tasa **vigente a la fecha del documento**.
 - Gravado parcial (ej. 30 % de la base al 5 % y el resto exento): la suma de `% de base` de una
@@ -102,8 +102,9 @@ erp_gen_categoria_fiscal (GRAV10, GRAV5, EXENTO, PARCIAL_30_5 …)
 - `erp_gen_empresa_config.moneda_id_funcional`: moneda contable de la empresa (PYG).
   Opcional `moneda_id_reporte` (USD) para reportes de grupo.
 - `erp_gen_cotizacion`: `(empresa_id null = general, moneda_origen, moneda_destino, fecha)`.
-  La búsqueda toma la última cotización `<= fecha`, primero de la empresa y luego general; si solo
-  existe el par inverso, usa `1 / tasa`. Fuente: `BCP`, `SET`, `MAN` (manual).
+  La búsqueda toma la última cotización `<= fecha` (a igual fecha, la de la empresa antes que la
+  general); si solo existe el par inverso, usa `1 / tasa`. El parámetro
+  `ERP_GEN_COTIZACION_DIAS_MAX` limita la antigüedad admitida. Fuente: `BCP`, `SET`, `MAN` (manual).
 - Todo documento: `moneda_id`, `cotizacion`, montos en moneda del documento y
   `*_funcional`. Los reportes nunca reconvierten.
 - Cobro/pago en moneda distinta a la del documento: se aplica con la cotización del día y la
@@ -234,13 +235,27 @@ reglas.
 | Reportes | Vistas `_v` y, para tableros, tablas resumen o `_mv` refrescadas por job. |
 | Seguridad por fila | Hoy: la API filtra por `APP_EMPRESA_ID`. VPD (`DBMS_RLS`, contexto `ctx_erp`) es opción futura (requiere Enterprise Edition on-premise). |
 
+### 9.1 Validación contra las guías de Oracle
+
+Revisado con las guías oficiales incluidas en `.claude/skills/oracle-db` (design, appdev, performance):
+
+| Decisión | Guía Oracle | Resultado |
+|---|---|---|
+| Identity `by default on null`, `cache 1000` en transaccionales, nunca `nocache`; número legal en tabla de correlativos con `for update` | `appdev/sequences-identity.md`, `appdev/locking-concurrency.md` | Adoptado (ESTANDAR §1.3) |
+| Particionamiento por intervalo mensual para tablas de solo inserción, índices locales | `design/partitioning-strategy.md` | Adoptado como opcional: requiere opción Partitioning (EE) on-premise |
+| Índice único local exige la clave de partición | `design/partitioning-strategy.md` §6 | Las UK de número de documento (empresa + timbrado + número) serán **índices globales** o incluirán la fecha |
+| Claves sustitutas, no naturales | `design/data-modeling.md` | Adoptado: PK identity; RUC, códigos ISO, etc. como UK |
+| Aislamiento por tenant con VPD (`DBMS_RLS` + contexto) | `design/data-modeling.md`, `security/` | Futuro (EE on-premise); hoy filtro por `APP_EMPRESA_ID` en la API |
+| Colas sin contención con `for update skip locked` | `appdev/locking-concurrency.md` | Para el envío SIFEN (`job_erp_fe_enviar`) en la fase 2 |
+| Sin índices bitmap en OLTP | `design/data-modeling.md` | Solo B-tree |
+
 ## 10. Errores del ERP
 
 Rango −20100 … −20299 (ESTANDAR §4.2), por módulo:
 
 | Módulo | Rango |
 |---|---|
-| gen | −20100 … −20129 |
+| gen | −20100 … −20129 (en uso: −20100 … −20111) |
 | doc | −20130 … −20159 |
 | stk | −20160 … −20179 |
 | ven | −20180 … −20199 |
