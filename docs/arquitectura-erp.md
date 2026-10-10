@@ -15,13 +15,11 @@
 | O6 | **Facturación electrónica** | Nace preparado para **SIFEN / e-Kuatia** (Paraguay): CDC, XML firmado, lotes, eventos, KuDE. La emisión en papel (timbrado preimpreso) es un caso particular. |
 | O7 | **OCI y on-premise** | Oracle 19c + APEX 26.1; nada exclusivo de la nube sin alternativa. |
 
-### Origen
+### Principios de modelado
 
-El análisis del modelo heredado **SCV** (SQL Developer Data Modeler, 1.118 tablas, 2012–2022) se
-usó como **especificación funcional** (reglas paraguayas: SET, RUC, timbrado, Hechauka,
-retenciones). No se migra su DDL: tenía el IVA fijo en columnas (`NVL05/NVL10`), códigos con
-precisión insuficiente (`NUMBER(4)`), 480 PK compuestas y ~15 tablas de vínculo por documento.
-También se analizó **Dolphin** (Datapar). Comparación y decisiones en `docs/analisis-erp-legados.md`.
+- Reglas paraguayas como especificación funcional: SET/DNIT, RUC, timbrado, registro de comprobantes, retenciones.
+- Nada fijo en columnas (montos por tasa, cuentas contables): todo por configuración.
+- Claves sustitutas con precisión suficiente; datos principales de un documento como columnas de su cabecera (no tablas satélite 1:1).
 
 ## 2. Módulos y aplicaciones APEX (no monolítico)
 
@@ -162,7 +160,7 @@ adm_gen_empresa ── erp_gen_empresa_config (país, monedas, rubro, datos fisc
 erp_gen_usuario_sucursal: usuario + sucursal [+ departamento] + punto por defecto
 ```
 
-- El **departamento** es una dimensión de análisis opcional (como en Dolphin): documentos, stock
+- El **departamento** es una dimensión de análisis opcional: documentos, stock
   y finanzas podrán llevar `departamento_id` para reportes por unidad de negocio.
 - Si un usuario no tiene filas en `erp_gen_usuario_sucursal`, opera todas las sucursales de la
   empresa, salvo que el parámetro `ERP_GEN_ACCESO_SUCURSAL_ESTRICTO = 'S'`.
@@ -261,7 +259,7 @@ Producto (con categoría fiscal, unidad base, marca, tipo bien/servicio, maneja 
 unidad y conversión, presentación, código de barras, depósito (`erp_stk_deposito`, ya creado en la fase 1), movimiento
 (cabecera + ítems, generado por el tipo de documento) y **`erp_stk_saldo`**
 (empresa, depósito, producto, lote) actualizado en la misma transacción. Costo promedio
-ponderado en moneda funcional **y de reporte** en `erp_stk_saldo` (idea de Dolphin: costo contable y gerencial).
+ponderado en moneda funcional **y de reporte** en `erp_stk_saldo` (costo contable y gerencial).
 
 ## 6. Ventas y compras (`ven` / `com`) — fase 4
 
@@ -279,7 +277,7 @@ ponderado en moneda funcional **y de reporte** en `erp_stk_saldo` (idea de Dolph
 - **`erp_fin_documento`**: toda cuenta a cobrar/pagar (de factura, nota, anticipo, préstamo) en su
   moneda, con **cuotas** (`erp_fin_documento_cuota`: vencimiento, importe, saldo).
 - **`erp_fin_aplicacion`**: qué recibo/orden de pago/nota de crédito cancela qué cuota, con
-  monto en ambas monedas y diferencia de cambio. Reemplaza los ~15 vínculos `FIN*` de SCV.
+  monto en ambas monedas y diferencia de cambio, sin tablas de vínculo por cada combinación.
 - Recibo, orden de pago, formas de pago (efectivo, cheque, transferencia, tarjeta), cheques
   emitidos (chequera) y recibidos, caja (apertura/cierre/arqueo), cuentas bancarias,
   retenciones (IVA/renta, comprobante de retención) e intereses por mora configurables.
