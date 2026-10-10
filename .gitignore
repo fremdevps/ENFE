@@ -66,3 +66,6 @@ tests/e2e/.auth/
 
 # Python
 __pycache__/
+
+# Worktrees temporales de agentes
+.claude/worktrees/
