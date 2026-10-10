@@ -26,6 +26,9 @@ as
     ) is
         r_periodo  erp_gen_periodo%rowtype;
     begin
+        if i_mes is null or i_mes not between 1 and 12 then
+            raise_application_error(c_err_mes_invalido, 'Indique el mes (1 a 12) del período.');
+        end if;
         erp_gen_periodo_ctr.insertar(i_empresa_id => i_empresa_id, i_modulo => i_modulo,
                                      i_anio => i_anio, i_mes => i_mes, i_estado => 'A');
         r_periodo := erp_gen_periodo_ctr.obtener(i_empresa_id => i_empresa_id, i_modulo => i_modulo,

@@ -10,6 +10,7 @@ as
 -- =============================================================================
 
     c_err_sin_permiso  constant pls_integer := -20108;
+    c_err_mes_invalido constant pls_integer := -20113;
 
     procedure validar_abierto (
         i_empresa_id  in number,

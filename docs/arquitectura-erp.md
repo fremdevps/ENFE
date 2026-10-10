@@ -327,7 +327,7 @@ Rango −20100 … −20299 (ESTANDAR §4.2), por módulo:
 
 | Módulo | Rango |
 |---|---|
-| gen | −20100 … −20129 (en uso: −20100 … −20111) |
+| gen | −20100 … −20129 (en uso: −20100 … −20113; −20112 = empresa sin acceso, página 95) |
 | doc | −20130 … −20159 |
 | stk | −20160 … −20179 |
 | ven | −20180 … −20199 |
