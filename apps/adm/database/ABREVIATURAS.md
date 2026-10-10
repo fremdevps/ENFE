@@ -15,3 +15,4 @@ Usadas en constraints, índices, triggers y secuencias (`<tipo>_adm_<abrev>_...`
 | adm_aud_login | log |
 | adm_aud_error | err |
 | adm_gen_mensaje_error | mse |
+| adm_aud_cambio | cam |
