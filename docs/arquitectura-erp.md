@@ -134,7 +134,7 @@ erp_gen_categoria_fiscal (GRAV10, GRAV5, EXENTO, PARCIAL_30_5 …)
 - Precio con impuesto incluido (lo habitual en Paraguay): `base = parte / (1 + tasa)`;
   sin incluir: `impuesto = base × tasa`. Redondeo a los decimales de la moneda.
 - Cada documento guarda el resultado en `<documento>_item_impuesto` (foto) y un resumen por tasa
-  en la cabecera (libro IVA / Hechauka / SIFEN). **Cambiar una tasa no altera documentos emitidos.**
+  en la cabecera (libro IVA / registro mensual de comprobantes / SIFEN). **Cambiar una tasa no altera documentos emitidos.**
 - Pendiente para una versión siguiente: impuestos en cascada (ISC que forma base del IVA) con
   `orden` y "aplica sobre impuestos anteriores".
 
@@ -186,7 +186,20 @@ Nada de tablas por cliente ni triggers por cliente. La adaptación es por **dato
 Funcionalidades previstas además de las iniciales: `REPARTO`, `LINEA_NEGOCIO`, `COMISION`, `INTERCOMPANY`, `UBICACION`.
 La **línea de negocio** es una dimensión comercial distinta del departamento (unidad organizativa).
 
-### 3.6 Períodos
+### 3.6 Todo es configurable
+
+Regla del producto: ninguna decisión de negocio queda fija en el código. Cada una va en el nivel que corresponde:
+
+| Dónde | Qué va ahí | Ejemplos |
+|---|---|---|
+| Parámetro (global, empresa, sucursal) | Comportamientos generales | base de comisiones (vendido / cobrado / por regla), método de costo por defecto, caja con o sin sesión y arqueo, aprobación previa de traslados |
+| Funcionalidad activable | Capacidades que una empresa usa o no | lotes, línea de negocio, reparto, comisiones |
+| Tipo de documento | Cómo se comporta cada comprobante | afecta stock, exige timbrado, máximo de ítems |
+| Producto, cliente, línea de negocio | Excepciones puntuales | método de costo del producto, política de mora del cliente |
+
+Cumplimiento fiscal verificado y pendientes: `docs/cumplimiento-paraguay.md`.
+
+### 3.7 Períodos
 
 `erp_gen_periodo (empresa, modulo, anio, mes, estado)`. Toda API que registra un documento llama
 `erp_gen_periodo_api.validar_abierto(empresa, modulo, fecha)`. Cerrar un período bloquea altas,
