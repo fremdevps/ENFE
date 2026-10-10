@@ -21,19 +21,50 @@ El análisis del modelo heredado **SCV** (SQL Developer Data Modeler, 1.118 tabl
 usó como **especificación funcional** (reglas paraguayas: SET, RUC, timbrado, Hechauka,
 retenciones). No se migra su DDL: tenía el IVA fijo en columnas (`NVL05/NVL10`), códigos con
 precisión insuficiente (`NUMBER(4)`), 480 PK compuestas y ~15 tablas de vínculo por documento.
+También se analizó **Dolphin** (Datapar). Comparación y decisiones en `docs/analisis-erp-legados.md`.
 
-## 2. Módulos
+## 2. Módulos y aplicaciones APEX (no monolítico)
+
+### 2.1 Una app APEX por módulo
+
+El ERP **no es una sola aplicación**. Sigue el patrón que APEX soporta de forma nativa:
+
+| Mecanismo APEX | Uso en ENFE |
+|---|---|
+| **Sesión compartida** (`sessionSharing: workspaceSharing` en el esquema de autenticación) | El usuario inicia sesión una vez y navega entre ADM y todas las apps del ERP sin volver a loguearse (ya funciona entre ADM y ERP). |
+| **Suscripción de componentes compartidos** (`subscription { master: … }`) | Una **app maestra** define autenticación, authorization schemes, LOVs, app items (`APP_EMPRESA_ID`), procesos de aplicación y tema; las apps de módulo se suscriben y heredan los cambios. |
+| **Un solo esquema** | Todas las apps usan los mismos paquetes `erp_*_api`; las apps son solo interfaz. Un módulo nuevo no duplica lógica. |
+
+| ID APEX | App | Módulos | Contenido |
+|---|---|---|---|
+| 200 | **ERP · Configuración** (maestra) | `gen`, `doc` | Empresa, estructura organizativa, monedas, impuestos, personas, períodos, documentos y timbrado, SIFEN |
+| 210 | ERP · Inventario | `stk` | Productos, depósitos, movimientos, saldos |
+| 220 | ERP · Compras | `com` | Proveedores, órdenes, facturas de compra |
+| 230 | ERP · Ventas | `ven` | Clientes, precios, pedidos, facturación |
+| 240 | ERP · Finanzas | `fin` | Cuentas a cobrar/pagar, caja, bancos, cheques |
+| 250 | ERP · Contabilidad | `cnt` | Plan de cuentas, asientos, cierres |
+| 260–299 | Apps verticales por rubro | `prd`, `agr`, `rst`… | Producción, agro (safra), restaurante… solo si la empresa las activa |
+
+Beneficios: cada app se despliega, versiona y prueba por separado; un cliente instala solo lo que
+usa; varios devs trabajan en paralelo sin pisarse; las pantallas pesadas de un módulo no afectan
+a los demás.
+
+Seguridad: cada app de módulo se registra en ADM con su `apex_app_id`. Pendiente en ADM:
+asociar `adm_seg_modulo` con su app APEX para que `tiene_acceso_app` reconozca las apps de
+módulo. Se hace al crear la segunda app (210).
+
+### 2.2 Módulos de base de datos
 
 | Código | Módulo | Contenido | Páginas |
 |---|---|---|---|
-| `gen` | General | País, ubicación, moneda, cotización, impuestos, categoría fiscal, sucursal, persona, parámetros, períodos | 10–99 |
-| `doc` | Documentos | Tipo de documento, punto de expedición, timbrado, numeración, facturación electrónica (SIFEN) | 100–199 |
-| `stk` | Inventario | Producto, unidad, marca, depósito, movimiento, saldo de stock, lote | 200–299 |
-| `ven` | Ventas | Cliente, lista de precio, pedido, factura de venta, nota de crédito/débito, remisión | 300–399 |
-| `com` | Compras | Proveedor, solicitud, orden de compra, factura de compra, autofactura | 400–499 |
-| `fin` | Finanzas | Cuenta a cobrar/pagar (cuotas), recibo, orden de pago, aplicación, retención, cheque, caja, banco, diferencia de cambio | 500–599 |
-| `cnt` | Contabilidad | Plan de cuentas, ejercicio, asiento, regla contable, centro de costo, saldo contable | 600–699 |
-| `prd` | Producción | (reservado) | 700–799 |
+| `gen` | General | País, ubicación, moneda, cotización, impuestos, categoría fiscal, estructura organizativa, persona y roles, funcionalidades por rubro, parámetros, períodos | app 200 |
+| `doc` | Documentos | Tipo de documento, timbrado, numeración, facturación electrónica (SIFEN) | app 200 |
+| `stk` | Inventario | Producto, unidad, marca, depósito, movimiento, saldo de stock, lote | app 210 |
+| `ven` | Ventas | Cliente, lista de precio, pedido, factura de venta, nota de crédito/débito, remisión | app 230 |
+| `com` | Compras | Proveedor, solicitud, orden de compra, factura de compra, autofactura | app 220 |
+| `fin` | Finanzas | Cuenta a cobrar/pagar (cuotas), recibo, orden de pago, aplicación, retención, cheque, caja, banco, diferencia de cambio | app 240 |
+| `cnt` | Contabilidad | Plan de cuentas, ejercicio, asiento, regla contable, centro de costo, saldo contable | app 250 |
+| `prd` | Producción | (reservado) | app 260+ |
 
 Dependencias (siempre hacia abajo, nunca circulares):
 
@@ -63,8 +94,18 @@ Dependencias (siempre hacia abajo, nunca circulares):
 | `erp_gen_categoria_tasa` | cata | Tasas que componen una categoría y qué % de la base afecta cada una |
 | `erp_gen_empresa_config` | emcf | Extensión ERP de `adm_gen_empresa`: país, moneda funcional, precio con impuesto, datos fiscales |
 | `erp_gen_sucursal` | suc | Sucursal / establecimiento (código SIFEN de 3 dígitos) |
+| `erp_gen_departamento` | dpto | Departamento / unidad de negocio de la empresa o de una sucursal |
+| `erp_gen_punto_expedicion` | ptex | Punto de expedición (3 dígitos) de una sucursal, opcionalmente de un departamento |
+| `erp_gen_usuario_sucursal` | ussu | Sucursales y departamentos que puede operar cada usuario, con punto de expedición por defecto |
+| `erp_gen_funcionalidad` | func | Catálogo de funcionalidades activables (lotes, series, safra, vendedores, centros de costo…) |
+| `erp_gen_rubro` | rub | Perfil de rubro (comercio, agro, industria, servicios…) con sus funcionalidades sugeridas |
+| `erp_gen_rubro_funcionalidad` | rufu | Funcionalidades que activa cada rubro |
+| `erp_gen_empresa_funcionalidad` | emfu | Funcionalidades activas de cada empresa |
+| `erp_gen_tipo_rol` | tirl | Roles de persona configurables (cliente, proveedor, empleado, transportista, productor…) |
+| `erp_gen_persona_rol` | prro | Roles de cada persona por empresa |
+| `erp_stk_deposito` | dpo | Depósito de una sucursal (módulo `stk`, creado con la estructura organizativa) |
 | `erp_gen_tipo_doc_identidad` | tdi | RUC, cédula, pasaporte… con código oficial |
-| `erp_gen_persona` | prs | Persona física o jurídica **única** (cliente, proveedor, empleado son roles) |
+| `erp_gen_persona` | prs | Persona física o jurídica **única** (cliente, proveedor, empleado son roles: `erp_gen_persona_rol`) |
 | `erp_gen_persona_direccion` | prdi | Direcciones (fiscal, entrega, cobro) |
 | `erp_gen_persona_contacto` | prco | Teléfonos, correos, contactos |
 | `erp_gen_parametro` | par | Parámetros clave/valor tipados; por empresa con valor general por defecto |
@@ -110,7 +151,39 @@ erp_gen_categoria_fiscal (GRAV10, GRAV5, EXENTO, PARCIAL_30_5 …)
 - Cobro/pago en moneda distinta a la del documento: se aplica con la cotización del día y la
   diferencia contra la cotización original genera **diferencia de cambio** (asiento automático).
 
-### 3.4 Períodos
+### 3.4 Estructura organizativa
+
+```
+adm_gen_empresa ── erp_gen_empresa_config (país, monedas, rubro, datos fiscales)
+   ├── erp_gen_departamento   (opcional; de toda la empresa o de una sucursal)
+   └── erp_gen_sucursal       (establecimiento 001, 002…)
+          ├── erp_gen_punto_expedicion  (001, 002… ; departamento opcional)
+          └── erp_stk_deposito          (departamento opcional; propio, consignación, tránsito)
+erp_gen_usuario_sucursal: usuario + sucursal [+ departamento] + punto por defecto
+```
+
+- El **departamento** es una dimensión de análisis opcional (como en Dolphin): documentos, stock
+  y finanzas podrán llevar `departamento_id` para reportes por unidad de negocio.
+- Si un usuario no tiene filas en `erp_gen_usuario_sucursal`, opera todas las sucursales de la
+  empresa, salvo que el parámetro `ERP_GEN_ACCESO_SUCURSAL_ESTRICTO = 'S'`.
+
+### 3.5 Adaptación a cualquier rubro
+
+Nada de tablas por cliente ni triggers por cliente. La adaptación es por **datos**:
+
+1. **Funcionalidades** (`erp_gen_funcionalidad`): interruptores por empresa que muestran u
+   ocultan campos, pantallas y validaciones (ej. `LOTE`, `VENCIMIENTO`, `SERIE`, `SAFRA`,
+   `VENDEDOR`, `CENTRO_COSTO`, `DEPARTAMENTO`, `CONSIGNACION`).
+   En APEX: condición `erp_gen_funcionalidad_api.esta_activa_sn('LOTE', :APP_EMPRESA_ID) = 'S'`.
+2. **Rubros** (`erp_gen_rubro`): plantillas que activan un conjunto de funcionalidades al
+   configurar la empresa (comercio, distribuidora, agro/cooperativa, industria, servicios,
+   restaurante…). Se pueden ajustar después, empresa por empresa.
+3. **Roles de persona configurables** (`erp_gen_tipo_rol`) con indicadores de en qué módulos se
+   usa cada rol.
+4. **Parámetros** (`erp_gen_parametro`) para comportamientos puntuales.
+5. **Apps verticales** (260–299) para rubros con procesos propios, que reutilizan el núcleo.
+
+### 3.6 Períodos
 
 `erp_gen_periodo (empresa, modulo, anio, mes, estado)`. Toda API que registra un documento llama
 `erp_gen_periodo_api.validar_abierto(empresa, modulo, fecha)`. Cerrar un período bloquea altas,
@@ -127,7 +200,6 @@ remisión, recibo, autofactura y orden de pago son configuraciones, no tablas de
 | Tabla | Para qué |
 |---|---|
 | `erp_doc_tipo_documento` | Comportamiento: `signo_stock` (+1/−1/0), `signo_cuenta` (D/C/N), `es_legal`, `tipo_emision` (E electrónico / P preimpreso / I interno), `codigo_sifen` (1 FE, 4 AFE, 5 NCE, 6 NDE, 7 NRE), `requiere_documento_origen`, `regla_contable` |
-| `erp_doc_punto_expedicion` | Punto de expedición (3 dígitos) de una sucursal |
 | `erp_doc_timbrado` | Timbrado (número, vigencia desde/hasta, electrónico o preimpreso) por empresa |
 | `erp_doc_numerador` | Correlativo por empresa + timbrado + establecimiento + punto + tipo; se toma con `select … for update` en la transacción (ESTANDAR §1.3) |
 | `erp_doc_numero_inutilizado` | Rangos inutilizados (evento SIFEN de inutilización) |
@@ -186,10 +258,10 @@ APEX / REST ──► erp_*_api.emitir ──► erp_doc_fe_documento (estado P,
 ## 5. Inventario (`stk`) — fase 3
 
 Producto (con categoría fiscal, unidad base, marca, tipo bien/servicio, maneja lote S/N),
-unidad y conversión, presentación, código de barras, depósito por sucursal, movimiento
+unidad y conversión, presentación, código de barras, depósito (`erp_stk_deposito`, ya creado en la fase 1), movimiento
 (cabecera + ítems, generado por el tipo de documento) y **`erp_stk_saldo`**
 (empresa, depósito, producto, lote) actualizado en la misma transacción. Costo promedio
-ponderado en moneda funcional en `erp_stk_saldo`.
+ponderado en moneda funcional **y de reporte** en `erp_stk_saldo` (idea de Dolphin: costo contable y gerencial).
 
 ## 6. Ventas y compras (`ven` / `com`) — fase 4
 
@@ -268,7 +340,7 @@ Rango −20100 … −20299 (ESTANDAR §4.2), por módulo:
 
 | Fase | Módulo | Rama | Estado |
 |---|---|---|---|
-| 1 | `gen` | `feature/erp-gen` | en curso |
+| 1 | `gen` + estructura organizativa + depósito + app 200 | `feature/erp-gen` | en curso |
 | 2 | `doc` + SIFEN (modelo y cola; conector aparte) | `feature/erp-doc` | pendiente |
 | 3 | `stk` | `feature/erp-stk` | pendiente |
 | 4 | `ven` / `com` | `feature/erp-ven`, `feature/erp-com` | pendiente |

@@ -311,7 +311,7 @@ Diferencia clave: en `ctr` se habla de **filas** (insertar, eliminar); en `api` 
 
 | Objeto | Regla | Ejemplo |
 |---|---|---|
-| ID de app | Fijo, por bloques de 100 | ADM `100` · ERP `200` · CRM `300` |
+| ID de app | Fijo, por bloques de 100; las apps de módulo de un sistema usan sub-bloques de 10 (ver `docs/arquitectura-erp.md` §2.1) | ADM `100` · ERP `200` (configuración, app maestra) · ERP Inventario `210` · ERP Ventas `230` · CRM `300` |
 | Alias de app | código de app | `adm`, `erp` |
 | Rango de páginas | 1–9 inicio · 10–99 módulo 1 · 100–199 módulo 2 · … · 9000–9998 utilitarios · 9999 login | — |
 | Alias de página | minúsculas con guion | `nuevo-usuario` |
