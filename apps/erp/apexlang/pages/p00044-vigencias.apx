@@ -1,0 +1,228 @@
+page 44 (
+    name: Vigencias de tasas
+    alias: VIGENCIAS
+    title: Vigencias de tasas
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @erp-gen-catalogo-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Porcentaje de cada tasa a lo largo del tiempo. Un cambio de tasa no altera documentos ya emitidos.
+            Use Crear vigencia para agregar o el lápiz de cada fila para editar.
+            ```
+    }
+
+    region breadcrumb (
+        name: Vigencias de tasas
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region vigencias (
+        name: Vigencias de tasas
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select v.impuesto_tasa_vig_id, i.codigo || ' / ' || t.codigo tasa, v.fecha_desde, v.porcentaje, v.observacion
+                  from erp_gen_impuesto_tasa_vig v
+                  join erp_gen_impuesto_tasa t on t.impuesto_tasa_id = v.impuesto_tasa_id
+                  join erp_gen_impuesto i on i.impuesto_id = t.impuesto_id
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: vigencias
+        }
+        link {
+            linkColumn: customTarget
+            target: {
+                page: 45
+                items: {
+                    P45_IMPUESTO_TASA_VIG_ID: #IMPUESTO_TASA_VIG_ID#
+                }
+                clearCache: 45
+            }
+            linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>
+        }
+        componentAppearance {
+            showNullValuesAs: -
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: No hay registros.
+            whenMoreDataFound: Hay más de #MAX_ROW_COUNT# registros; use la búsqueda o los filtros.
+        }
+        download {
+            formats: [
+                csv
+                html
+            ]
+        }
+        comments {
+            comments:
+                ```
+                Listado de erp_gen_impuesto_tasa_vig. Alta/edición en la página 45 (guardado automático: catálogo).
+                ```
+        }
+
+        column IMPUESTO_TASA_VIG_ID (
+            type: hidden
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 10
+            }
+            source {
+                dataType: NUMBER
+            }
+        )
+
+        column TASA (
+            type: plainText
+            heading {
+                heading: Tasa
+            }
+            layout {
+                sequence: 20
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Tasa. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column FECHA_DESDE (
+            type: plainText
+            heading {
+                heading: Rige desde
+            }
+            layout {
+                sequence: 30
+            }
+            source {
+                dataType: DATE
+            }
+            comments {
+                comments: Display Label: Rige desde. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column PORCENTAJE (
+            type: plainText
+            heading {
+                heading: Porcentaje
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: NUMBER
+            }
+            comments {
+                comments: Display Label: Porcentaje. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column OBSERVACION (
+            type: plainText
+            heading {
+                heading: Norma / observación
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Norma / observación. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+    )
+
+    button crear (
+        buttonName: CREAR
+        label: Crear vigencia
+        layout {
+            sequence: 10
+            region: @vigencias
+            slot: RIGHT_OF_IR_SEARCH_BAR
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: #DEFAULT#
+            icon: fa-plus
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 45
+                clearCache: 45
+            }
+        }
+    )
+
+    dynamicAction refrescar-al-cerrar (
+        name: Refrescar al cerrar el formulario
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @vigencias
+        }
+
+        action refrescar (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @vigencias
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+)

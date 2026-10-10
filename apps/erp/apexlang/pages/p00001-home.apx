@@ -6,49 +6,87 @@ page 1 (
         pageTemplate: @/standard
         templateOptions: #DEFAULT#
     }
-    navigation {
-        cursorFocus: doNotFocusCursor
-    }
     security {
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
+    help {
+        helpText:
+            ```
+            Configuración general del ERP para la empresa activa.
+            Siga los pasos de Puesta en marcha y use las tarjetas para ir a cada configuración. La empresa activa se cambia desde la barra superior.
+            ```
+    }
 
-    region app-name (
+    region breadcrumb (
         name: Inicio
-        title: &APP_TITLE.
-        type: staticContent
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
         layout {
             sequence: 10
-            slot: breadcrumbBar
+            slot: REGION_POSITION_01
         }
         appearance {
-            template: @/hero
-            templateOptions: #DEFAULT#
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
         }
-        image {
-            fileUrl: #APP_FILES#icons/app-icon-512.png
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
         }
     )
 
-    region mis-modulos (
-        name: Mis módulos
+    region puesta-en-marcha (
+        name: Puesta en marcha
         type: classicReport
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select m.codigo, m.nombre, m.icono
-                  from adm_seg_modulo m
-                  join adm_seg_aplicacion a on a.aplicacion_id = m.aplicacion_id
-                 where a.codigo = 'ERP'
-                   and m.estado = 'A'
-                   and exists (select 1
-                                 from adm_seg_usuario_permiso_v v
-                                where v.username  = :APP_USER
-                                  and v.modulo_id = m.modulo_id)
-                 order by m.orden
+                select 1 orden, 'Datos de la empresa (país, monedas, rubro)' paso,
+                       case when exists (select 1 from erp_gen_empresa_config where empresa_id = :APP_EMPRESA_ID)
+                            then 'Listo' else 'Pendiente' end estado
+                  from dual
+                union all
+                select 2, 'Al menos una sucursal (establecimiento)',
+                       case when exists (select 1 from erp_gen_sucursal where empresa_id = :APP_EMPRESA_ID and estado = 'A')
+                            then 'Listo' else 'Pendiente' end
+                  from dual
+                union all
+                select 3, 'Punto de expedición por sucursal',
+                       case when exists (select 1 from erp_gen_punto_expedicion p join erp_gen_sucursal s on s.sucursal_id = p.sucursal_id
+                                          where s.empresa_id = :APP_EMPRESA_ID and p.estado = 'A')
+                            then 'Listo' else 'Pendiente' end
+                  from dual
+                union all
+                select 4, 'Depósito principal',
+                       case when exists (select 1 from erp_stk_deposito d join erp_gen_sucursal s on s.sucursal_id = d.sucursal_id
+                                          where s.empresa_id = :APP_EMPRESA_ID and d.estado = 'A')
+                            then 'Listo' else 'Pendiente' end
+                  from dual
+                union all
+                select 5, 'Funcionalidades del rubro activadas',
+                       case when exists (select 1 from erp_gen_empresa_func where empresa_id = :APP_EMPRESA_ID and estado = 'A')
+                            then 'Listo' else 'Pendiente' end
+                  from dual
+                union all
+                select 6, 'Cotización del día cargada',
+                       case when exists (select 1 from erp_gen_cotizacion
+                                          where fecha = trunc(current_date) and (empresa_id is null or empresa_id = :APP_EMPRESA_ID))
+                            then 'Listo' else 'Pendiente' end
+                  from dual
+                union all
+                select 7, 'Períodos del año creados',
+                       case when exists (select 1 from erp_gen_periodo where empresa_id = :APP_EMPRESA_ID and anio = extract(year from current_date))
+                            then 'Listo' else 'Pendiente' end
+                  from dual
+                 order by 1
                 ```
         }
         layout {
@@ -64,11 +102,11 @@ page 1 (
             templateOptions: #DEFAULT#
         }
 
-        column CODIGO (
+        column ORDEN (
             reportColumnQueryId: 1
             derivedColumn: N
             heading {
-                heading: Código
+                heading: Paso
                 alignment: start
             }
             layout {
@@ -77,11 +115,11 @@ page 1 (
             }
         )
 
-        column NOMBRE (
+        column PASO (
             reportColumnQueryId: 2
             derivedColumn: N
             heading {
-                heading: Módulo
+                heading: Qué configurar
                 alignment: start
             }
             layout {
@@ -90,11 +128,11 @@ page 1 (
             }
         )
 
-        column ICONO (
+        column ESTADO (
             reportColumnQueryId: 3
             derivedColumn: N
             heading {
-                heading: Icono
+                heading: Estado
                 alignment: start
             }
             layout {
@@ -102,5 +140,32 @@ page 1 (
                 columnAlignment: start
             }
         )
+    )
+
+    region accesos (
+        name: Configuración
+        type: list
+        source {
+            list: @accesos
+        }
+        layout {
+            sequence: 30
+            slot: BODY
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            listTemplate: @/cards
+            templateOptions: [
+                #DEFAULT#
+                t-Cards--featured force-fa-lg
+                t-Cards--displayIcons
+                t-Cards--3cols
+                t-Cards--desc-2ln
+                t-Cards--animColorFill
+            ]
+        }
     )
 )

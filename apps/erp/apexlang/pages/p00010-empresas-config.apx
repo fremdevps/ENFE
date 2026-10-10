@@ -1,0 +1,281 @@
+page 10 (
+    name: Datos de la empresa
+    alias: EMPRESAS-CONFIG
+    title: Datos de la empresa
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @erp-gen-empresa-configurar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Configuración del ERP de cada empresa registrada en la Administración Central.
+            Use Configurar empresa para agregar o el lápiz de cada fila para editar.
+            ```
+    }
+
+    region breadcrumb (
+        name: Datos de la empresa
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region empresas-config (
+        name: Datos de la empresa
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select c.empresa_config_id, e.codigo, e.razon_social, p.nombre pais, mf.codigo moneda_funcional,
+                       mr.codigo moneda_reporte, r.nombre rubro,
+                       decode(c.precio_incluye_impuesto, 'S', 'Sí', 'No') precio_con_impuesto
+                  from erp_gen_empresa_config c
+                  join adm_gen_empresa e on e.empresa_id = c.empresa_id
+                  join erp_gen_pais p on p.pais_id = c.pais_id
+                  join erp_gen_moneda mf on mf.moneda_id = c.moneda_id_funcional
+                  left join erp_gen_moneda mr on mr.moneda_id = c.moneda_id_reporte
+                  left join erp_gen_rubro r on r.rubro_id = c.rubro_id
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: empresas-config
+        }
+        link {
+            linkColumn: customTarget
+            target: {
+                page: 11
+                items: {
+                    P11_EMPRESA_CONFIG_ID: #EMPRESA_CONFIG_ID#
+                }
+                clearCache: 11
+            }
+            linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>
+        }
+        componentAppearance {
+            showNullValuesAs: -
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: No hay registros.
+            whenMoreDataFound: Hay más de #MAX_ROW_COUNT# registros; use la búsqueda o los filtros.
+        }
+        download {
+            formats: [
+                csv
+                html
+            ]
+        }
+        comments {
+            comments:
+                ```
+                Listado de erp_gen_empresa_config. Alta/edición en la página 11 (guardado automático: catálogo).
+                ```
+        }
+
+        column EMPRESA_CONFIG_ID (
+            type: hidden
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 10
+            }
+            source {
+                dataType: NUMBER
+            }
+        )
+
+        column CODIGO (
+            type: plainText
+            heading {
+                heading: Empresa
+            }
+            layout {
+                sequence: 20
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Empresa. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column RAZON_SOCIAL (
+            type: plainText
+            heading {
+                heading: Razón social
+            }
+            layout {
+                sequence: 30
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Razón social. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column PAIS (
+            type: plainText
+            heading {
+                heading: País
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: País. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column MONEDA_FUNCIONAL (
+            type: plainText
+            heading {
+                heading: Moneda funcional
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Moneda funcional. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column MONEDA_REPORTE (
+            type: plainText
+            heading {
+                heading: Moneda de reporte
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Moneda de reporte. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column RUBRO (
+            type: plainText
+            heading {
+                heading: Rubro
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Rubro. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column PRECIO_CON_IMPUESTO (
+            type: plainText
+            heading {
+                heading: Precio con impuesto
+            }
+            layout {
+                sequence: 80
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Precio con impuesto. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+    )
+
+    button crear (
+        buttonName: CREAR
+        label: Configurar empresa
+        layout {
+            sequence: 10
+            region: @empresas-config
+            slot: RIGHT_OF_IR_SEARCH_BAR
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: #DEFAULT#
+            icon: fa-plus
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 11
+                clearCache: 11
+            }
+        }
+    )
+
+    dynamicAction refrescar-al-cerrar (
+        name: Refrescar al cerrar el formulario
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @empresas-config
+        }
+
+        action refrescar (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @empresas-config
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+)

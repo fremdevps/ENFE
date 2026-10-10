@@ -1,0 +1,141 @@
+page 24 (
+    name: Activar funcionalidades del rubro
+    alias: APLICAR-RUBRO
+    title: Activar funcionalidades del rubro
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/drawer
+        templateOptions: [
+            #DEFAULT#
+            js-dialog-class-t-Drawer--pullOutEnd
+        ]
+    }
+    dialog {
+        chained: false
+    }
+    security {
+        authorizationScheme: @erp-gen-empresa-configurar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Activa en la empresa activa las funcionalidades sugeridas por su rubro.
+            No desactiva las que ya tenga.
+            ```
+    }
+
+    region botones (
+        name: Botones
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: REGION_POSITION_03
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region datos (
+        name: Activar funcionalidades del rubro
+        type: staticContent
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    button cancelar (
+        buttonName: CANCELAR
+        label: Cancelar
+        layout {
+            sequence: 5
+            region: @botones
+            slot: CLOSE
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+    )
+
+    button activar (
+        buttonName: ACTIVAR
+        label: Activar
+        layout {
+            sequence: 10
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+        }
+    )
+
+    dynamicAction cerrar-panel (
+        name: Cancelar
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cancelar
+        }
+
+        action cancelar-dialogo (
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+
+    process activar-proceso (
+        name: Activar
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                erp_gen_funcionalidad_api.crear_desde_rubro(i_empresa_id => :APP_EMPRESA_ID);
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        serverSideCondition {
+            whenButtonPressed: @activar
+        }
+        successMessage {
+            successMessage: Funcionalidades del rubro activadas.
+        }
+    )
+
+    process cerrar (
+        name: Cerrar panel
+        type: closeDialog
+        execution {
+            sequence: 50
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: ACTIVAR
+        }
+    )
+)

@@ -6,12 +6,75 @@ supportingObject (
         includeInAppExport: true
     }
 
-    installScript registro-en-seguridad-central (
+    installScript tablas (
         execution {
             sequence: 10
         }
         script {
-            contentFile: 01_registro-en-seguridad-central.sql
+            contentFile: 01_tablas.sql
+        }
+    )
+
+    installScript triggers (
+        execution {
+            sequence: 20
+        }
+        script {
+            contentFile: 02_triggers.sql
+        }
+    )
+
+    installScript vistas (
+        execution {
+            sequence: 30
+        }
+        script {
+            contentFile: 03_vistas.sql
+        }
+    )
+
+    installScript tipos (
+        execution {
+            sequence: 40
+        }
+        script {
+            contentFile: 04_tipos.sql
+        }
+    )
+
+    installScript paquetes-especificaciones (
+        execution {
+            sequence: 50
+        }
+        script {
+            contentFile: 05_paquetes-especificaciones.sql
+        }
+    )
+
+    installScript paquetes-cuerpos (
+        execution {
+            sequence: 60
+        }
+        script {
+            contentFile: 06_paquetes-cuerpos.sql
+        }
+    )
+
+    installScript registro-en-seguridad-central (
+        execution {
+            sequence: 70
+        }
+        script {
+            contentFile: 07_registro-en-seguridad-central.sql
+        }
+    )
+
+    installScript datos-iniciales (
+        execution {
+            sequence: 80
+        }
+        script {
+            contentFile: 08_datos-iniciales.sql
         }
     )
 )

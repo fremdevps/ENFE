@@ -19,3 +19,29 @@ appProcess forzar-cambio-password (
         point: beforeHeader
     }
 )
+
+appProcess inicializar-empresa (
+    name: Inicializar empresa activa
+    type: executeCode
+    source {
+        plsqlCode:
+            ```plsql
+            -- Empresa activa de la sesión: la empresa por defecto del usuario o la primera
+            -- habilitada (erp_gen_usuario_empresa_v). Se cambia en la página 95.
+            if :APP_EMPRESA_ID is null and :APP_USER is not null and :APP_USER <> 'nobody' then
+                for r in (select empresa_id, razon_social
+                            from erp_gen_usuario_empresa_v
+                           where upper(username) = upper(:APP_USER)
+                           order by case es_defecto when 'S' then 0 else 1 end, codigo
+                           fetch first 1 row only) loop
+                    :APP_EMPRESA_ID     := r.empresa_id;
+                    :APP_EMPRESA_NOMBRE := r.razon_social;
+                end loop;
+            end if;
+            ```
+    }
+    execution {
+        sequence: 20
+        point: beforeHeader
+    }
+)

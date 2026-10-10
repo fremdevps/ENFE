@@ -1,0 +1,244 @@
+page 76 (
+    name: Rubros
+    alias: RUBROS
+    title: Rubros
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @erp-gen-catalogo-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Perfiles de rubro. Cada uno sugiere funcionalidades al configurar una empresa.
+            Use Crear rubro para agregar o el lápiz de cada fila para editar.
+            ```
+    }
+
+    region breadcrumb (
+        name: Rubros
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region rubros (
+        name: Rubros
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select r.rubro_id, r.codigo, r.nombre, r.descripcion,
+                       (select count(*) from erp_gen_rubro_func rf where rf.rubro_id = r.rubro_id) funcionalidades,
+                       decode(r.estado, 'A', 'Activo', 'Inactivo') estado
+                  from erp_gen_rubro r
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: rubros
+        }
+        link {
+            linkColumn: customTarget
+            target: {
+                page: 77
+                items: {
+                    P77_RUBRO_ID: #RUBRO_ID#
+                }
+                clearCache: 77
+            }
+            linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>
+        }
+        componentAppearance {
+            showNullValuesAs: -
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: No hay registros.
+            whenMoreDataFound: Hay más de #MAX_ROW_COUNT# registros; use la búsqueda o los filtros.
+        }
+        download {
+            formats: [
+                csv
+                html
+            ]
+        }
+        comments {
+            comments:
+                ```
+                Listado de erp_gen_rubro. Alta/edición en la página 77 (guardado automático: catálogo).
+                ```
+        }
+
+        column RUBRO_ID (
+            type: hidden
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 10
+            }
+            source {
+                dataType: NUMBER
+            }
+        )
+
+        column CODIGO (
+            type: plainText
+            heading {
+                heading: Código
+            }
+            layout {
+                sequence: 20
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Código. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column NOMBRE (
+            type: plainText
+            heading {
+                heading: Nombre
+            }
+            layout {
+                sequence: 30
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column DESCRIPCION (
+            type: plainText
+            heading {
+                heading: Descripción
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Descripción. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column FUNCIONALIDADES (
+            type: plainText
+            heading {
+                heading: Funcionalidades
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                dataType: NUMBER
+            }
+            comments {
+                comments: Display Label: Funcionalidades. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column ESTADO (
+            type: plainText
+            heading {
+                heading: Estado
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+    )
+
+    button crear (
+        buttonName: CREAR
+        label: Crear rubro
+        layout {
+            sequence: 10
+            region: @rubros
+            slot: RIGHT_OF_IR_SEARCH_BAR
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: #DEFAULT#
+            icon: fa-plus
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 77
+                clearCache: 77
+            }
+        }
+    )
+
+    dynamicAction refrescar-al-cerrar (
+        name: Refrescar al cerrar el formulario
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @rubros
+        }
+
+        action refrescar (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @rubros
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+)

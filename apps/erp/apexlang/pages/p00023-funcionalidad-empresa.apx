@@ -1,0 +1,314 @@
+page 23 (
+    name: Funcionalidad de la empresa
+    alias: FUNCIONALIDAD-EMPRESA
+    title: Funcionalidad de la empresa
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/drawer
+        templateOptions: [
+            #DEFAULT#
+            js-dialog-class-t-Drawer--pullOutEnd
+        ]
+    }
+    dialog {
+        chained: false
+    }
+    security {
+        authorizationScheme: @erp-gen-empresa-configurar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Alta y edición: funcionalidad de la empresa.
+            Los campos marcados son obligatorios.
+            ```
+    }
+
+    region botones (
+        name: Botones
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: REGION_POSITION_03
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region formulario (
+        name: Funcionalidad de la empresa
+        type: form
+        source {
+            location: localDatabase
+            tableName: ERP_GEN_EMPRESA_FUNC
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+        }
+    )
+
+    pageItem P23_EMPRESA_FUNC_ID (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @formulario
+            slot: regionBody
+        }
+        source {
+            formRegion: @formulario
+            column: EMPRESA_FUNC_ID
+            dataType: number
+            queryOnly: true
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P23_EMPRESA_ID (
+        type: hidden
+        layout {
+            sequence: 20
+            region: @formulario
+            slot: regionBody
+        }
+        source {
+            formRegion: @formulario
+            column: EMPRESA_ID
+            dataType: number
+        }
+        default {
+            type: item
+            item: APP_EMPRESA_ID
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P23_FUNCIONALIDAD_ID (
+        type: selectList
+        label {
+            label: Funcionalidad
+        }
+        layout {
+            sequence: 30
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @funcionalidades
+        }
+        source {
+            formRegion: @formulario
+            column: FUNCIONALIDAD_ID
+            dataType: number
+        }
+        help {
+            inlineHelpText: Qué activar
+            helpText: Funcionalidad a activar o desactivar en la empresa.
+        }
+    )
+
+    pageItem P23_ESTADO (
+        type: selectList
+        label {
+            label: Estado
+        }
+        layout {
+            sequence: 40
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        default {
+            type: static
+            staticValue: A
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @estado-ai
+        }
+        source {
+            formRegion: @formulario
+            column: ESTADO
+            dataType: varchar2
+        }
+        help {
+            inlineHelpText: Activo o inactivo
+            helpText: Los registros inactivos no se ofrecen en las listas.
+        }
+    )
+
+    button cancelar (
+        buttonName: CANCELAR
+        label: Cancelar
+        layout {
+            sequence: 10
+            region: @botones
+            slot: CLOSE
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+    )
+
+    button eliminar (
+        buttonName: ELIMINAR
+        label: Eliminar
+        layout {
+            sequence: 20
+            region: @botones
+            slot: DELETE
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: delete
+            executeValidations: false
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: ¿Seguro que desea eliminar este registro?
+            style: danger
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P23_EMPRESA_FUNC_ID
+        }
+    )
+
+    button guardar (
+        buttonName: GUARDAR
+        label: Guardar cambios
+        layout {
+            sequence: 30
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: update
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P23_EMPRESA_FUNC_ID
+        }
+    )
+
+    button crear (
+        buttonName: CREAR
+        label: Crear
+        layout {
+            sequence: 40
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: insert
+        }
+        serverSideCondition {
+            type: itemIsNull
+            item: P23_EMPRESA_FUNC_ID
+        }
+    )
+
+    dynamicAction cerrar-panel (
+        name: Cancelar
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cancelar
+        }
+
+        action cancelar-dialogo (
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+
+    process inicializar (
+        name: Inicializar Funcionalidad de la empresa
+        type: formInitialization
+        formRegion: @formulario
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+    )
+
+    process guardar-datos (
+        name: Guardar Funcionalidad de la empresa
+        type: formAutoRowProcessing
+        formRegion: @formulario
+        execution {
+            sequence: 10
+        }
+        successMessage {
+            successMessage: Cambios guardados.
+        }
+    )
+
+    process cerrar (
+        name: Cerrar panel
+        type: closeDialog
+        execution {
+            sequence: 50
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: CREAR,GUARDAR,ELIMINAR
+        }
+    )
+)

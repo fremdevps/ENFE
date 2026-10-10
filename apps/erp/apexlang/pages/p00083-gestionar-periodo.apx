@@ -1,0 +1,337 @@
+page 83 (
+    name: Gestionar período
+    alias: GESTIONAR-PERIODO
+    title: Gestionar período
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/drawer
+        templateOptions: [
+            #DEFAULT#
+            js-dialog-class-t-Drawer--pullOutEnd
+        ]
+    }
+    dialog {
+        chained: false
+    }
+    security {
+        authorizationScheme: @erp-gen-periodo-cerrar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Cree los meses de un año, cierre un mes o reábralo.
+            Reabrir requiere el permiso ERP_GEN_PERIODO_REABRIR.
+            ```
+    }
+
+    region botones (
+        name: Botones
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: REGION_POSITION_03
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region datos (
+        name: Gestionar período
+        type: staticContent
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P83_PERIODO_ID (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @datos
+            slot: regionBody
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P83_MODULO (
+        type: selectList
+        label {
+            label: Módulo
+        }
+        layout {
+            sequence: 20
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @modulos-erp
+        }
+        help {
+            inlineHelpText: Módulo del período
+            helpText: Cada módulo abre y cierra sus períodos por separado.
+        }
+    )
+
+    pageItem P83_ANIO (
+        type: numberField
+        label {
+            label: Año
+        }
+        layout {
+            sequence: 30
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        help {
+            inlineHelpText: Ej. 2026
+            helpText: Año del período.
+        }
+    )
+
+    pageItem P83_MES (
+        type: selectList
+        label {
+            label: Mes
+        }
+        layout {
+            sequence: 40
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        lov {
+            type: sharedComponent
+            lov: @meses
+            displayNullValue: true
+            nullDisplayValue: - Todo el año (solo crear) -
+        }
+        help {
+            inlineHelpText: Para cerrar o reabrir
+            helpText: Mes a cerrar o reabrir. Para crear el año completo, déjelo vacío.
+        }
+    )
+
+    button cancelar (
+        buttonName: CANCELAR
+        label: Cancelar
+        layout {
+            sequence: 5
+            region: @botones
+            slot: CLOSE
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+    )
+
+    button crear (
+        buttonName: CREAR_ANIO
+        label: Crear los 12 meses
+        layout {
+            sequence: 10
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+        }
+    )
+
+    button reabrir (
+        buttonName: REABRIR
+        label: Reabrir
+        layout {
+            sequence: 20
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: ¿Reabrir el período? Se podrán registrar documentos con fecha en ese mes.
+            style: danger
+        }
+    )
+
+    button cerrar (
+        buttonName: CERRAR
+        label: Cerrar período
+        layout {
+            sequence: 30
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: ¿Cerrar el período? No se podrán registrar documentos con fecha en ese mes.
+            style: danger
+        }
+    )
+
+    dynamicAction cerrar-panel (
+        name: Cancelar
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cancelar
+        }
+
+        action cancelar-dialogo (
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+
+    process cargar-periodo (
+        name: Cargar período
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                for r in (select modulo, anio, mes from erp_gen_periodo
+                           where periodo_id = :P83_PERIODO_ID and empresa_id = :APP_EMPRESA_ID) loop
+                    :P83_MODULO := r.modulo;
+                    :P83_ANIO   := r.anio;
+                    :P83_MES    := r.mes;
+                end loop;
+                ```
+        }
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P83_PERIODO_ID
+        }
+    )
+
+    process crear-proceso (
+        name: Crear
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                erp_gen_periodo_api.crear_anio(i_empresa_id => :APP_EMPRESA_ID, i_modulo => :P83_MODULO, i_anio => :P83_ANIO);
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        serverSideCondition {
+            whenButtonPressed: @crear
+        }
+        successMessage {
+            successMessage: Meses creados.
+        }
+    )
+
+    process reabrir-proceso (
+        name: Reabrir
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                erp_gen_periodo_api.reabrir(i_empresa_id => :APP_EMPRESA_ID, i_modulo => :P83_MODULO, i_anio => :P83_ANIO, i_mes => :P83_MES);
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        serverSideCondition {
+            whenButtonPressed: @reabrir
+        }
+        successMessage {
+            successMessage: Período reabierto.
+        }
+    )
+
+    process cerrar-proceso (
+        name: Cerrar
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                erp_gen_periodo_api.cerrar(i_empresa_id => :APP_EMPRESA_ID, i_modulo => :P83_MODULO, i_anio => :P83_ANIO, i_mes => :P83_MES);
+                ```
+        }
+        execution {
+            sequence: 30
+        }
+        serverSideCondition {
+            whenButtonPressed: @cerrar
+        }
+        successMessage {
+            successMessage: Período cerrado.
+        }
+    )
+
+    process cerrar (
+        name: Cerrar panel
+        type: closeDialog
+        execution {
+            sequence: 50
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: CREAR_ANIO,REABRIR,CERRAR
+        }
+    )
+)

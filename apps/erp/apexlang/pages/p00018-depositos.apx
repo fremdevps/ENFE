@@ -1,0 +1,279 @@
+page 18 (
+    name: Depósitos
+    alias: DEPOSITOS
+    title: Depósitos
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @erp-gen-empresa-configurar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Depósitos de stock de las sucursales de la empresa activa.
+            Use Crear depósito para agregar o el lápiz de cada fila para editar.
+            ```
+    }
+
+    region breadcrumb (
+        name: Depósitos
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region depositos (
+        name: Depósitos
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select d.deposito_id, d.codigo, d.nombre, s.nombre sucursal,
+                       decode(d.tipo, 'P', 'Propio', 'C', 'De terceros', 'T', 'En tránsito') tipo,
+                       decode(d.es_principal, 'S', 'Sí', 'No') principal,
+                       decode(d.debe_controlar_stock, 'S', 'Sí', 'No') controla_stock, decode(d.estado, 'A', 'Activo', 'Inactivo') estado
+                  from erp_stk_deposito d
+                  join erp_gen_sucursal s on s.sucursal_id = d.sucursal_id
+                 where s.empresa_id = :APP_EMPRESA_ID
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: depositos
+        }
+        link {
+            linkColumn: customTarget
+            target: {
+                page: 19
+                items: {
+                    P19_DEPOSITO_ID: #DEPOSITO_ID#
+                }
+                clearCache: 19
+            }
+            linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>
+        }
+        componentAppearance {
+            showNullValuesAs: -
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: No hay registros.
+            whenMoreDataFound: Hay más de #MAX_ROW_COUNT# registros; use la búsqueda o los filtros.
+        }
+        download {
+            formats: [
+                csv
+                html
+            ]
+        }
+        comments {
+            comments:
+                ```
+                Listado de erp_stk_deposito. Alta/edición en la página 19 (guardado automático: catálogo).
+                ```
+        }
+
+        column DEPOSITO_ID (
+            type: hidden
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 10
+            }
+            source {
+                dataType: NUMBER
+            }
+        )
+
+        column CODIGO (
+            type: plainText
+            heading {
+                heading: Código
+            }
+            layout {
+                sequence: 20
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Código. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column NOMBRE (
+            type: plainText
+            heading {
+                heading: Nombre
+            }
+            layout {
+                sequence: 30
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column SUCURSAL (
+            type: plainText
+            heading {
+                heading: Sucursal
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Sucursal. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column TIPO (
+            type: plainText
+            heading {
+                heading: Tipo
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Tipo. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column PRINCIPAL (
+            type: plainText
+            heading {
+                heading: Principal
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Principal. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column CONTROLA_STOCK (
+            type: plainText
+            heading {
+                heading: Controla stock
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Summary: Sí = no admite saldo negativo. Display Label: Controla stock. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column ESTADO (
+            type: plainText
+            heading {
+                heading: Estado
+            }
+            layout {
+                sequence: 80
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+    )
+
+    button crear (
+        buttonName: CREAR
+        label: Crear depósito
+        layout {
+            sequence: 10
+            region: @depositos
+            slot: RIGHT_OF_IR_SEARCH_BAR
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: #DEFAULT#
+            icon: fa-plus
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 19
+                clearCache: 19
+            }
+        }
+    )
+
+    dynamicAction refrescar-al-cerrar (
+        name: Refrescar al cerrar el formulario
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @depositos
+        }
+
+        action refrescar (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @depositos
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+)

@@ -1,0 +1,261 @@
+page 72 (
+    name: Ubicaciones
+    alias: UBICACIONES
+    title: Ubicaciones
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @erp-gen-catalogo-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Ubicaciones geográficas (departamento, distrito, ciudad) con su código oficial.
+            Use Crear ubicación para agregar o el lápiz de cada fila para editar.
+            ```
+    }
+
+    region breadcrumb (
+        name: Ubicaciones
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region ubicaciones (
+        name: Ubicaciones
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select u.ubicacion_id, p.nombre pais, decode(u.tipo, 'DEP', 'Departamento', 'DIS', 'Distrito', 'Ciudad') tipo,
+                       u.codigo_oficial, u.nombre, s.nombre superior, decode(u.estado, 'A', 'Activo', 'Inactivo') estado
+                  from erp_gen_ubicacion u
+                  join erp_gen_pais p on p.pais_id = u.pais_id
+                  left join erp_gen_ubicacion s on s.ubicacion_id = u.ubicacion_id_padre
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: ubicaciones
+        }
+        link {
+            linkColumn: customTarget
+            target: {
+                page: 73
+                items: {
+                    P73_UBICACION_ID: #UBICACION_ID#
+                }
+                clearCache: 73
+            }
+            linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>
+        }
+        componentAppearance {
+            showNullValuesAs: -
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: No hay registros.
+            whenMoreDataFound: Hay más de #MAX_ROW_COUNT# registros; use la búsqueda o los filtros.
+        }
+        download {
+            formats: [
+                csv
+                html
+            ]
+        }
+        comments {
+            comments:
+                ```
+                Listado de erp_gen_ubicacion. Alta/edición en la página 73 (guardado automático: catálogo).
+                ```
+        }
+
+        column UBICACION_ID (
+            type: hidden
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 10
+            }
+            source {
+                dataType: NUMBER
+            }
+        )
+
+        column PAIS (
+            type: plainText
+            heading {
+                heading: País
+            }
+            layout {
+                sequence: 20
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: País. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column TIPO (
+            type: plainText
+            heading {
+                heading: Tipo
+            }
+            layout {
+                sequence: 30
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Tipo. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column CODIGO_OFICIAL (
+            type: plainText
+            heading {
+                heading: Código oficial
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Código oficial. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column NOMBRE (
+            type: plainText
+            heading {
+                heading: Nombre
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column SUPERIOR (
+            type: plainText
+            heading {
+                heading: Pertenece a
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Pertenece a. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column ESTADO (
+            type: plainText
+            heading {
+                heading: Estado
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+    )
+
+    button crear (
+        buttonName: CREAR
+        label: Crear ubicación
+        layout {
+            sequence: 10
+            region: @ubicaciones
+            slot: RIGHT_OF_IR_SEARCH_BAR
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: #DEFAULT#
+            icon: fa-plus
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 73
+                clearCache: 73
+            }
+        }
+    )
+
+    dynamicAction refrescar-al-cerrar (
+        name: Refrescar al cerrar el formulario
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @ubicaciones
+        }
+
+        action refrescar (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @ubicaciones
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+)

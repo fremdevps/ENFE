@@ -19,3 +19,69 @@ authorization es-superadmin (
         errorMessage: No tiene permiso para realizar esta acción.
     }
 )
+
+authorization erp-gen-catalogo-gestionar (
+    name: ERP_GEN_CATALOGO_GESTIONAR
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seg_seguridad_reg.tiene_permiso(:APP_USER, 'ERP_GEN_CATALOGO_GESTIONAR', :APP_EMPRESA_ID);
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción en la empresa activa.
+    }
+)
+
+authorization erp-gen-empresa-configurar (
+    name: ERP_GEN_EMPRESA_CONFIGURAR
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seg_seguridad_reg.tiene_permiso(:APP_USER, 'ERP_GEN_EMPRESA_CONFIGURAR', :APP_EMPRESA_ID);
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción en la empresa activa.
+    }
+)
+
+authorization erp-gen-cotizacion-gestionar (
+    name: ERP_GEN_COTIZACION_GESTIONAR
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seg_seguridad_reg.tiene_permiso(:APP_USER, 'ERP_GEN_COTIZACION_GESTIONAR', :APP_EMPRESA_ID);
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción en la empresa activa.
+    }
+)
+
+authorization erp-gen-persona-ver (
+    name: ERP_GEN_PERSONA_VER
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seg_seguridad_reg.tiene_permiso(:APP_USER, 'ERP_GEN_PERSONA_VER', :APP_EMPRESA_ID);
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción en la empresa activa.
+    }
+)
+
+authorization erp-gen-persona-gestionar (
+    name: ERP_GEN_PERSONA_GESTIONAR
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seg_seguridad_reg.tiene_permiso(:APP_USER, 'ERP_GEN_PERSONA_GESTIONAR', :APP_EMPRESA_ID);
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción en la empresa activa.
+    }
+)
+
+authorization erp-gen-periodo-cerrar (
+    name: ERP_GEN_PERIODO_CERRAR
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seg_seguridad_reg.tiene_permiso(:APP_USER, 'ERP_GEN_PERIODO_CERRAR', :APP_EMPRESA_ID);
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción en la empresa activa.
+    }
+)

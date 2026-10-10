@@ -1,0 +1,315 @@
+page 60 (
+    name: Personas
+    alias: PERSONAS
+    title: Personas
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @erp-gen-persona-ver
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Padrón único de personas físicas y jurídicas, compartido por todas las empresas.
+            Los roles (cliente, proveedor…) se asignan por empresa en Roles por empresa.
+            ```
+    }
+
+    region breadcrumb (
+        name: Personas
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region personas (
+        name: Personas
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select p.persona_id, p.nro_documento || nvl2(p.dv, '-' || p.dv, null) documento, td.codigo tipo_documento,
+                       p.razon_social, p.nombre_fantasia, decode(p.tipo_persona, 'F', 'Física', 'Jurídica') tipo,
+                       (select listagg(tr.nombre, ', ') within group (order by tr.nombre)
+                          from erp_gen_persona_rol pr join erp_gen_tipo_rol tr on tr.tipo_rol_id = pr.tipo_rol_id
+                         where pr.persona_id = p.persona_id and pr.empresa_id = :APP_EMPRESA_ID and pr.estado = 'A') roles,
+                       p.email, p.telefono, decode(p.estado, 'A', 'Activo', 'Inactivo') estado
+                  from erp_gen_persona p
+                  join erp_gen_tipo_doc_identidad td on td.tipo_doc_identidad_id = p.tipo_doc_identidad_id
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: personas
+        }
+        link {
+            linkColumn: customTarget
+            target: {
+                page: 61
+                items: {
+                    P61_PERSONA_ID: #PERSONA_ID#
+                }
+                clearCache: 61
+            }
+            linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>
+        }
+        componentAppearance {
+            showNullValuesAs: -
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: No hay registros.
+            whenMoreDataFound: Hay más de #MAX_ROW_COUNT# registros; use la búsqueda o los filtros.
+        }
+        download {
+            formats: [
+                csv
+                html
+            ]
+        }
+        comments {
+            comments:
+                ```
+                Listado de erp_gen_persona. Alta/edición en la página 61 vía erp_gen_persona_api.
+                ```
+        }
+
+        column PERSONA_ID (
+            type: hidden
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 10
+            }
+            source {
+                dataType: NUMBER
+            }
+        )
+
+        column DOCUMENTO (
+            type: plainText
+            heading {
+                heading: Documento
+            }
+            layout {
+                sequence: 20
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Documento. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column TIPO_DOCUMENTO (
+            type: plainText
+            heading {
+                heading: Tipo doc.
+            }
+            layout {
+                sequence: 30
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Tipo doc.. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column RAZON_SOCIAL (
+            type: plainText
+            heading {
+                heading: Razón social / nombre
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Razón social / nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column NOMBRE_FANTASIA (
+            type: plainText
+            heading {
+                heading: Nombre de fantasía
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Nombre de fantasía. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column TIPO (
+            type: plainText
+            heading {
+                heading: Persona
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Persona. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column ROLES (
+            type: plainText
+            heading {
+                heading: Roles en la empresa activa
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Roles en la empresa activa. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column EMAIL (
+            type: plainText
+            heading {
+                heading: Email
+            }
+            layout {
+                sequence: 80
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Email. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column TELEFONO (
+            type: plainText
+            heading {
+                heading: Teléfono
+            }
+            layout {
+                sequence: 90
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Teléfono. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column ESTADO (
+            type: plainText
+            heading {
+                heading: Estado
+            }
+            layout {
+                sequence: 100
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+    )
+
+    button crear (
+        buttonName: CREAR
+        label: Crear persona
+        layout {
+            sequence: 10
+            region: @personas
+            slot: RIGHT_OF_IR_SEARCH_BAR
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: #DEFAULT#
+            icon: fa-plus
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 61
+                clearCache: 61
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-persona-gestionar
+        }
+    )
+
+    dynamicAction refrescar-al-cerrar (
+        name: Refrescar al cerrar el formulario
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @personas
+        }
+
+        action refrescar (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @personas
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+)

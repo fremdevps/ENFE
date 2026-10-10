@@ -1,5 +1,5 @@
 app ERP (
-    name: ERP
+    name: ERP Configuración
     logo {
         type: text
         text: &APP_TITLE.

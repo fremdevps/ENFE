@@ -1,0 +1,147 @@
+page 95 (
+    name: Cambiar empresa
+    alias: CAMBIAR-EMPRESA
+    title: Cambiar empresa
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Elija la empresa con la que va a trabajar.
+            Solo se listan las empresas donde tiene algún rol del ERP.
+            ```
+    }
+
+    region breadcrumb (
+        name: Cambiar empresa
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region datos (
+        name: Empresa activa
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: BODY
+            column: 4
+            columnSpan: 6
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P95_EMPRESA_ID (
+        type: selectList
+        label {
+            label: Empresa
+        }
+        layout {
+            sequence: 10
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @mis-empresas
+        }
+        default {
+            type: item
+            item: APP_EMPRESA_ID
+        }
+        help {
+            inlineHelpText: Empresas donde tiene acceso
+            helpText: Los datos y permisos de las pantallas se aplican a la empresa elegida.
+        }
+    )
+
+    button cambiar (
+        buttonName: CAMBIAR
+        label: Usar esta empresa
+        layout {
+            sequence: 10
+            region: @datos
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    process cambiar-empresa (
+        name: Cambiar empresa activa
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                begin
+                    select empresa_id, razon_social
+                      into :APP_EMPRESA_ID, :APP_EMPRESA_NOMBRE
+                      from erp_gen_usuario_empresa_v
+                     where upper(username) = upper(:APP_USER)
+                       and empresa_id = :P95_EMPRESA_ID;
+                exception
+                    when no_data_found then
+                        raise_application_error(-20112, 'No tiene acceso a la empresa elegida.');
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        serverSideCondition {
+            whenButtonPressed: @cambiar
+        }
+        successMessage {
+            successMessage: Empresa activa: &APP_EMPRESA_NOMBRE.
+        }
+    )
+
+    branch ir-a-inicio (
+        name: Ir al inicio
+        execution {
+            sequence: 10
+            point: afterProcessing
+        }
+        behavior {
+            type: pageOrUrl
+            target: {
+                page: 1
+            }
+        }
+    )
+)

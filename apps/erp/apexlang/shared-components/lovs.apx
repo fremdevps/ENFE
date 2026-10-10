@@ -1,20 +1,723 @@
+lov afectacion-iva (
+    name: AFECTACION_IVA
+    source {
+        location: staticValues
+    }
+
+    entry gravado (
+        sequence: 10
+        display: Gravado
+        return: 1
+    )
+
+    entry exonerado (
+        sequence: 20
+        display: Exonerado
+        return: 2
+    )
+
+    entry exento (
+        sequence: 30
+        display: Exento
+        return: 3
+    )
+
+    entry parcial (
+        sequence: 40
+        display: Gravado parcial
+        return: 4
+    )
+
+)
+
 lov boolean (
     name: BOOLEAN
     source {
         location: staticValues
     }
 
-    entry false (
-        sequence: 2
-        display: No
-        return: FALSE
-    )
-
     entry true (
-        sequence: 1
+        sequence: 10
         display: Yes
         return: TRUE
     )
 
+    entry false (
+        sequence: 20
+        display: No
+        return: FALSE
+    )
+
 )
 
+lov categorias-fiscales (
+    name: CATEGORIAS_FISCALES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select c.codigo || ' - ' || c.nombre || ' (' || p.codigo || ')' d, c.categoria_fiscal_id r
+              from erp_gen_categoria_fiscal c
+              join erp_gen_pais p on p.pais_id = c.pais_id
+             where c.estado = 'A'
+             order by p.codigo, c.codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov departamentos (
+    name: DEPARTAMENTOS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select codigo || ' - ' || nombre d, departamento_id r
+              from erp_gen_departamento
+             where empresa_id = :APP_EMPRESA_ID
+               and estado = 'A'
+             order by codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov empresa-activa (
+    name: EMPRESA_ACTIVA
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select codigo || ' - ' || razon_social d, empresa_id r
+              from adm_gen_empresa
+             where empresa_id = :APP_EMPRESA_ID
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov empresas (
+    name: EMPRESAS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select codigo || ' - ' || razon_social d, empresa_id r
+              from adm_gen_empresa
+             order by codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov estado-ai (
+    name: ESTADO_AI
+    source {
+        location: staticValues
+    }
+
+    entry activo (
+        sequence: 10
+        display: Activo
+        return: A
+    )
+
+    entry inactivo (
+        sequence: 20
+        display: Inactivo
+        return: I
+    )
+
+)
+
+lov fuente-cotizacion (
+    name: FUENTE_COTIZACION
+    source {
+        location: staticValues
+    }
+
+    entry bcp (
+        sequence: 10
+        display: Banco Central
+        return: BCP
+    )
+
+    entry set (
+        sequence: 20
+        display: DNIT / SET
+        return: SET
+    )
+
+    entry api (
+        sequence: 30
+        display: Servicio externo
+        return: API
+    )
+
+    entry manual (
+        sequence: 40
+        display: Manual
+        return: MAN
+    )
+
+)
+
+lov funcionalidades (
+    name: FUNCIONALIDADES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select nombre || ' (' || codigo || ')' d, funcionalidad_id r
+              from erp_gen_funcionalidad
+             where estado = 'A'
+             order by nombre
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov impuesto-tasas (
+    name: IMPUESTO_TASAS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select i.codigo || ' / ' || t.codigo || ' - ' || t.nombre d, t.impuesto_tasa_id r
+              from erp_gen_impuesto_tasa t
+              join erp_gen_impuesto i on i.impuesto_id = t.impuesto_id
+             order by i.codigo, t.codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov impuestos (
+    name: IMPUESTOS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select i.codigo || ' - ' || i.nombre || ' (' || p.codigo || ')' d, i.impuesto_id r
+              from erp_gen_impuesto i
+              join erp_gen_pais p on p.pais_id = i.pais_id
+             order by p.codigo, i.codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov meses (
+    name: MESES
+    source {
+        location: staticValues
+    }
+
+    entry m01 (
+        sequence: 10
+        display: Enero
+        return: 1
+    )
+
+    entry m02 (
+        sequence: 20
+        display: Febrero
+        return: 2
+    )
+
+    entry m03 (
+        sequence: 30
+        display: Marzo
+        return: 3
+    )
+
+    entry m04 (
+        sequence: 40
+        display: Abril
+        return: 4
+    )
+
+    entry m05 (
+        sequence: 50
+        display: Mayo
+        return: 5
+    )
+
+    entry m06 (
+        sequence: 60
+        display: Junio
+        return: 6
+    )
+
+    entry m07 (
+        sequence: 70
+        display: Julio
+        return: 7
+    )
+
+    entry m08 (
+        sequence: 80
+        display: Agosto
+        return: 8
+    )
+
+    entry m09 (
+        sequence: 90
+        display: Septiembre
+        return: 9
+    )
+
+    entry m10 (
+        sequence: 100
+        display: Octubre
+        return: 10
+    )
+
+    entry m11 (
+        sequence: 110
+        display: Noviembre
+        return: 11
+    )
+
+    entry m12 (
+        sequence: 120
+        display: Diciembre
+        return: 12
+    )
+
+)
+
+lov mis-empresas (
+    name: MIS_EMPRESAS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select codigo || ' - ' || razon_social d, empresa_id r
+              from erp_gen_usuario_empresa_v
+             where upper(username) = upper(:APP_USER)
+             order by codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov modulos-erp (
+    name: MODULOS_ERP
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select m.codigo || ' - ' || m.nombre d, m.codigo r
+              from adm_seg_modulo m
+              join adm_seg_aplicacion a on a.aplicacion_id = m.aplicacion_id
+             where a.codigo = 'ERP'
+               and m.estado = 'A'
+             order by m.orden
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov monedas (
+    name: MONEDAS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select codigo || ' - ' || nombre d, moneda_id r
+              from erp_gen_moneda
+             where estado = 'A'
+             order by codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov paises (
+    name: PAISES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select nombre d, pais_id r
+              from erp_gen_pais
+             where estado = 'A'
+             order by nombre
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov personas (
+    name: PERSONAS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select p.razon_social || ' (' || p.nro_documento || nvl2(p.dv, '-' || p.dv, null) || ')' d, p.persona_id r
+              from erp_gen_persona p
+             where p.estado = 'A'
+             order by p.razon_social
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov puntos-expedicion (
+    name: PUNTOS_EXPEDICION
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select s.establecimiento || '-' || p.codigo || ' ' || p.nombre d, p.punto_expedicion_id r
+              from erp_gen_punto_expedicion p
+              join erp_gen_sucursal s on s.sucursal_id = p.sucursal_id
+             where s.empresa_id = :APP_EMPRESA_ID
+               and p.estado = 'A'
+             order by s.establecimiento, p.codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov rubros (
+    name: RUBROS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select nombre d, rubro_id r
+              from erp_gen_rubro
+             where estado = 'A'
+             order by nombre
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov si-no (
+    name: SI_NO
+    source {
+        location: staticValues
+    }
+
+    entry si (
+        sequence: 10
+        display: Sí
+        return: S
+    )
+
+    entry no (
+        sequence: 20
+        display: No
+        return: N
+    )
+
+)
+
+lov sucursales (
+    name: SUCURSALES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select establecimiento || ' - ' || nombre d, sucursal_id r
+              from erp_gen_sucursal
+             where empresa_id = :APP_EMPRESA_ID
+               and estado = 'A'
+             order by establecimiento
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov tipo-contribuyente (
+    name: TIPO_CONTRIBUYENTE
+    source {
+        location: staticValues
+    }
+
+    entry fisica (
+        sequence: 10
+        display: Persona física
+        return: F
+    )
+
+    entry juridica (
+        sequence: 20
+        display: Persona jurídica
+        return: J
+    )
+
+)
+
+lov tipo-cotizacion (
+    name: TIPO_COTIZACION
+    source {
+        location: staticValues
+    }
+
+    entry compra (
+        sequence: 10
+        display: Compra
+        return: C
+    )
+
+    entry venta (
+        sequence: 20
+        display: Venta
+        return: V
+    )
+
+)
+
+lov tipo-dato-parametro (
+    name: TIPO_DATO_PARAMETRO
+    source {
+        location: staticValues
+    }
+
+    entry texto (
+        sequence: 10
+        display: Texto
+        return: T
+    )
+
+    entry numero (
+        sequence: 20
+        display: Número
+        return: N
+    )
+
+    entry fecha (
+        sequence: 30
+        display: Fecha (AAAA-MM-DD)
+        return: F
+    )
+
+    entry si-no (
+        sequence: 40
+        display: Sí / No
+        return: S
+    )
+
+)
+
+lov tipo-deposito (
+    name: TIPO_DEPOSITO
+    source {
+        location: staticValues
+    }
+
+    entry propio (
+        sequence: 10
+        display: Propio
+        return: P
+    )
+
+    entry terceros (
+        sequence: 20
+        display: De terceros / consignación
+        return: C
+    )
+
+    entry transito (
+        sequence: 30
+        display: En tránsito
+        return: T
+    )
+
+)
+
+lov tipo-impuesto (
+    name: TIPO_IMPUESTO
+    source {
+        location: staticValues
+    }
+
+    entry impuesto (
+        sequence: 10
+        display: Impuesto
+        return: I
+    )
+
+    entry retencion (
+        sequence: 20
+        display: Retención
+        return: R
+    )
+
+    entry percepcion (
+        sequence: 30
+        display: Percepción
+        return: P
+    )
+
+)
+
+lov tipo-persona (
+    name: TIPO_PERSONA
+    source {
+        location: staticValues
+    }
+
+    entry fisica (
+        sequence: 10
+        display: Física
+        return: F
+    )
+
+    entry juridica (
+        sequence: 20
+        display: Jurídica
+        return: J
+    )
+
+)
+
+lov tipo-ubicacion (
+    name: TIPO_UBICACION
+    source {
+        location: staticValues
+    }
+
+    entry departamento (
+        sequence: 10
+        display: Departamento / estado
+        return: DEP
+    )
+
+    entry distrito (
+        sequence: 20
+        display: Distrito / municipio
+        return: DIS
+    )
+
+    entry ciudad (
+        sequence: 30
+        display: Ciudad / localidad
+        return: CIU
+    )
+
+)
+
+lov tipos-doc-identidad (
+    name: TIPOS_DOC_IDENTIDAD
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select t.codigo || ' - ' || t.nombre || ' (' || p.codigo || ')' d, t.tipo_doc_identidad_id r
+              from erp_gen_tipo_doc_identidad t
+              join erp_gen_pais p on p.pais_id = t.pais_id
+             where t.estado = 'A'
+             order by p.codigo, t.codigo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov tipos-rol (
+    name: TIPOS_ROL
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select nombre d, tipo_rol_id r
+              from erp_gen_tipo_rol
+             where estado = 'A'
+             order by nombre
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov ubicaciones (
+    name: UBICACIONES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select u.nombre || ' (' || decode(u.tipo, 'DEP', 'Dpto.', 'DIS', 'Distrito', 'Ciudad')
+                   || nvl2(p.nombre, ' - ' || p.nombre, null) || ')' d, u.ubicacion_id r
+              from erp_gen_ubicacion u
+              left join erp_gen_ubicacion p on p.ubicacion_id = u.ubicacion_id_padre
+             where u.estado = 'A'
+             order by u.nombre
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov usuarios (
+    name: USUARIOS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select username || ' - ' || nombres || ' ' || apellidos d, usuario_id r
+              from adm_seg_usuario
+             where estado = 'A'
+             order by username
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)

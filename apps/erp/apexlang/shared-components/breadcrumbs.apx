@@ -2,7 +2,7 @@ breadcrumb breadcrumb (
     name: Breadcrumb
 
     entry home (
-        name: Home
+        name: Inicio
         pageNumber: 1
         execution {
             sequence: 10
@@ -14,5 +14,436 @@ breadcrumb breadcrumb (
         }
     )
 
-)
+    entry cfg-empresa (
+        name: Datos de la empresa
+        pageNumber: 10
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 20
+        }
+        link {
+            target: {
+                page: 10
+            }
+        }
+    )
 
+    entry sucursales (
+        name: Sucursales
+        pageNumber: 12
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 30
+        }
+        link {
+            target: {
+                page: 12
+            }
+        }
+    )
+
+    entry departamentos (
+        name: Departamentos
+        pageNumber: 14
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 40
+        }
+        link {
+            target: {
+                page: 14
+            }
+        }
+    )
+
+    entry puntos (
+        name: Puntos de expedición
+        pageNumber: 16
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 50
+        }
+        link {
+            target: {
+                page: 16
+            }
+        }
+    )
+
+    entry depositos (
+        name: Depósitos
+        pageNumber: 18
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 60
+        }
+        link {
+            target: {
+                page: 18
+            }
+        }
+    )
+
+    entry usuarios-sucursal (
+        name: Usuarios por sucursal
+        pageNumber: 20
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 70
+        }
+        link {
+            target: {
+                page: 20
+            }
+        }
+    )
+
+    entry func-empresa (
+        name: Funcionalidades activas
+        pageNumber: 22
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 80
+        }
+        link {
+            target: {
+                page: 22
+            }
+        }
+    )
+
+    entry parametros (
+        name: Parámetros
+        pageNumber: 80
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 90
+        }
+        link {
+            target: {
+                page: 80
+            }
+        }
+    )
+
+    entry periodos (
+        name: Períodos
+        pageNumber: 82
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 100
+        }
+        link {
+            target: {
+                page: 82
+            }
+        }
+    )
+
+    entry monedas (
+        name: Monedas
+        pageNumber: 30
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 110
+        }
+        link {
+            target: {
+                page: 30
+            }
+        }
+    )
+
+    entry cotizaciones (
+        name: Cotizaciones
+        pageNumber: 32
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 120
+        }
+        link {
+            target: {
+                page: 32
+            }
+        }
+    )
+
+    entry impuestos (
+        name: Impuestos
+        pageNumber: 40
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 130
+        }
+        link {
+            target: {
+                page: 40
+            }
+        }
+    )
+
+    entry tasas (
+        name: Tasas
+        pageNumber: 42
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 140
+        }
+        link {
+            target: {
+                page: 42
+            }
+        }
+    )
+
+    entry vigencias (
+        name: Vigencias de tasas
+        pageNumber: 44
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 150
+        }
+        link {
+            target: {
+                page: 44
+            }
+        }
+    )
+
+    entry categorias (
+        name: Categorías fiscales
+        pageNumber: 46
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 160
+        }
+        link {
+            target: {
+                page: 46
+            }
+        }
+    )
+
+    entry categoria-tasas (
+        name: Tasas por categoría
+        pageNumber: 48
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 170
+        }
+        link {
+            target: {
+                page: 48
+            }
+        }
+    )
+
+    entry probar-impuestos (
+        name: Probar cálculo
+        pageNumber: 50
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 180
+        }
+        link {
+            target: {
+                page: 50
+            }
+        }
+    )
+
+    entry personas (
+        name: Personas
+        pageNumber: 60
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 190
+        }
+        link {
+            target: {
+                page: 60
+            }
+        }
+    )
+
+    entry roles-persona (
+        name: Roles por empresa
+        pageNumber: 62
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 200
+        }
+        link {
+            target: {
+                page: 62
+            }
+        }
+    )
+
+    entry tipos-rol (
+        name: Tipos de rol
+        pageNumber: 64
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 210
+        }
+        link {
+            target: {
+                page: 64
+            }
+        }
+    )
+
+    entry tipos-documento (
+        name: Tipos de documento
+        pageNumber: 66
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 220
+        }
+        link {
+            target: {
+                page: 66
+            }
+        }
+    )
+
+    entry paises (
+        name: Países
+        pageNumber: 70
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 230
+        }
+        link {
+            target: {
+                page: 70
+            }
+        }
+    )
+
+    entry ubicaciones (
+        name: Ubicaciones
+        pageNumber: 72
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 240
+        }
+        link {
+            target: {
+                page: 72
+            }
+        }
+    )
+
+    entry funcionalidades (
+        name: Funcionalidades
+        pageNumber: 74
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 250
+        }
+        link {
+            target: {
+                page: 74
+            }
+        }
+    )
+
+    entry rubros (
+        name: Rubros
+        pageNumber: 76
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 260
+        }
+        link {
+            target: {
+                page: 76
+            }
+        }
+    )
+
+    entry rubro-func (
+        name: Funcionalidades por rubro
+        pageNumber: 78
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 270
+        }
+        link {
+            target: {
+                page: 78
+            }
+        }
+    )
+
+    entry cambiar-empresa (
+        name: Cambiar empresa
+        pageNumber: 95
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 280
+        }
+        link {
+            target: {
+                page: 95
+            }
+        }
+    )
+
+)

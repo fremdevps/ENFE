@@ -1,0 +1,283 @@
+page 20 (
+    name: Usuarios por sucursal
+    alias: USUARIOS-SUCURSAL
+    title: Usuarios por sucursal
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @erp-gen-empresa-configurar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Sucursales y departamentos que puede operar cada usuario en la empresa activa.
+            Si un usuario no tiene ninguna, opera todas (salvo el parámetro ERP_GEN_ACCESO_SUCURSAL_ESTRICTO).
+            Use Asignar sucursal para agregar o el lápiz de cada fila para editar.
+            ```
+    }
+
+    region breadcrumb (
+        name: Usuarios por sucursal
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region usuarios-sucursal (
+        name: Usuarios por sucursal
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select us.usuario_sucursal_id, u.username usuario, u.nombres || ' ' || u.apellidos nombre, s.nombre sucursal,
+                       coalesce(d.nombre, 'Todos') departamento, se.establecimiento || '-' || p.codigo punto,
+                       decode(us.es_defecto, 'S', 'Sí', 'No') por_defecto, decode(us.estado, 'A', 'Activo', 'Inactivo') estado
+                  from erp_gen_usuario_sucursal us
+                  join adm_seg_usuario u on u.usuario_id = us.usuario_id
+                  join erp_gen_sucursal s on s.sucursal_id = us.sucursal_id
+                  left join erp_gen_departamento d on d.departamento_id = us.departamento_id
+                  left join erp_gen_punto_expedicion p on p.punto_expedicion_id = us.punto_expedicion_id
+                  left join erp_gen_sucursal se on se.sucursal_id = p.sucursal_id
+                 where s.empresa_id = :APP_EMPRESA_ID
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: BODY
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: usuarios-sucursal
+        }
+        link {
+            linkColumn: customTarget
+            target: {
+                page: 21
+                items: {
+                    P21_USUARIO_SUCURSAL_ID: #USUARIO_SUCURSAL_ID#
+                }
+                clearCache: 21
+            }
+            linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>
+        }
+        componentAppearance {
+            showNullValuesAs: -
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: No hay registros.
+            whenMoreDataFound: Hay más de #MAX_ROW_COUNT# registros; use la búsqueda o los filtros.
+        }
+        download {
+            formats: [
+                csv
+                html
+            ]
+        }
+        comments {
+            comments:
+                ```
+                Listado de erp_gen_usuario_sucursal. Alta/edición en la página 21 (guardado automático: catálogo).
+                ```
+        }
+
+        column USUARIO_SUCURSAL_ID (
+            type: hidden
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 10
+            }
+            source {
+                dataType: NUMBER
+            }
+        )
+
+        column USUARIO (
+            type: plainText
+            heading {
+                heading: Usuario
+            }
+            layout {
+                sequence: 20
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Usuario. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column NOMBRE (
+            type: plainText
+            heading {
+                heading: Nombre
+            }
+            layout {
+                sequence: 30
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Nombre. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column SUCURSAL (
+            type: plainText
+            heading {
+                heading: Sucursal
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Sucursal. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column DEPARTAMENTO (
+            type: plainText
+            heading {
+                heading: Departamento
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Departamento. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column PUNTO (
+            type: plainText
+            heading {
+                heading: Punto por defecto
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Punto por defecto. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column POR_DEFECTO (
+            type: plainText
+            heading {
+                heading: Sucursal por defecto
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Sucursal por defecto. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+
+        column ESTADO (
+            type: plainText
+            heading {
+                heading: Estado
+            }
+            layout {
+                sequence: 80
+            }
+            source {
+                dataType: STRING
+            }
+            comments {
+                comments: Display Label: Estado. Display in Report: true. Display in Form: true. Format Mask: none. Value Required: false. Read Only: true. Primary Display Column: false. Authorization Scheme: none.
+            }
+        )
+    )
+
+    button crear (
+        buttonName: CREAR
+        label: Asignar sucursal
+        layout {
+            sequence: 10
+            region: @usuarios-sucursal
+            slot: RIGHT_OF_IR_SEARCH_BAR
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: #DEFAULT#
+            icon: fa-plus
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 21
+                clearCache: 21
+            }
+        }
+    )
+
+    dynamicAction refrescar-al-cerrar (
+        name: Refrescar al cerrar el formulario
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @usuarios-sucursal
+        }
+
+        action refrescar (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @usuarios-sucursal
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+)

@@ -1,0 +1,440 @@
+page 33 (
+    name: Cotización
+    alias: COTIZACION
+    title: Cotización
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/drawer
+        templateOptions: [
+            #DEFAULT#
+            js-dialog-class-t-Drawer--pullOutEnd
+        ]
+    }
+    dialog {
+        chained: false
+    }
+    security {
+        authorizationScheme: @erp-gen-cotizacion-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Alta y edición: cotización.
+            Los campos marcados son obligatorios.
+            ```
+    }
+
+    region botones (
+        name: Botones
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: REGION_POSITION_03
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region formulario (
+        name: Cotización
+        type: form
+        source {
+            location: localDatabase
+            tableName: ERP_GEN_COTIZACION
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+        }
+    )
+
+    pageItem P33_COTIZACION_ID (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @formulario
+            slot: regionBody
+        }
+        source {
+            formRegion: @formulario
+            column: COTIZACION_ID
+            dataType: number
+            queryOnly: true
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P33_FECHA (
+        type: datePicker
+        label {
+            label: Fecha
+        }
+        layout {
+            sequence: 20
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @formulario
+            column: FECHA
+            dataType: date
+        }
+        help {
+            inlineHelpText: Día de la cotización
+            helpText: Rige desde esta fecha hasta la próxima cotización cargada.
+        }
+    )
+
+    pageItem P33_MONEDA_ID_ORIGEN (
+        type: selectList
+        label {
+            label: Moneda
+        }
+        layout {
+            sequence: 30
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @monedas
+        }
+        source {
+            formRegion: @formulario
+            column: MONEDA_ID_ORIGEN
+            dataType: number
+        }
+        help {
+            inlineHelpText: Ej. USD
+            helpText: 1 unidad de esta moneda…
+        }
+    )
+
+    pageItem P33_MONEDA_ID_DESTINO (
+        type: selectList
+        label {
+            label: En moneda
+        }
+        layout {
+            sequence: 40
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @monedas
+        }
+        source {
+            formRegion: @formulario
+            column: MONEDA_ID_DESTINO
+            dataType: number
+        }
+        help {
+            inlineHelpText: Ej. PYG
+            helpText: …equivale a la tasa en esta moneda.
+        }
+    )
+
+    pageItem P33_TASA_COMPRA (
+        type: numberField
+        label {
+            label: Tasa compra
+        }
+        layout {
+            sequence: 50
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @formulario
+            column: TASA_COMPRA
+            dataType: number
+        }
+        help {
+            inlineHelpText: Comprador
+            helpText: Cotización comprador.
+        }
+    )
+
+    pageItem P33_TASA_VENTA (
+        type: numberField
+        label {
+            label: Tasa venta
+        }
+        layout {
+            sequence: 60
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @formulario
+            column: TASA_VENTA
+            dataType: number
+        }
+        help {
+            inlineHelpText: Vendedor
+            helpText: Cotización vendedor.
+        }
+    )
+
+    pageItem P33_FUENTE (
+        type: selectList
+        label {
+            label: Fuente
+        }
+        layout {
+            sequence: 70
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        default {
+            type: static
+            staticValue: MAN
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @fuente-cotizacion
+        }
+        source {
+            formRegion: @formulario
+            column: FUENTE
+            dataType: varchar2
+        }
+        help {
+            inlineHelpText: Origen del dato
+            helpText: De dónde se obtuvo la cotización.
+        }
+    )
+
+    pageItem P33_EMPRESA_ID (
+        type: selectList
+        label {
+            label: Ámbito
+        }
+        layout {
+            sequence: 80
+            region: @formulario
+            slot: regionBody
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        lov {
+            type: sharedComponent
+            lov: @empresa-activa
+            displayNullValue: true
+            nullDisplayValue: General (todas las empresas)
+        }
+        source {
+            formRegion: @formulario
+            column: EMPRESA_ID
+            dataType: number
+        }
+        help {
+            inlineHelpText: Vacío = general
+            helpText: General: vale para todas las empresas. Elija la empresa si usa una cotización propia.
+        }
+    )
+
+    button cancelar (
+        buttonName: CANCELAR
+        label: Cancelar
+        layout {
+            sequence: 10
+            region: @botones
+            slot: CLOSE
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+    )
+
+    button eliminar (
+        buttonName: ELIMINAR
+        label: Eliminar
+        layout {
+            sequence: 20
+            region: @botones
+            slot: DELETE
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: delete
+            executeValidations: false
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: ¿Seguro que desea eliminar este registro?
+            style: danger
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P33_COTIZACION_ID
+        }
+    )
+
+    button guardar (
+        buttonName: GUARDAR
+        label: Guardar cambios
+        layout {
+            sequence: 30
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: update
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P33_COTIZACION_ID
+        }
+    )
+
+    button crear (
+        buttonName: CREAR
+        label: Crear
+        layout {
+            sequence: 40
+            region: @botones
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: insert
+        }
+        serverSideCondition {
+            type: itemIsNull
+            item: P33_COTIZACION_ID
+        }
+    )
+
+    dynamicAction cerrar-panel (
+        name: Cancelar
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cancelar
+        }
+
+        action cancelar-dialogo (
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+
+    process inicializar (
+        name: Inicializar Cotización
+        type: formInitialization
+        formRegion: @formulario
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+    )
+
+    process guardar-datos (
+        name: Guardar Cotización
+        type: formAutoRowProcessing
+        formRegion: @formulario
+        execution {
+            sequence: 10
+        }
+        successMessage {
+            successMessage: Cambios guardados.
+        }
+    )
+
+    process cerrar (
+        name: Cerrar panel
+        type: closeDialog
+        execution {
+            sequence: 50
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: CREAR,GUARDAR,ELIMINAR
+        }
+    )
+)

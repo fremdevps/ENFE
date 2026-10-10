@@ -1,16 +1,17 @@
 list navigation-bar (
     name: Navigation Bar
 
-    entry --- (
-        label: ---
+    entry empresa-activa (
+        label: &APP_EMPRESA_NOMBRE.
+        icon {
+            imageIconCssClasses: fa-building-o
+        }
         layout {
-            sequence: 20
-            parentEntry: @app-user
+            sequence: 5
         }
         link {
             target: {
-                type: url
-                url: separator
+                page: 95
             }
         }
         serverSideCondition {
@@ -34,6 +35,20 @@ list navigation-bar (
         }
         userDefinedAttributes {
             2: has-username
+        }
+    )
+
+    entry --- (
+        label: ---
+        layout {
+            sequence: 20
+            parentEntry: @app-user
+        }
+        link {
+            target: {
+                type: url
+                url: separator
+            }
         }
     )
 
@@ -62,7 +77,7 @@ list navigation-bar (
 list navigation-menu (
     name: Navigation Menu
 
-    entry home (
+    entry inicio (
         label: Inicio
         icon {
             imageIconCssClasses: fa-home
@@ -77,5 +92,1129 @@ list navigation-menu (
         }
     )
 
+    entry empresa (
+        label: Empresa
+        icon {
+            imageIconCssClasses: fa-building-o
+        }
+        layout {
+            sequence: 20
+        }
+        link {
+            target: {
+                type: url
+                url: #
+            }
+        }
+    )
+
+    entry cfg-empresa (
+        label: Datos de la empresa
+        icon {
+            imageIconCssClasses: fa-id-card-o
+        }
+        layout {
+            sequence: 21
+            parentEntry: @empresa
+        }
+        link {
+            target: {
+                page: 10
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry sucursales (
+        label: Sucursales
+        icon {
+            imageIconCssClasses: fa-map-marker
+        }
+        layout {
+            sequence: 22
+            parentEntry: @empresa
+        }
+        link {
+            target: {
+                page: 12
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry departamentos (
+        label: Departamentos
+        icon {
+            imageIconCssClasses: fa-sitemap
+        }
+        layout {
+            sequence: 23
+            parentEntry: @empresa
+        }
+        link {
+            target: {
+                page: 14
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry puntos (
+        label: Puntos de expedición
+        icon {
+            imageIconCssClasses: fa-print
+        }
+        layout {
+            sequence: 24
+            parentEntry: @empresa
+        }
+        link {
+            target: {
+                page: 16
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry depositos (
+        label: Depósitos
+        icon {
+            imageIconCssClasses: fa-archive
+        }
+        layout {
+            sequence: 25
+            parentEntry: @empresa
+        }
+        link {
+            target: {
+                page: 18
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry usuarios-sucursal (
+        label: Usuarios por sucursal
+        icon {
+            imageIconCssClasses: fa-users
+        }
+        layout {
+            sequence: 26
+            parentEntry: @empresa
+        }
+        link {
+            target: {
+                page: 20
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry func-empresa (
+        label: Funcionalidades activas
+        icon {
+            imageIconCssClasses: fa-toggle-on
+        }
+        layout {
+            sequence: 27
+            parentEntry: @empresa
+        }
+        link {
+            target: {
+                page: 22
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry parametros (
+        label: Parámetros
+        icon {
+            imageIconCssClasses: fa-sliders
+        }
+        layout {
+            sequence: 28
+            parentEntry: @empresa
+        }
+        link {
+            target: {
+                page: 80
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry periodos (
+        label: Períodos
+        icon {
+            imageIconCssClasses: fa-calendar
+        }
+        layout {
+            sequence: 29
+            parentEntry: @empresa
+        }
+        link {
+            target: {
+                page: 82
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-periodo-cerrar
+        }
+    )
+
+    entry monedas-grp (
+        label: Monedas
+        icon {
+            imageIconCssClasses: fa-money
+        }
+        layout {
+            sequence: 39
+        }
+        link {
+            target: {
+                type: url
+                url: #
+            }
+        }
+    )
+
+    entry monedas (
+        label: Monedas
+        icon {
+            imageIconCssClasses: fa-money
+        }
+        layout {
+            sequence: 40
+            parentEntry: @monedas-grp
+        }
+        link {
+            target: {
+                page: 30
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry cotizaciones (
+        label: Cotizaciones
+        icon {
+            imageIconCssClasses: fa-line-chart
+        }
+        layout {
+            sequence: 41
+            parentEntry: @monedas-grp
+        }
+        link {
+            target: {
+                page: 32
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-cotizacion-gestionar
+        }
+    )
+
+    entry impuestos-grp (
+        label: Impuestos
+        icon {
+            imageIconCssClasses: fa-percent
+        }
+        layout {
+            sequence: 51
+        }
+        link {
+            target: {
+                type: url
+                url: #
+            }
+        }
+    )
+
+    entry impuestos (
+        label: Impuestos
+        icon {
+            imageIconCssClasses: fa-bank
+        }
+        layout {
+            sequence: 52
+            parentEntry: @impuestos-grp
+        }
+        link {
+            target: {
+                page: 40
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry tasas (
+        label: Tasas
+        icon {
+            imageIconCssClasses: fa-percent
+        }
+        layout {
+            sequence: 53
+            parentEntry: @impuestos-grp
+        }
+        link {
+            target: {
+                page: 42
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry vigencias (
+        label: Vigencias de tasas
+        icon {
+            imageIconCssClasses: fa-calendar-check-o
+        }
+        layout {
+            sequence: 54
+            parentEntry: @impuestos-grp
+        }
+        link {
+            target: {
+                page: 44
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry categorias (
+        label: Categorías fiscales
+        icon {
+            imageIconCssClasses: fa-tags
+        }
+        layout {
+            sequence: 55
+            parentEntry: @impuestos-grp
+        }
+        link {
+            target: {
+                page: 46
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry categoria-tasas (
+        label: Tasas por categoría
+        icon {
+            imageIconCssClasses: fa-th-list
+        }
+        layout {
+            sequence: 56
+            parentEntry: @impuestos-grp
+        }
+        link {
+            target: {
+                page: 48
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry probar-impuestos (
+        label: Probar cálculo
+        icon {
+            imageIconCssClasses: fa-calculator
+        }
+        layout {
+            sequence: 57
+            parentEntry: @impuestos-grp
+        }
+        link {
+            target: {
+                page: 50
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry personas-grp (
+        label: Personas
+        icon {
+            imageIconCssClasses: fa-address-book-o
+        }
+        layout {
+            sequence: 67
+        }
+        link {
+            target: {
+                type: url
+                url: #
+            }
+        }
+    )
+
+    entry personas (
+        label: Personas
+        icon {
+            imageIconCssClasses: fa-address-book-o
+        }
+        layout {
+            sequence: 68
+            parentEntry: @personas-grp
+        }
+        link {
+            target: {
+                page: 60
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-persona-ver
+        }
+    )
+
+    entry roles-persona (
+        label: Roles por empresa
+        icon {
+            imageIconCssClasses: fa-user-circle-o
+        }
+        layout {
+            sequence: 69
+            parentEntry: @personas-grp
+        }
+        link {
+            target: {
+                page: 62
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-persona-ver
+        }
+    )
+
+    entry tipos-rol (
+        label: Tipos de rol
+        icon {
+            imageIconCssClasses: fa-tag
+        }
+        layout {
+            sequence: 70
+            parentEntry: @personas-grp
+        }
+        link {
+            target: {
+                page: 64
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry tipos-documento (
+        label: Tipos de documento
+        icon {
+            imageIconCssClasses: fa-id-badge
+        }
+        layout {
+            sequence: 71
+            parentEntry: @personas-grp
+        }
+        link {
+            target: {
+                page: 66
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry catalogos (
+        label: Catálogos
+        icon {
+            imageIconCssClasses: fa-book
+        }
+        layout {
+            sequence: 81
+        }
+        link {
+            target: {
+                type: url
+                url: #
+            }
+        }
+    )
+
+    entry paises (
+        label: Países
+        icon {
+            imageIconCssClasses: fa-globe
+        }
+        layout {
+            sequence: 82
+            parentEntry: @catalogos
+        }
+        link {
+            target: {
+                page: 70
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry ubicaciones (
+        label: Ubicaciones
+        icon {
+            imageIconCssClasses: fa-map-o
+        }
+        layout {
+            sequence: 83
+            parentEntry: @catalogos
+        }
+        link {
+            target: {
+                page: 72
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry funcionalidades (
+        label: Funcionalidades
+        icon {
+            imageIconCssClasses: fa-puzzle-piece
+        }
+        layout {
+            sequence: 84
+            parentEntry: @catalogos
+        }
+        link {
+            target: {
+                page: 74
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry rubros (
+        label: Rubros
+        icon {
+            imageIconCssClasses: fa-industry
+        }
+        layout {
+            sequence: 85
+            parentEntry: @catalogos
+        }
+        link {
+            target: {
+                page: 76
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry rubro-func (
+        label: Funcionalidades por rubro
+        icon {
+            imageIconCssClasses: fa-th
+        }
+        layout {
+            sequence: 86
+            parentEntry: @catalogos
+        }
+        link {
+            target: {
+                page: 78
+            }
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
 )
 
+list accesos (
+    name: Accesos
+
+    entry acc-cfg-empresa (
+        label: Datos de la empresa
+        icon {
+            imageIconCssClasses: fa-id-card-o
+        }
+        layout {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 10
+            }
+        }
+        userDefinedAttributes {
+            1: País, monedas, rubro y datos fiscales de cada empresa.
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry acc-sucursales (
+        label: Sucursales
+        icon {
+            imageIconCssClasses: fa-map-marker
+        }
+        layout {
+            sequence: 20
+        }
+        link {
+            target: {
+                page: 12
+            }
+        }
+        userDefinedAttributes {
+            1: Establecimientos de la empresa activa.
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry acc-departamentos (
+        label: Departamentos
+        icon {
+            imageIconCssClasses: fa-sitemap
+        }
+        layout {
+            sequence: 30
+        }
+        link {
+            target: {
+                page: 14
+            }
+        }
+        userDefinedAttributes {
+            1: Unidades de negocio o áreas (opcional).
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry acc-puntos (
+        label: Puntos de expedición
+        icon {
+            imageIconCssClasses: fa-print
+        }
+        layout {
+            sequence: 40
+        }
+        link {
+            target: {
+                page: 16
+            }
+        }
+        userDefinedAttributes {
+            1: Puntos de emisión de comprobantes por sucursal.
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry acc-depositos (
+        label: Depósitos
+        icon {
+            imageIconCssClasses: fa-archive
+        }
+        layout {
+            sequence: 50
+        }
+        link {
+            target: {
+                page: 18
+            }
+        }
+        userDefinedAttributes {
+            1: Depósitos de stock por sucursal.
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry acc-usuarios-sucursal (
+        label: Usuarios por sucursal
+        icon {
+            imageIconCssClasses: fa-users
+        }
+        layout {
+            sequence: 60
+        }
+        link {
+            target: {
+                page: 20
+            }
+        }
+        userDefinedAttributes {
+            1: Qué sucursales opera cada usuario.
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry acc-func-empresa (
+        label: Funcionalidades activas
+        icon {
+            imageIconCssClasses: fa-toggle-on
+        }
+        layout {
+            sequence: 70
+        }
+        link {
+            target: {
+                page: 22
+            }
+        }
+        userDefinedAttributes {
+            1: Lo que usa la empresa según su rubro.
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry acc-parametros (
+        label: Parámetros
+        icon {
+            imageIconCssClasses: fa-sliders
+        }
+        layout {
+            sequence: 80
+        }
+        link {
+            target: {
+                page: 80
+            }
+        }
+        userDefinedAttributes {
+            1: Ajustes del comportamiento del ERP.
+        }
+        security {
+            authorizationScheme: @erp-gen-empresa-configurar
+        }
+    )
+
+    entry acc-periodos (
+        label: Períodos
+        icon {
+            imageIconCssClasses: fa-calendar
+        }
+        layout {
+            sequence: 90
+        }
+        link {
+            target: {
+                page: 82
+            }
+        }
+        userDefinedAttributes {
+            1: Apertura y cierre de meses por módulo.
+        }
+        security {
+            authorizationScheme: @erp-gen-periodo-cerrar
+        }
+    )
+
+    entry acc-monedas (
+        label: Monedas
+        icon {
+            imageIconCssClasses: fa-money
+        }
+        layout {
+            sequence: 100
+        }
+        link {
+            target: {
+                page: 30
+            }
+        }
+        userDefinedAttributes {
+            1: Monedas y sus decimales.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-cotizaciones (
+        label: Cotizaciones
+        icon {
+            imageIconCssClasses: fa-line-chart
+        }
+        layout {
+            sequence: 110
+        }
+        link {
+            target: {
+                page: 32
+            }
+        }
+        userDefinedAttributes {
+            1: Tipos de cambio por fecha.
+        }
+        security {
+            authorizationScheme: @erp-gen-cotizacion-gestionar
+        }
+    )
+
+    entry acc-impuestos (
+        label: Impuestos
+        icon {
+            imageIconCssClasses: fa-bank
+        }
+        layout {
+            sequence: 120
+        }
+        link {
+            target: {
+                page: 40
+            }
+        }
+        userDefinedAttributes {
+            1: IVA, ISC, retenciones… por país.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-tasas (
+        label: Tasas
+        icon {
+            imageIconCssClasses: fa-percent
+        }
+        layout {
+            sequence: 130
+        }
+        link {
+            target: {
+                page: 42
+            }
+        }
+        userDefinedAttributes {
+            1: Tasas de cada impuesto.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-vigencias (
+        label: Vigencias de tasas
+        icon {
+            imageIconCssClasses: fa-calendar-check-o
+        }
+        layout {
+            sequence: 140
+        }
+        link {
+            target: {
+                page: 44
+            }
+        }
+        userDefinedAttributes {
+            1: Porcentaje de cada tasa desde una fecha.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-categorias (
+        label: Categorías fiscales
+        icon {
+            imageIconCssClasses: fa-tags
+        }
+        layout {
+            sequence: 150
+        }
+        link {
+            target: {
+                page: 46
+            }
+        }
+        userDefinedAttributes {
+            1: Cómo tributa cada producto.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-categoria-tasas (
+        label: Tasas por categoría
+        icon {
+            imageIconCssClasses: fa-th-list
+        }
+        layout {
+            sequence: 160
+        }
+        link {
+            target: {
+                page: 48
+            }
+        }
+        userDefinedAttributes {
+            1: Composición de cada categoría fiscal.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-probar-impuestos (
+        label: Probar cálculo
+        icon {
+            imageIconCssClasses: fa-calculator
+        }
+        layout {
+            sequence: 170
+        }
+        link {
+            target: {
+                page: 50
+            }
+        }
+        userDefinedAttributes {
+            1: Verifique cómo se calcula un monto.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-personas (
+        label: Personas
+        icon {
+            imageIconCssClasses: fa-address-book-o
+        }
+        layout {
+            sequence: 180
+        }
+        link {
+            target: {
+                page: 60
+            }
+        }
+        userDefinedAttributes {
+            1: Padrón único de personas físicas y jurídicas.
+        }
+        security {
+            authorizationScheme: @erp-gen-persona-ver
+        }
+    )
+
+    entry acc-roles-persona (
+        label: Roles por empresa
+        icon {
+            imageIconCssClasses: fa-user-circle-o
+        }
+        layout {
+            sequence: 190
+        }
+        link {
+            target: {
+                page: 62
+            }
+        }
+        userDefinedAttributes {
+            1: Clientes, proveedores, empleados… de la empresa activa.
+        }
+        security {
+            authorizationScheme: @erp-gen-persona-ver
+        }
+    )
+
+    entry acc-tipos-rol (
+        label: Tipos de rol
+        icon {
+            imageIconCssClasses: fa-tag
+        }
+        layout {
+            sequence: 200
+        }
+        link {
+            target: {
+                page: 64
+            }
+        }
+        userDefinedAttributes {
+            1: Roles de persona disponibles.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-tipos-documento (
+        label: Tipos de documento
+        icon {
+            imageIconCssClasses: fa-id-badge
+        }
+        layout {
+            sequence: 210
+        }
+        link {
+            target: {
+                page: 66
+            }
+        }
+        userDefinedAttributes {
+            1: RUC, cédula, pasaporte…
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-paises (
+        label: Países
+        icon {
+            imageIconCssClasses: fa-globe
+        }
+        layout {
+            sequence: 220
+        }
+        link {
+            target: {
+                page: 70
+            }
+        }
+        userDefinedAttributes {
+            1: Países y su moneda.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-ubicaciones (
+        label: Ubicaciones
+        icon {
+            imageIconCssClasses: fa-map-o
+        }
+        layout {
+            sequence: 230
+        }
+        link {
+            target: {
+                page: 72
+            }
+        }
+        userDefinedAttributes {
+            1: Departamentos, distritos y ciudades.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-funcionalidades (
+        label: Funcionalidades
+        icon {
+            imageIconCssClasses: fa-puzzle-piece
+        }
+        layout {
+            sequence: 240
+        }
+        link {
+            target: {
+                page: 74
+            }
+        }
+        userDefinedAttributes {
+            1: Catálogo de funcionalidades activables.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-rubros (
+        label: Rubros
+        icon {
+            imageIconCssClasses: fa-industry
+        }
+        layout {
+            sequence: 250
+        }
+        link {
+            target: {
+                page: 76
+            }
+        }
+        userDefinedAttributes {
+            1: Perfiles de rubro.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+    entry acc-rubro-func (
+        label: Funcionalidades por rubro
+        icon {
+            imageIconCssClasses: fa-th
+        }
+        layout {
+            sequence: 260
+        }
+        link {
+            target: {
+                page: 78
+            }
+        }
+        userDefinedAttributes {
+            1: Qué activa cada rubro.
+        }
+        security {
+            authorizationScheme: @erp-gen-catalogo-gestionar
+        }
+    )
+
+)

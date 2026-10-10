@@ -1,0 +1,11 @@
+appItem APP_EMPRESA_ID (
+    security {
+        sessionStateProtection: checksumRequiredSessionLevel
+    }
+)
+
+appItem APP_EMPRESA_NOMBRE (
+    security {
+        sessionStateProtection: checksumRequiredSessionLevel
+    }
+)

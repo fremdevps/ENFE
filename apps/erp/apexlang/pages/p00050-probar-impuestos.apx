@@ -1,0 +1,340 @@
+page 50 (
+    name: Probar cálculo
+    alias: PROBAR-IMPUESTOS
+    title: Probar cálculo
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @erp-gen-catalogo-gestionar
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Verifique cómo el motor de impuestos desglosa un monto.
+            Elija la categoría fiscal, el monto, si incluye impuestos y la moneda, y presione Calcular.
+            ```
+    }
+
+    region breadcrumb (
+        name: Probar cálculo
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: REGION_POSITION_01
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region datos (
+        name: Datos del cálculo
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: BODY
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P50_CATEGORIA_FISCAL_ID (
+        type: selectList
+        label {
+            label: Categoría fiscal
+        }
+        layout {
+            sequence: 10
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @categorias-fiscales
+        }
+        help {
+            inlineHelpText: Cómo tributa el producto
+            helpText: Define las tasas y la parte de la base que grava cada una.
+        }
+    )
+
+    pageItem P50_MONTO (
+        type: numberField
+        label {
+            label: Monto
+        }
+        layout {
+            sequence: 20
+            region: @datos
+            slot: regionBody
+            startNewRow: false
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        help {
+            inlineHelpText: Importe a desglosar
+            helpText: Precio total si incluye impuestos; base si no los incluye.
+        }
+    )
+
+    pageItem P50_INCLUYE_IMPUESTO (
+        type: selectList
+        label {
+            label: Incluye impuestos
+        }
+        layout {
+            sequence: 30
+            region: @datos
+            slot: regionBody
+            startNewRow: false
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @si-no
+        }
+        default {
+            type: static
+            staticValue: S
+        }
+        help {
+            inlineHelpText: Sí = precio final
+            helpText: Sí: el monto ya incluye los impuestos. No: se suman sobre el monto.
+        }
+    )
+
+    pageItem P50_MONEDA_ID (
+        type: selectList
+        label {
+            label: Moneda
+        }
+        layout {
+            sequence: 40
+            region: @datos
+            slot: regionBody
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        lov {
+            type: sharedComponent
+            lov: @monedas
+        }
+        help {
+            inlineHelpText: Define el redondeo
+            helpText: Los importes se redondean a los decimales de la moneda.
+        }
+    )
+
+    pageItem P50_FECHA (
+        type: datePicker
+        label {
+            label: Fecha
+        }
+        layout {
+            sequence: 50
+            region: @datos
+            slot: regionBody
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        help {
+            inlineHelpText: Vacío = hoy
+            helpText: Se usa la tasa vigente a esta fecha.
+        }
+    )
+
+    button calcular (
+        buttonName: CALCULAR
+        label: Calcular
+        layout {
+            sequence: 10
+            region: @datos
+            slot: NEXT
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region resultado (
+        name: Resultado
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select coalesce(i.codigo, '-') impuesto,
+                       c.codigo_tasa tasa,
+                       c.porcentaje,
+                       c.porcentaje_base,
+                       c.monto,
+                       c.monto_base,
+                       c.monto_impuesto
+                  from table(erp_gen_impuesto_api.obtener_calculo(
+                             i_categoria_fiscal_id => :P50_CATEGORIA_FISCAL_ID,
+                             i_fecha               => coalesce(to_date(:P50_FECHA), trunc(current_date)),
+                             i_monto               => to_number(:P50_MONTO),
+                             i_incluye_impuesto    => :P50_INCLUYE_IMPUESTO,
+                             i_moneda_id           => :P50_MONEDA_ID)) c
+                  left join erp_gen_impuesto i on i.impuesto_id = c.impuesto_id
+                ```
+        }
+        layout {
+            sequence: 30
+            slot: BODY
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            language: plsql
+            plsqlExpression:
+                ```plsql
+                :P50_CATEGORIA_FISCAL_ID is not null and :P50_MONTO is not null and :P50_MONEDA_ID is not null
+                ```
+        }
+
+        column IMPUESTO (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Impuesto
+                alignment: start
+            }
+            layout {
+                sequence: 10
+                columnAlignment: start
+            }
+        )
+
+        column TASA (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Tasa
+                alignment: start
+            }
+            layout {
+                sequence: 20
+                columnAlignment: start
+            }
+        )
+
+        column PORCENTAJE (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: % tasa
+                alignment: start
+            }
+            layout {
+                sequence: 30
+                columnAlignment: start
+            }
+        )
+
+        column PORCENTAJE_BASE (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: % de la base
+                alignment: start
+            }
+            layout {
+                sequence: 40
+                columnAlignment: start
+            }
+        )
+
+        column MONTO (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Parte del monto
+                alignment: start
+            }
+            layout {
+                sequence: 50
+                columnAlignment: start
+            }
+        )
+
+        column MONTO_BASE (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: Base imponible
+                alignment: start
+            }
+            layout {
+                sequence: 60
+                columnAlignment: start
+            }
+        )
+
+        column MONTO_IMPUESTO (
+            reportColumnQueryId: 7
+            derivedColumn: N
+            heading {
+                heading: Impuesto
+                alignment: start
+            }
+            layout {
+                sequence: 70
+                columnAlignment: start
+            }
+        )
+    )
+)
