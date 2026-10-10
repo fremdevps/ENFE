@@ -14,6 +14,8 @@
 | O5 | **Escalable en volumen** | PK identity con caché; saldos mantenidos (no se recalculan del histórico); documentos inmutables; períodos cerrados; particionamiento opcional; APIs por lote. |
 | O6 | **Facturación electrónica** | Nace preparado para **SIFEN / e-Kuatia** (Paraguay): CDC, XML firmado, lotes, eventos, KuDE. La emisión en papel (timbrado preimpreso) es un caso particular. |
 | O7 | **OCI y on-premise** | Oracle 19c + APEX 26.1; nada exclusivo de la nube sin alternativa. |
+| O8 | **Nativo primero** | Todo se resuelve con Oracle Database (hasta 26ai) y APEX. Solo lo que de verdad no se pueda hacer nativo queda para una API externa futura, documentada como tal. |
+| O9 | **Historial de cambios** | Quién cambió qué y cuándo, con valores antes/después en JSON, para maestros y configuración (§9.2). |
 
 ### Principios de modelado
 
@@ -197,10 +199,10 @@ remisión, recibo, autofactura y orden de pago son configuraciones, no tablas de
 
 | Tabla | Para qué |
 |---|---|
-| `erp_doc_tipo_documento` | Comportamiento: `signo_stock` (+1/−1/0), `signo_cuenta` (D/C/N), `es_legal`, `tipo_emision` (E electrónico / P preimpreso / I interno), `codigo_sifen` (1 FE, 4 AFE, 5 NCE, 6 NDE, 7 NRE), `requiere_documento_origen`, `regla_contable` |
+| `erp_doc_tipo_documento` | Códigos fiscales como datos (`codigo_sifen`, `codigo_registro_fiscal` del registro mensual de comprobantes), `max_items` (preimpresos), exige vendedor / RUC / documento de origen. Comportamiento: `signo_stock` (+1/−1/0), `signo_cuenta` (D/C/N), `es_legal`, `tipo_emision` (E electrónico / P preimpreso / I interno), `codigo_sifen` (1 FE, 4 AFE, 5 NCE, 6 NDE, 7 NRE), `requiere_documento_origen`, `regla_contable` |
 | `erp_doc_timbrado` | Timbrado (número, vigencia desde/hasta, electrónico o preimpreso) por empresa |
-| `erp_doc_numerador` | Correlativo por empresa + timbrado + establecimiento + punto + tipo; se toma con `select … for update` en la transacción (ESTANDAR §1.3) |
-| `erp_doc_numero_inutilizado` | Rangos inutilizados (evento SIFEN de inutilización) |
+| `erp_doc_numerador` | Correlativo por empresa + timbrado + establecimiento + punto + tipo de documento, con `numero_desde`/`numero_hasta`/`numero_actual` (rango obligatorio en preimpreso y autoimpresor), avisos por días al vencimiento y % de rango usado, y usuarios autorizados. Se toma con `select … for update` **en la misma transacción** del documento (nunca en transacción autónoma: quemaría números) |
+| `erp_doc_numero_inutilizado` | Números anulados, inutilizados o extraviados (papel) y rangos inutilizados (evento SIFEN), con motivo obligatorio; salen en el registro mensual de comprobantes |
 
 ### 4.2 Facturación electrónica SIFEN (e-Kuatia)
 
@@ -237,21 +239,30 @@ APEX / REST ──► erp_*_api.emitir ──► erp_doc_fe_documento (estado P,
                                                 │  (cola)
                          job_erp_fe_enviar ─────┘
                                 │
-                     Conector de firma y envío  ◄── certificado .p12 (fuera de la BD)
-                     (servicio Java/Node; o PL/SQL + wallet si la plataforma lo permite)
+                     erp_doc_fe_firma / envío nativos  ◄── certificado en wallet / almacén seguro
+                     (API externa solo si la plataforma no permite algún paso)
                                 │ SOAP mTLS
                               SIFEN (siRecepDE / lotes / consultas / eventos)
                                 │
                      respuesta ──► actualiza estado, CDC, mensajes ──► KuDE (PDF + QR)
 ```
 
-- **La firma XML-DSig y el SOAP con certificado cliente se hacen en un conector externo**
-  intercambiable. En PL/SQL puro la firma XML es frágil, y en Autonomous el uso de certificados
-  cliente está limitado. La BD solo arma el documento, encola y guarda respuestas, así el núcleo
-  es igual en OCI y on-premise.
+- **Nativo primero (O8)**: armado del XML, validación, CDC, QR, cola, envío SOAP con TLS mutuo, eventos y KuDE se
+  implementan en Oracle + APEX. La firma XML-DSig se resuelve con las capacidades nativas de
+  cada versión (detalle en el diseño de la fase 2); si alguna plataforma no lo permite, ese único
+  paso queda como API externa futura, con el resto del flujo igual.
 - El documento comercial (factura) y el documento electrónico son entidades separadas: la factura
   existe aunque SIFEN esté caído (**contingencia**, tipo de emisión 2) y se reenvía después.
 - Los documentos aprobados son **inmutables**; se corrigen con NCE/NDE o se cancelan por evento.
+- La regla de inmutabilidad vive en la **API de anulación** de cada módulo (y en las anulaciones en cascada), nunca solo en pantallas: si el documento tiene un DE aprobado, se exige el evento de cancelación dentro del plazo parametrizado.
+- `erp_doc_fe_documento`: **UK sobre `cdc`** y **UK sobre (documento de origen, tipo)**: un solo DE por documento comercial. Origen genérico (`origen_modulo`, `origen_id`): facturas, notas, remisiones y movimientos de stock.
+- Estado de envío separado del estado SIFEN: envío (pendiente, en lote, enviado, sin respuesta, error técnico) y resultado (aprobado, aprobado con observación, rechazado, cancelado, inutilizado) más estados del receptor (notificado, conforme, parcialmente conforme, disconforme, desconocido) y nominación.
+- Respuestas de la DNIT **estructuradas** (`codigo_respuesta`, `mensaje`) y catálogo de códigos con "cómo resolver"; nunca interpretar textos.
+- Cola con `select … for update skip locked`, lotes de hasta 50 DE, reintentos con espera creciente (`intentos`, `proximo_intento`), fallback de consulta de lote a consulta por CDC, control de las 72 h desde la firma y de las 48 h de consulta de lote.
+- Código de seguridad del CDC **aleatorio** (no derivado de datos del documento).
+- Contingencia (`tipo_emision = 2`): emitir, imprimir KuDE y regularizar dentro del plazo.
+- KuDE en formatos A4, A5 y cinta; envío por correo al receptor con reintentos.
+- **Compras**: todo comprobante de proveedor guarda timbrado + número o CDC, validados (vigencia del timbrado a la fecha de emisión, unicidad por proveedor + número); servicio de consulta RUC / timbrado / CDC ante la DNIT con resultados en caché y padrón de RUC cargado por job.
 
 ## 5. Inventario (`stk`) — fase 3
 
@@ -259,7 +270,9 @@ Producto (con categoría fiscal, unidad base, marca, tipo bien/servicio, maneja 
 unidad y conversión, presentación, código de barras, depósito (`erp_stk_deposito`, ya creado en la fase 1), movimiento
 (cabecera + ítems, generado por el tipo de documento) y **`erp_stk_saldo`**
 (empresa, depósito, producto, lote) actualizado en la misma transacción. Costo promedio
-ponderado en moneda funcional **y de reporte** en `erp_stk_saldo` (costo contable y gerencial).
+ponderado en moneda funcional **y de reporte** en `erp_stk_saldo` (costo contable y gerencial). Saldo **actual** mantenido
+en la transacción y movimientos con costo unitario guardado; el costo histórico, si se necesita, sale de un cierre mensual
+(`erp_stk_saldo_periodo`). No se admiten movimientos con fecha anterior a un período cerrado (evita reprocesos).
 
 ## 6. Ventas y compras (`ven` / `com`) — fase 4
 
@@ -271,6 +284,10 @@ ponderado en moneda funcional **y de reporte** en `erp_stk_saldo` (costo contabl
   condición, totales en moneda doc y funcional, estado), ítems, `_item_impuesto` (foto),
   `_impuesto` (resumen por tasa), vencimientos.
 - Estados: `B` borrador · `E` emitido · `A` anulado. Un documento emitido no se modifica.
+- Persona, moneda, cotización funcional y de reporte, condición, timbrado y punto son **columnas de la cabecera** (sin tablas satélite 1:1).
+- Pedido: cantidad pendiente por ítem (facturación parcial), plan de vencimientos, motivo de cancelación, descuentos autorizados con usuario y límite.
+- Línea de crédito por cliente con vigencia y monto por moneda.
+- Maestro-detalle en APEX: colección de APEX con **vista tipada** sobre ella (nombre de colección provisto por la API) antes de grabar.
 
 ## 7. Finanzas (`fin`) — fase 5
 
@@ -281,6 +298,13 @@ ponderado en moneda funcional **y de reporte** en `erp_stk_saldo` (costo contabl
 - Recibo, orden de pago, formas de pago (efectivo, cheque, transferencia, tarjeta), cheques
   emitidos (chequera) y recibidos, caja (apertura/cierre/arqueo), cuentas bancarias,
   retenciones (IVA/renta, comprobante de retención) e intereses por mora configurables.
+- **Operaciones financieras con signo** (pago, descuento, interés, retención, diferencia de cambio) aplicadas sobre la cuota;
+  saldo de la cuota mantenido en la transacción (no vistas materializadas on commit).
+- Interés por mora en la cuota (tipo, tasa mensual, desde antes o después del vencimiento); días hábiles con `erp_gen_feriado`.
+- Retenciones como `erp_gen_impuesto` de tipo R: tasa con vigencia y **monto mínimo** (`erp_gen_impuesto_tasa_vig.monto_minimo`),
+  base sobre la foto de impuestos del documento, excepciones por persona, comprobante de retención (emitido o recibido) con
+  respuesta de la DNIT; la retención recibida es un medio de cobro.
+- Aprobación de órdenes de pago por niveles; descuento de cheques y documentos.
 
 ## 8. Contabilidad (`cnt`) — fase 6
 
@@ -291,6 +315,11 @@ costo, **reglas contables** (`tipo de documento + concepto → cuenta`, con over
 categoría de producto, cliente o sucursal) y **saldo contable por cuenta y período** mantenido.
 Los módulos no escriben asientos: llaman `erp_cnt_asiento_api.generar(documento)`, que aplica las
 reglas.
+- Asiento con origen genérico (`origen_modulo`, `origen_id`) y líneas D/C simples (una cuenta por línea).
+- Si una regla falla, el documento no se pierde: queda en `erp_cnt_asiento_pendiente` para reprocesar.
+- Plan de cuentas con clasificación corto/largo plazo y cuentas que controlan diferencia de cambio (revalúo solo en esas).
+- Ninguna cuenta contable fija en columnas: IVA débito/crédito por tasa, retenciones, redondeo, diferencia de cambio e intereses salen de reglas por concepto.
+- Libros legales (compras, ventas, diario, mayor, balance) como funciones o vistas parametrizadas por empresa, período y moneda.
 
 ## 9. Escalabilidad y volumen
 
@@ -318,6 +347,27 @@ Revisado con las guías oficiales incluidas en `.claude/skills/oracle-db` (desig
 | Aislamiento por tenant con VPD (`DBMS_RLS` + contexto) | `design/data-modeling.md`, `security/` | Futuro (EE on-premise); hoy filtro por `APP_EMPRESA_ID` en la API |
 | Colas sin contención con `for update skip locked` | `appdev/locking-concurrency.md` | Para el envío SIFEN (`job_erp_fe_enviar`) en la fase 2 |
 | Sin índices bitmap en OLTP | `design/data-modeling.md` | Solo B-tree |
+
+### 9.2 Historial de cambios
+
+| Opción | Uso en ENFE |
+|---|---|
+| **Tabla genérica con JSON + trigger compound generado por tabla** | **Elegida** para el historial funcional: igual en ADB, SE2 y EE; captura todo DML (también fuera de la capa `ctr`); muestra "qué columna cambió". |
+| Flashback Time Travel (FDA) | Complemento opcional de recuperación (gratis sin compresión); no como historial funcional (en ADB la retención es global y requiere ADMIN). |
+| Unified Auditing | Solo auditoría de seguridad (accesos, DDL, privilegios); no guarda valores por columna. |
+| Tabla inmutable (19.11+) | Opción para que el historial no se pueda borrar ni modificar; congela la estructura de la tabla. |
+
+- Tabla **`adm_aud_cambio`** (en ADM, transversal a todas las apps): app, tabla, `registro_id`, `registro_padre_id`, `empresa_id`,
+  operación (I/U/D), `cambios` (JSON: arreglo `[{"col":…,"antes":…,"despues":…}]`, solo columnas cambiadas; en D la fila completa),
+  usuario, fecha, app/página/sesión APEX, id de transacción y módulo. CLOB con `is json` en 19c; tipo `JSON` cuando el mínimo sea 21c+.
+- Generador `adm_aud_cambio_utl` que produce el trigger `trg_<app>_<abrev>_aiud` (compound, inserción por lote) por cada tabla
+  auditada. Excluye columnas de auditoría, LOB y columnas sensibles (contraseñas, hashes, tokens: solo registra "cambió").
+  **No autónomo**: si la transacción se deshace, el historial también.
+- Se auditan maestros y configuración (empresa, sucursal, punto, depósito, monedas, impuestos, personas, roles, rubros,
+  parámetros, períodos) y la seguridad de ADM. Los documentos transaccionales no: son inmutables y sus cambios de estado se
+  registran como eventos desde la API.
+- En APEX: región **Historial** (timeline + detalle Campo / Antes / Después) en cada formulario de edición, y pantalla de
+  historial con filtros en ADM. Retención por parámetro y purga mensual por job; particionamiento mensual opcional.
 
 ## 10. Errores del ERP
 
