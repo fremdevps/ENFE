@@ -8,7 +8,7 @@
 | App | ID APEX | Estado |
 |---|---|---|
 | ADM · Administración Central (seguridad central) | 100 | Publicada (v0.3.0 en `main`) |
-| ERP · Configuración (app maestra del ERP modular) | 200 | Fase 1 construida en `feature/erp-gen`; **deploy a DEV en curso** |
+| ERP · Configuración (app maestra del ERP modular) | 200 | Fase 1 construida en `feature/erp-gen`; **desplegada y verificada en DEV** |
 | ERP · Inventario / Compras / Ventas / Finanzas / Contabilidad | 210 / 220 / 230 / 240 / 250 | Diseñadas en `docs/arquitectura-erp.md`; sin construir |
 | Verticales por rubro | 260–299 | Reservadas |
 
@@ -34,39 +34,59 @@ Rama activa: **`feature/erp-gen`** (desde `develop`, publicada en `origin`). Sin
 - **Pruebas E2E** (`tests/e2e/specs/erp/`): session sharing, apertura de todas las pantallas y motor
   de impuestos.
 
-## Verificado
+## Verificado en DEV ENFE OCI (2026-10-10)
 
-- `apex validate` de la app 200: OK (offline).
-- Pruebas públicas `npm run test:publico` contra DEV: **5/5** (antes del deploy).
-- En DEV: tablas, triggers, vista, tipos y paquetes del ERP instalados; registro en seguridad central
-  aplicado.
+| # | Verificación | Resultado |
+|---|---|---|
+| 1 | `apex validate` de la app 200 | Correcta |
+| 2 | Instalación de base de datos en `WKSP_DEV` | 30 tablas, 30 triggers, 1 vista, 2 tipos, 14 paquetes |
+| 3 | Objetos inválidos | Ninguno |
+| 4 | Datos iniciales | Cargados (monedas, IVA, categorías, rubros, roles, 8 módulos, 15 permisos, 67 mensajes) |
+| 5 | Importación de la app 200 "ERP Configuración" | Correcta, 62 páginas |
+| 6 | `verificar_consultas.sql 200 QA_ADMIN` | 50 consultas, **0 con error** |
+| 7 | Motor de impuestos por SQL | IVA 10 % incluido 110.000 → 100.000 + 10.000; IVA 5 % sobre 100.000 → 5.000; exento; USD con 2 decimales |
+| 8 | Dígito verificador de RUC, períodos, funcionalidades, cotización inexistente | Resultados esperados |
+| 9 | Pruebas públicas (`npm run test:publico`) | 5/5 |
+| 10 | Suite Playwright del ERP (`npx playwright test specs/erp --project=chrome`) | **33/33** |
 
-## En curso / pendiente de verificar
+Problemas encontrados y resueltos en el deploy:
 
-1. **Datos iniciales en DEV**: fallaron con ORA-12839 (DML paralelo por defecto en Autonomous).
-   Corrección en curso: `alter session disable parallel dml` al inicio de los scripts de datos
-   (cambios sin commitear en `apps/erp/database/data/*.sql`). Reinstalar y confirmar.
-2. Objetos inválidos: `select * from user_objects where status <> 'VALID'` → vacío.
-3. Importar la app 200 con supporting objects.
-4. `@tools/apex/verificar_consultas.sql 200 QA_ADMIN` → `0 con error`.
-5. Suite Playwright del ERP: `npx playwright test specs/erp`.
-6. Actualizar `CHANGELOG.md` (hoy dice "pendiente de verificar") y mergear `feature/erp-gen` a
-   `develop` con `--no-ff` cuando todo pase.
+- **ORA-12839** en los `merge` de datos: Autonomous usa DML paralelo por defecto. Los scripts de datos
+  empiezan con `alter session disable parallel dml`.
+- La página "Probar cálculo" fallaba sin datos: el motor ahora devuelve un resultado vacío si falta
+  categoría, monto o moneda.
 
-## Siguiente paso
+## Pendiente
 
-Terminar el deploy y la verificación en DEV (lista de arriba, en orden). Después:
+1. **Mergear `feature/erp-gen` a `develop`** (`--no-ff`). Está frenado por una decisión del dueño:
+   limpiar o no el historial de git de la rama (ver el punto 2).
+2. **Historial de git**: hay commits de `feature/erp-gen` con menciones de origen (el mensaje de
+   `7de7d7b` y versiones anteriores de documentos). Limpiarlos requiere reescribir la rama y hacer
+   force push: **pedir OK al dueño antes**. Conviene hacerlo antes del merge a `develop`.
+3. **Suite E2E de ADM desactualizada**: los specs de `tests/e2e/specs/adm/` (03, 04, 07, 09 y
+   `support/adm.ts`) todavía asumen Interactive Grid y alias viejos (`nuevo-usuario`, `usuario-roles`).
+   Hay que reescribirlos para listado + panel lateral. No afecta al ERP.
+4. **Historial de cambios** (`adm_aud_cambio` + generador de triggers compound
+   `trg_<app>_<abrev>_aiud`, diseño en `docs/arquitectura-erp.md` §9.2). Toca ADM.
+5. **Fase 2** (`feature/erp-doc`): tipo de documento, timbrado, numerador, números inutilizados y
+   **SIFEN nativo** (§4). Primer paso recomendado: prueba de concepto de la firma (formato de clave
+   de `DBMS_CRYPTO.SIGN` y XML canónico por construcción) contra el ambiente de test de SIFEN.
+6. **Cambio en ADM** para reconocer apps por módulo (`adm_seg_modulo` ↔ app APEX) al crear la app 210.
+7. **Contratos de granos** (app vertical AGR): requisitos en
+   `docs/requisitos-agr-contratos-granos.md`, con 13 preguntas abiertas para el dueño.
+8. Cargar la tabla geográfica oficial (departamentos, distritos, ciudades) y los feriados.
 
-- **Historial de cambios** (`adm_aud_cambio` + generador de triggers compound `trg_<app>_<abrev>_aiud`,
-  diseño en `docs/arquitectura-erp.md` §9.2). Toca ADM.
-- **Fase 2** (`feature/erp-doc`): tipo de documento, timbrado, numerador, números inutilizados y
-  **SIFEN nativo** (§4).
-- **Cambio en ADM** para reconocer apps por módulo (`adm_seg_modulo` ↔ app APEX) al crear la app 210.
-- **Historial de git**: hay commits de `feature/erp-gen` con menciones de origen (ej. el mensaje de
-  `7de7d7b` y el documento retirado en `5b2b49e`). Limpiarlos requiere reescribir y hacer force push
-  de la rama: **pedir OK al dueño antes**.
-- Investigaciones abiertas: coherencia de nombres, SIFEN 100 % nativo en Oracle, contratos de granos
-  con fijaciones parciales de precio y tipo de cambio en cualquier orden (será app vertical).
+### SIFEN nativo: resultado de la investigación
+
+- Nativo en todas las plataformas: armado del XML, CDC, hash y QR (`DBMS_CRYPTO`, `APEX_BARCODE`),
+  firma RSA-SHA256 (`DBMS_CRYPTO.SIGN`, requiere 19.9 o superior), ZIP de lotes (`APEX_ZIP`), cola y
+  jobs (`DBMS_SCHEDULER`, `for update skip locked`).
+- La canonicalización no existe como función: se emite el XML ya en forma canónica.
+- Validación contra XSD: en Autonomous solo con `DBMS_XMLSCHEMA_UTIL` y un XSD único (aplanado).
+- **Único bloqueo**: en Autonomous con endpoint público (como DEV, Always Free) la base no puede
+  presentar el certificado de cliente del TLS mutuo. Ese envío queda como API futura, o se usa
+  endpoint privado. On-premise funciona con wallet.
+- KuDE: página HTML imprimible o PDF generado en PL/SQL.
 
 ## Reglas que no se negocian
 

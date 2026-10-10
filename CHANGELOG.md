@@ -5,11 +5,16 @@ Formato: [SemVer](https://semver.org/lang/es/). Ver `.claude/skills/git-flujo/SK
 ## [Sin publicar]
 ### Agregado
 - **ERP modular**: diseño de una app APEX por módulo con sesión compartida y app maestra (200 ERP Configuración); `docs/arquitectura-erp.md`.
-- Módulo General del ERP (27 tablas): monedas y cotizaciones, motor de impuestos configurable con vigencias y categorías fiscales, estructura organizativa (sucursal, departamento, punto de expedición, depósito, acceso por sucursal), personas con roles por empresa y validación de RUC, funcionalidades por rubro, parámetros y períodos.
-- App 200 **ERP Configuración** con 56 páginas, empresa activa en la sesión (`APP_EMPRESA_ID`) y página para probar el cálculo de impuestos.
+- Módulo General del ERP (30 tablas): monedas y cotizaciones, motor de impuestos configurable con vigencias y categorías fiscales, estructura organizativa (sucursal, departamento, punto de expedición, depósito, acceso por sucursal), personas con roles por empresa y validación de RUC, funcionalidades por rubro, parámetros y períodos.
+- App 200 **ERP Configuración** con 62 páginas, empresa activa en la sesión (`APP_EMPRESA_ID`) y página para probar el cálculo de impuestos.
 - Pruebas E2E del ERP (apertura de pantallas y motor de impuestos).
-### Pendiente de verificar
-- Instalación en DEV, `verificar_consultas.sql` y suite con login: no se corrieron (sin conexión a la base desde el asistente).
+### Verificado en DEV
+- Instalación sin objetos inválidos, importación de la app 200, `verificar_consultas.sql` (50 consultas, 0 con error) y suite Playwright del ERP (33/33).
+### Corregido
+- ORA-12839 en los datos iniciales sobre Autonomous (DML paralelo).
+- El motor de impuestos devuelve un resultado vacío cuando faltan datos, en lugar de un error.
+### Problemas conocidos
+- La suite Playwright de ADM con login sigue apuntando a las pantallas anteriores.
 
 ## [v0.3.0] - 2026-10-03
 ### Cambiado

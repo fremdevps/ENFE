@@ -6,6 +6,10 @@
 -- Requiere que ADM esté instalado (adm_seg_aplicacion con codigo = 'ERP').
 -- =============================================================================
 
+-- Autonomous Database habilita DML paralelo por defecto: varios merge sobre tablas
+-- relacionadas en la misma transacción darían ORA-12839.
+alter session disable parallel dml;
+
 -- Módulos del ERP -------------------------------------------------------------
 merge into adm_seg_modulo t
 using (select a.aplicacion_id, m.codigo, m.nombre, m.icono, m.orden

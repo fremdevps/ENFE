@@ -8,6 +8,10 @@
 -- ciudades): se carga aparte desde la publicación de la DNIT.
 -- =============================================================================
 
+-- Autonomous Database habilita DML paralelo por defecto: varios merge sobre tablas
+-- relacionadas en la misma transacción darían ORA-12839.
+alter session disable parallel dml;
+
 -- Monedas ----------------------------------------------------------------------
 merge into erp_gen_moneda t
 using (select 'PYG' codigo, 'Guaraní'          nombre, '₲'   simbolo, 0 decimales, 2 decimales_precio from dual union all
@@ -212,6 +216,10 @@ commit;
 -- Mensajes de error por constraint del módulo General del ERP (idempotente).
 -- Los usa el manejador central adm_gen_error_api.
 -- =============================================================================
+
+-- Autonomous Database habilita DML paralelo por defecto: varios merge sobre tablas
+-- relacionadas en la misma transacción darían ORA-12839.
+alter session disable parallel dml;
 merge into adm_gen_mensaje_error t
 using (
     select 'UK_ERP_MON_CODIGO'              codigo, 'Ya existe una moneda con ese código.' mensaje from dual union all

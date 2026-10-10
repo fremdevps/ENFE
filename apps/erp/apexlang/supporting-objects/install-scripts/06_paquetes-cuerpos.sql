@@ -340,6 +340,11 @@ as
                 i_impuesto_id, null, 'EXENTO', 0, i_pct_base, i_monto_exento, i_monto_exento, 0);
         end agregar_exento;
     begin
+        -- Sin datos que calcular (ej. pantalla recién abierta): resultado vacío, no error.
+        if i_categoria_fiscal_id is null or i_monto is null or i_moneda_id is null then
+            return v_resultado;
+        end if;
+
         begin
             select estado into v_estado
               from erp_gen_categoria_fiscal
