@@ -92,3 +92,42 @@ using (select r.rol_id, p.permiso_id
     insert (rol_id, permiso_id) values (s.rol_id, s.permiso_id);
 
 commit;
+
+-- Permisos del módulo Inventario -------------------------------------------------
+merge into adm_seg_permiso t
+using (select m.modulo_id, p.codigo, p.nombre
+         from adm_seg_modulo m
+         join adm_seg_aplicacion a on a.aplicacion_id = m.aplicacion_id and a.codigo = 'ERP'
+        cross join (select 'ERP_STK_CATALOGO_GESTIONAR' codigo, 'Gestionar catálogos de inventario (unidades, categorías, marcas, ubicaciones, vehículos, rutas)' nombre from dual union all
+                    select 'ERP_STK_PRODUCTO_VER', 'Consultar productos' from dual union all
+                    select 'ERP_STK_PRODUCTO_GESTIONAR', 'Crear y modificar productos' from dual union all
+                    select 'ERP_STK_LOTE_GESTIONAR', 'Crear y modificar lotes y números de serie' from dual union all
+                    select 'ERP_STK_SALDO_VER', 'Consultar saldos y movimientos de stock' from dual union all
+                    select 'ERP_STK_COSTO_VER', 'Ver costos y valorización del stock' from dual union all
+                    select 'ERP_STK_MOVIMIENTO_REGISTRAR', 'Registrar ajustes y movimientos manuales de stock' from dual union all
+                    select 'ERP_STK_MOVIMIENTO_ANULAR', 'Anular movimientos manuales de stock' from dual union all
+                    select 'ERP_STK_RESERVA_GESTIONAR', 'Reservar y liberar stock' from dual union all
+                    select 'ERP_STK_TRASLADO_VER', 'Consultar traslados y mercadería en tránsito' from dual union all
+                    select 'ERP_STK_TRASLADO_CREAR', 'Crear, modificar y solicitar traslados' from dual union all
+                    select 'ERP_STK_TRASLADO_APROBAR', 'Aprobar y rechazar traslados' from dual union all
+                    select 'ERP_STK_TRASLADO_DESPACHAR', 'Despachar traslados' from dual union all
+                    select 'ERP_STK_TRASLADO_RECIBIR', 'Recibir traslados y generar devoluciones' from dual union all
+                    select 'ERP_STK_TRASLADO_RESOLVER', 'Resolver diferencias de traslados (pérdida, devolución)' from dual union all
+                    select 'ERP_STK_TRASLADO_ANULAR', 'Anular traslados' from dual) p
+        where m.codigo = 'STK') s
+   on (t.codigo = s.codigo)
+ when not matched then
+    insert (modulo_id, codigo, nombre, tipo)
+    values (s.modulo_id, s.codigo, s.nombre, 'ACCION');
+
+-- El administrador del ERP recibe también los permisos de inventario
+merge into adm_seg_rol_permiso t
+using (select r.rol_id, p.permiso_id
+         from adm_seg_rol r
+         join adm_seg_permiso p on p.codigo like 'ERP\_STK\_%' escape '\'
+        where r.codigo = 'ERP_ADMINISTRADOR') s
+   on (t.rol_id = s.rol_id and t.permiso_id = s.permiso_id)
+ when not matched then
+    insert (rol_id, permiso_id) values (s.rol_id, s.permiso_id);
+
+commit;
