@@ -8,6 +8,7 @@ Formato: [SemVer](https://semver.org/lang/es/). Ver `.claude/skills/git-flujo/SK
 - Módulo General del ERP (30 tablas): monedas y cotizaciones, motor de impuestos configurable con vigencias y categorías fiscales, estructura organizativa (sucursal, departamento, punto de expedición, depósito, acceso por sucursal), personas con roles por empresa y validación de RUC, funcionalidades por rubro, parámetros y períodos.
 - App 200 **ERP Configuración** con 62 páginas, empresa activa en la sesión (`APP_EMPRESA_ID`) y página para probar el cálculo de impuestos.
 - Pruebas E2E del ERP (apertura de pantallas y motor de impuestos).
+- **Historial de cambios** en ADM: tabla `adm_aud_cambio` (JSON con antes/después por campo), triggers generados para las tablas maestras, pantalla con filtros, región Historial en los formularios, permiso `ADM_AUD_CAMBIO_VER` y purga mensual (retención 84 meses); `docs/arquitectura-seguridad.md`.
 ### Verificado en DEV
 - Instalación sin objetos inválidos, importación de la app 200, `verificar_consultas.sql` (50 consultas, 0 con error) y suite Playwright del ERP (33/33).
 ### Corregido
