@@ -507,3 +507,228 @@ as
 
 end adm_gen_error_api;
 /
+
+-- >>> apps/adm/database/packages/adm_aud_cambio_utl.pks
+create or replace package adm_aud_cambio_utl
+    authid definer
+as
+-- =============================================================================
+-- Paquete : adm_aud_cambio_utl   (capa utl)
+-- Desc    : Utilitarios del historial de cambios (adm_aud_cambio). Sin DML.
+--
+--   1. generar_trigger: produce el código del trigger compound
+--      trg_<app>_<abrev>_aiud de una tabla, leyendo el diccionario de datos.
+--      El resultado se guarda en apps/<app>/database/triggers/ y se versiona
+--      (tools/db/generar_trigger_historial.sql lo hace en un paso).
+--   2. agregar_*: los usan los triggers generados para armar el detalle JSON
+--      [{"col":…,"antes":…,"despues":…}] solo con las columnas que cambiaron.
+--
+--   Reglas del generador:
+--   - App = primer tramo del nombre de la tabla; abreviatura = "Abrev: xxx"
+--     del comentario de la tabla.
+--   - La PK debe ser una sola columna numérica: va en registro_id (no en el JSON).
+--   - empresa_id se registra si la tabla tiene esa columna.
+--   - Nunca se auditan: creado_por, fecha_creacion, modificado_por,
+--     fecha_modificacion, columnas LOB / de tipos no escalares, virtuales u
+--     ocultas, ni las indicadas en i_columnas_excluidas.
+--   - Columnas reservadas (el nombre contiene password, hash, token, clave,
+--     secret o salt y son texto de más de 1 carácter, número o raw; más las de
+--     i_columnas_reservadas): solo se registra QUE cambiaron, nunca el valor.
+--   - Si la tabla tiene una FK on delete cascade (o set null), las bajas (o
+--     modificaciones) se insertan fila por fila: Oracle no ejecuta la sección
+--     "after statement" de la tabla hija cuando el cambio llega desde el padre.
+--   - Fechas en ISO 8601; números como número JSON, sin máscara; raw en hexadecimal.
+-- =============================================================================
+
+    c_err_no_auditable  constant pls_integer := -20042;
+
+    -- i_columna_padre     : columna numérica con la PK del registro padre (ej. usuario_id
+    --                       en adm_seg_usuario_rol) -> registro_padre_id.
+    -- i_columnas_excluidas: lista separada por comas de columnas que no interesa auditar
+    --                       (ej. contadores o fechas que cambian en cada ingreso).
+    -- i_columnas_reservadas: lista separada por comas de columnas sensibles adicionales.
+    -- Devuelve un script completo (termina con "/").
+    function generar_trigger (
+        i_tabla                in varchar2,
+        i_columna_padre        in varchar2 default null,
+        i_columnas_excluidas   in varchar2 default null,
+        i_columnas_reservadas  in varchar2 default null
+    ) return clob;
+
+    -- Nombre del trigger de historial de una tabla: trg_<app>_<abrev>_aiud.
+    function obtener_nombre_trigger (
+        i_tabla  in varchar2
+    ) return varchar2;
+
+    -- Genera y compila el trigger en el esquema (DDL). Para pruebas y ambientes
+    -- de desarrollo; lo normal es instalar el archivo versionado.
+    procedure crear_trigger (
+        i_tabla                in varchar2,
+        i_columna_padre        in varchar2 default null,
+        i_columnas_excluidas   in varchar2 default null,
+        i_columnas_reservadas  in varchar2 default null
+    );
+
+    -- Agregan {"col","antes","despues"} a io_detalle solo si el valor cambió
+    -- (comparación segura con nulos). En un alta i_antes llega nulo y en una
+    -- baja i_despues llega nulo, así que una misma llamada sirve para I, U y D.
+    procedure agregar_texto (
+        io_detalle  in out nocopy json_array_t,
+        i_columna   in varchar2,
+        i_antes     in varchar2,
+        i_despues   in varchar2
+    );
+
+    procedure agregar_numero (
+        io_detalle  in out nocopy json_array_t,
+        i_columna   in varchar2,
+        i_antes     in number,
+        i_despues   in number
+    );
+
+    procedure agregar_fecha (
+        io_detalle  in out nocopy json_array_t,
+        i_columna   in varchar2,
+        i_antes     in date,
+        i_despues   in date
+    );
+
+    procedure agregar_fecha_hora (
+        io_detalle  in out nocopy json_array_t,
+        i_columna   in varchar2,
+        i_antes     in timestamp,
+        i_despues   in timestamp
+    );
+
+    procedure agregar_fecha_hora_tz (
+        io_detalle  in out nocopy json_array_t,
+        i_columna   in varchar2,
+        i_antes     in timestamp with time zone,
+        i_despues   in timestamp with time zone
+    );
+
+    procedure agregar_binario (
+        io_detalle  in out nocopy json_array_t,
+        i_columna   in varchar2,
+        i_antes     in raw,
+        i_despues   in raw
+    );
+
+    -- Columna reservada: {"col", "antes":null, "despues":null, "reservado":true}.
+    -- La comparación la hace el trigger; el valor nunca sale de él.
+    procedure agregar_reservado (
+        io_detalle  in out nocopy json_array_t,
+        i_columna   in varchar2
+    );
+
+end adm_aud_cambio_utl;
+/
+
+-- >>> apps/adm/database/packages/adm_aud_cambio_ctr.pks
+create or replace package adm_aud_cambio_ctr
+    authid definer
+    accessible by (package adm_aud_cambio_api, trigger trg_adm_cam_bud)
+as
+-- =============================================================================
+-- Paquete : adm_aud_cambio_ctr   (capa ctr)
+-- Tabla   : adm_aud_cambio
+-- Desc    : Inserción por lote del historial de cambios y borrado por retención.
+--           NO es autónomo: si la transacción del usuario se deshace, su
+--           historial también.
+-- =============================================================================
+
+    c_err_inmutable  constant pls_integer := -20040;
+
+    -- Un cambio pendiente de insertar. cambios viaja como varchar2 (hasta 32767
+    -- bytes) para no crear un LOB temporal por fila.
+    type t_cambio is record (
+        app_codigo         adm_aud_cambio.app_codigo%type,
+        tabla              adm_aud_cambio.tabla%type,
+        registro_id        adm_aud_cambio.registro_id%type,
+        registro_padre_id  adm_aud_cambio.registro_padre_id%type,
+        empresa_id         adm_aud_cambio.empresa_id%type,
+        operacion          adm_aud_cambio.operacion%type,
+        cambios            varchar2(32767)
+    );
+    type t_cambios is table of t_cambio index by pls_integer;
+
+    -- Inserta todas las filas con un solo FORALL. Usuario, sesión APEX,
+    -- transacción y módulo se toman una vez por lote.
+    procedure insertar_lote (
+        i_cambios  in t_cambios
+    );
+
+    -- Fila cuyo JSON supera los 32767 bytes (caso raro).
+    procedure insertar (
+        i_cambio   in t_cambio,
+        i_cambios  in adm_aud_cambio.cambios%type
+    );
+
+    -- Purga: borra lo anterior a la fecha límite. Único delete permitido.
+    procedure eliminar_anteriores (
+        i_fecha_limite  in  adm_aud_cambio.fecha%type,
+        o_filas         out number
+    );
+
+    -- La consulta trg_adm_cam_bud para dejar pasar solo el delete de la purga.
+    function es_purga_activa return boolean;
+
+end adm_aud_cambio_ctr;
+/
+
+-- >>> apps/adm/database/packages/adm_aud_cambio_api.pks
+create or replace package adm_aud_cambio_api
+    authid definer
+as
+-- =============================================================================
+-- Paquete : adm_aud_cambio_api   (capa api)
+-- Desc    : Historial de cambios de datos (adm_aud_cambio) para todas las apps.
+--
+--   Registro : lo hacen los triggers trg_<app>_<abrev>_aiud generados con
+--              adm_aud_cambio_utl.generar_trigger (agregar por fila + registrar
+--              por sentencia). Nadie más debe llamarlos.
+--   Consulta : vistas adm_aud_cambio_v (cabecera) y adm_aud_cambio_det_v
+--              (una fila por campo: Campo / Antes / Después).
+--   Purga    : job_adm_purgar_cambio ejecuta ejecutar_purga cada mes.
+-- =============================================================================
+
+    c_err_retencion    constant pls_integer := -20041;
+
+    c_meses_retencion  constant pls_integer := 84;    -- 7 años
+    c_filas_lote       constant pls_integer := 500;   -- filas por FORALL en sentencias masivas
+
+    subtype t_cambios is adm_aud_cambio_ctr.t_cambios;
+
+    -- Acumula el cambio de una fila. No hace nada si i_detalle está vacío (un
+    -- update que no cambió ningún valor auditado no deja historial). Cada
+    -- c_filas_lote filas inserta lo acumulado para acotar la memoria.
+    procedure agregar (
+        io_cambios           in out nocopy t_cambios,
+        i_app_codigo         in adm_aud_cambio.app_codigo%type,
+        i_tabla              in adm_aud_cambio.tabla%type,
+        i_registro_id        in adm_aud_cambio.registro_id%type,
+        i_registro_padre_id  in adm_aud_cambio.registro_padre_id%type,
+        i_empresa_id         in adm_aud_cambio.empresa_id%type,
+        i_operacion          in adm_aud_cambio.operacion%type,
+        i_detalle            in json_array_t
+    );
+
+    -- Inserta lo acumulado (un solo lote) y vacía la colección.
+    procedure registrar (
+        io_cambios  in out nocopy t_cambios
+    );
+
+    -- Borra el historial anterior a i_meses_retencion meses completos.
+    -- No hace commit (lo decide quien llama).
+    procedure purgar (
+        i_meses_retencion  in  number default c_meses_retencion,
+        o_filas            out number
+    );
+
+    -- Para el job: purga, confirma y deja el error en la bitácora si falla.
+    procedure ejecutar_purga (
+        i_meses_retencion  in number default c_meses_retencion
+    );
+
+end adm_aud_cambio_api;
+/

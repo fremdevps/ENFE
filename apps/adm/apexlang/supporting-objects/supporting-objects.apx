@@ -51,21 +51,39 @@ supportingObject (
         }
     )
 
-    installScript datos-iniciales (
+    installScript triggers-de-historial (
         execution {
             sequence: 60
         }
         script {
-            contentFile: 06_datos-iniciales.sql
+            contentFile: 06_triggers-de-historial.sql
+        }
+    )
+
+    installScript jobs (
+        execution {
+            sequence: 70
+        }
+        script {
+            contentFile: 07_jobs.sql
+        }
+    )
+
+    installScript datos-iniciales (
+        execution {
+            sequence: 80
+        }
+        script {
+            contentFile: 08_datos-iniciales.sql
         }
     )
 
     installScript superadmin (
         execution {
-            sequence: 70
+            sequence: 90
         }
         script {
-            contentFile: 07_superadmin.sql
+            contentFile: 09_superadmin.sql
         }
     )
 )
