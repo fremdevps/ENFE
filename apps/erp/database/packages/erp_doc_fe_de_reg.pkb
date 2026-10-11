@@ -558,7 +558,10 @@ as
         exigir(regexp_like(i_version_formato, '^[0-9]{3}$'), 'la versión del formato debe tener 3 dígitos.');
 
         r_de.version_formato  := i_version_formato;
-        r_de.codigo_seguridad := i_codigo_seguridad;
+        -- sin código de seguridad se genera uno aleatorio distinto del número del documento (§10.3)
+        r_de.codigo_seguridad := coalesce(i_codigo_seguridad,
+                                          erp_doc_fe_cdc_utl.generar_codigo_seguridad(
+                                              i_numero_documento => obtener_numero(v_timbrado, 'numero_documento')));
         -- sin fracción de segundos: el formato del manual llega hasta el segundo
         r_de.fecha_firma      := to_timestamp(to_char(i_fecha_firma, 'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS');
         r_de.tipo_de          := obtener_numero(v_datos, 'tipo_de');
@@ -607,7 +610,7 @@ as
                         i_tipo_contribuyente => obtener_numero(v_emisor, 'tipo_contribuyente'),
                         i_fecha_emision      => cast(r_de.fecha_emision as date),
                         i_tipo_emision       => r_de.tipo_emision,
-                        i_codigo_seguridad   => i_codigo_seguridad);
+                        i_codigo_seguridad   => r_de.codigo_seguridad);
 
         dbms_lob.createtemporary(v_xml, true, dbms_lob.session);
 
@@ -620,7 +623,7 @@ as
         abrir(v_xml, 'gOpeDE');
         agregar_numero(v_xml, 'iTipEmi', r_de.tipo_emision, true);
         agregar_texto(v_xml, 'dDesTipEmi', describir('TIPO_EMISION', r_de.tipo_emision));
-        agregar_texto(v_xml, 'dCodSeg', i_codigo_seguridad);
+        agregar_texto(v_xml, 'dCodSeg', r_de.codigo_seguridad);
         agregar_texto(v_xml, 'dInfoEmi', obtener_texto(v_datos, 'info_emisor'));
         agregar_texto(v_xml, 'dInfoFisc', obtener_texto(v_datos, 'info_fisco'));
         cerrar(v_xml, 'gOpeDE');

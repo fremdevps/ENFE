@@ -38,6 +38,23 @@ prompt == Tablas
 @@../database/tables/erp_gen_parametro.sql
 @@../database/tables/erp_gen_periodo.sql
 @@../database/tables/erp_gen_periodo_habilita.sql
+@@../database/tables/erp_doc_clase_documento.sql
+@@../database/tables/erp_doc_tipo_documento.sql
+@@../database/tables/erp_doc_tipo_doc_fiscal.sql
+@@../database/tables/erp_doc_motivo.sql
+@@../database/tables/erp_doc_timbrado.sql
+@@../database/tables/erp_doc_numerador.sql
+@@../database/tables/erp_doc_numerador_usuario.sql
+@@../database/tables/erp_doc_numero_inutilizado.sql
+@@../database/tables/erp_doc_fe_certificado.sql
+@@../database/tables/erp_doc_fe_config.sql
+@@../database/tables/erp_doc_fe_actividad.sql
+@@../database/tables/erp_doc_fe_cod_respuesta.sql
+@@../database/tables/erp_doc_fe_lote.sql
+@@../database/tables/erp_doc_fe_documento.sql
+@@../database/tables/erp_doc_fe_lote_detalle.sql
+@@../database/tables/erp_doc_fe_evento.sql
+@@../database/tables/erp_doc_fe_log.sql
 
 prompt == Triggers
 @@../database/triggers/trg_erp_mon_bu.sql
@@ -70,6 +87,23 @@ prompt == Triggers
 @@../database/triggers/trg_erp_par_bu.sql
 @@../database/triggers/trg_erp_peri_bu.sql
 @@../database/triggers/trg_erp_peha_bu.sql
+@@../database/triggers/trg_erp_cldo_bu.sql
+@@../database/triggers/trg_erp_tido_bu.sql
+@@../database/triggers/trg_erp_tdfi_bu.sql
+@@../database/triggers/trg_erp_moti_bu.sql
+@@../database/triggers/trg_erp_timb_bu.sql
+@@../database/triggers/trg_erp_nume_bu.sql
+@@../database/triggers/trg_erp_nuus_bu.sql
+@@../database/triggers/trg_erp_nuin_bu.sql
+@@../database/triggers/trg_erp_fece_bu.sql
+@@../database/triggers/trg_erp_feco_bu.sql
+@@../database/triggers/trg_erp_feac_bu.sql
+@@../database/triggers/trg_erp_fecr_bu.sql
+@@../database/triggers/trg_erp_felo_bu.sql
+@@../database/triggers/trg_erp_fedo_bu.sql
+@@../database/triggers/trg_erp_feld_bu.sql
+@@../database/triggers/trg_erp_feev_bu.sql
+@@../database/triggers/trg_erp_felg_bu.sql
 
 prompt == Vistas
 @@../database/views/erp_gen_usuario_empresa_v.sql
@@ -93,6 +127,26 @@ prompt == Paquetes (especificaciones)
 @@../database/packages/erp_gen_periodo_api.pks
 @@../database/packages/erp_gen_persona_api.pks
 @@../database/packages/erp_gen_funcionalidad_api.pks
+@@../database/packages/erp_doc_fe_xml_utl.pks
+@@../database/packages/erp_doc_fe_cdc_utl.pks
+@@../database/packages/erp_doc_fe_secreto_utl.pks
+@@../database/packages/erp_doc_fe_firma_utl.pks
+@@../database/packages/erp_doc_fe_qr_utl.pks
+@@../database/packages/erp_doc_numerador_ctr.pks
+@@../database/packages/erp_doc_numero_inutilizado_ctr.pks
+@@../database/packages/erp_doc_fe_documento_ctr.pks
+@@../database/packages/erp_doc_fe_lote_ctr.pks
+@@../database/packages/erp_doc_fe_log_ctr.pks
+@@../database/packages/erp_doc_fe_certificado_ctr.pks
+@@../database/packages/erp_doc_fe_config_ctr.pks
+@@../database/packages/erp_doc_fe_de_reg.pks
+@@../database/packages/erp_doc_fe_cola_reg.pks
+@@../database/packages/erp_doc_numerador_reg.pks
+@@../database/packages/erp_doc_tipo_documento_api.pks
+@@../database/packages/erp_doc_numerador_api.pks
+@@../database/packages/erp_doc_fe_cola_api.pks
+@@../database/packages/erp_doc_fe_config_api.pks
+@@../database/packages/erp_doc_fe_documento_api.pks
 
 prompt == Paquetes (cuerpos)
 @@../database/packages/erp_gen_parametro_ctr.pkb
@@ -109,6 +163,26 @@ prompt == Paquetes (cuerpos)
 @@../database/packages/erp_gen_periodo_api.pkb
 @@../database/packages/erp_gen_persona_api.pkb
 @@../database/packages/erp_gen_funcionalidad_api.pkb
+@@../database/packages/erp_doc_fe_xml_utl.pkb
+@@../database/packages/erp_doc_fe_cdc_utl.pkb
+@@../database/packages/erp_doc_fe_secreto_utl.pkb
+@@../database/packages/erp_doc_fe_firma_utl.pkb
+@@../database/packages/erp_doc_fe_qr_utl.pkb
+@@../database/packages/erp_doc_numerador_ctr.pkb
+@@../database/packages/erp_doc_numero_inutilizado_ctr.pkb
+@@../database/packages/erp_doc_fe_documento_ctr.pkb
+@@../database/packages/erp_doc_fe_lote_ctr.pkb
+@@../database/packages/erp_doc_fe_log_ctr.pkb
+@@../database/packages/erp_doc_fe_certificado_ctr.pkb
+@@../database/packages/erp_doc_fe_config_ctr.pkb
+@@../database/packages/erp_doc_fe_de_reg.pkb
+@@../database/packages/erp_doc_fe_cola_reg.pkb
+@@../database/packages/erp_doc_numerador_reg.pkb
+@@../database/packages/erp_doc_tipo_documento_api.pkb
+@@../database/packages/erp_doc_numerador_api.pkb
+@@../database/packages/erp_doc_fe_cola_api.pkb
+@@../database/packages/erp_doc_fe_config_api.pkb
+@@../database/packages/erp_doc_fe_documento_api.pkb
 
 prompt == Registro en seguridad central
 @@../database/data/erp_seg_registro.sql
@@ -116,6 +190,8 @@ prompt == Registro en seguridad central
 prompt == Datos iniciales
 @@../database/data/erp_gen_datos_iniciales.sql
 @@../database/data/erp_gen_mensajes_error.sql
+@@../database/data/erp_doc_datos_iniciales.sql
+@@../database/data/erp_doc_mensajes_error.sql
 
 prompt == Objetos inválidos (debe estar vacío)
 select object_name, object_type from user_objects

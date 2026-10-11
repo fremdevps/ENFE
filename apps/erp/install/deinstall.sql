@@ -15,6 +15,13 @@ declare
 begin
     for r in (select column_value nombre
                 from table(sys.odcivarchar2list(
+                         'erp_doc_fe_documento_api', 'erp_doc_fe_config_api', 'erp_doc_fe_cola_api',
+                         'erp_doc_numerador_api', 'erp_doc_tipo_documento_api', 'erp_doc_numerador_reg',
+                         'erp_doc_fe_cola_reg', 'erp_doc_fe_de_reg', 'erp_doc_fe_config_ctr',
+                         'erp_doc_fe_certificado_ctr', 'erp_doc_fe_log_ctr', 'erp_doc_fe_lote_ctr',
+                         'erp_doc_fe_documento_ctr', 'erp_doc_numero_inutilizado_ctr', 'erp_doc_numerador_ctr',
+                         'erp_doc_fe_qr_utl', 'erp_doc_fe_firma_utl', 'erp_doc_fe_secreto_utl',
+                         'erp_doc_fe_cdc_utl', 'erp_doc_fe_xml_utl',
                          'erp_gen_funcionalidad_api', 'erp_gen_persona_api', 'erp_gen_periodo_api', 'erp_gen_impuesto_api',
                          'erp_gen_moneda_api', 'erp_gen_parametro_api', 'erp_gen_persona_reg', 'erp_gen_periodo_reg',
                          'erp_gen_impuesto_reg', 'erp_gen_moneda_reg', 'erp_gen_empresa_func_ctr', 'erp_gen_persona_ctr',
@@ -28,6 +35,12 @@ begin
 
     for r in (select column_value nombre
                 from table(sys.odcivarchar2list(
+                         'erp_doc_fe_log', 'erp_doc_fe_evento', 'erp_doc_fe_lote_detalle',
+                         'erp_doc_fe_documento', 'erp_doc_fe_lote', 'erp_doc_fe_cod_respuesta',
+                         'erp_doc_fe_actividad', 'erp_doc_fe_config', 'erp_doc_fe_certificado',
+                         'erp_doc_numero_inutilizado', 'erp_doc_numerador_usuario', 'erp_doc_numerador',
+                         'erp_doc_timbrado', 'erp_doc_motivo', 'erp_doc_tipo_doc_fiscal',
+                         'erp_doc_tipo_documento', 'erp_doc_clase_documento',
                          'erp_gen_periodo_habilita', 'erp_gen_periodo', 'erp_gen_parametro', 'erp_gen_persona_rol',
                          'erp_gen_tipo_rol', 'erp_gen_persona_contacto', 'erp_gen_persona_direccion', 'erp_gen_persona_documento',
                          'erp_gen_persona', 'erp_gen_tipo_doc_identidad', 'erp_stk_deposito', 'erp_gen_usuario_sucursal',

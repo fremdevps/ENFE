@@ -53,6 +53,24 @@ using (select m.modulo_id, p.codigo, p.nombre
     insert (modulo_id, codigo, nombre, tipo)
     values (s.modulo_id, s.codigo, s.nombre, 'ACCION');
 
+-- Permisos del módulo Documentos ------------------------------------------------
+merge into adm_seg_permiso t
+using (select m.modulo_id, p.codigo, p.nombre
+         from adm_seg_modulo m
+         join adm_seg_aplicacion a on a.aplicacion_id = m.aplicacion_id and a.codigo = 'ERP'
+        cross join (select 'ERP_DOC_CATALOGO_GESTIONAR' codigo, 'Gestionar tipos de documento, códigos fiscales y motivos' nombre from dual union all
+                    select 'ERP_DOC_TIMBRADO_GESTIONAR', 'Gestionar timbrados, numeradores y usuarios autorizados' from dual union all
+                    select 'ERP_DOC_NUMERO_INUTILIZAR', 'Anular e inutilizar números de comprobantes' from dual union all
+                    select 'ERP_DOC_FE_CONFIGURAR', 'Configurar la facturación electrónica (certificado, CSC, ambiente)' from dual union all
+                    select 'ERP_DOC_FE_VER', 'Consultar documentos electrónicos, lotes y bitácora' from dual union all
+                    select 'ERP_DOC_FE_REENVIAR', 'Reenviar documentos electrónicos detenidos' from dual union all
+                    select 'ERP_DOC_FE_EVENTO_REGISTRAR', 'Registrar eventos de documentos electrónicos (cancelación, inutilización)' from dual) p
+        where m.codigo = 'DOC') s
+   on (t.codigo = s.codigo)
+ when not matched then
+    insert (modulo_id, codigo, nombre, tipo)
+    values (s.modulo_id, s.codigo, s.nombre, 'ACCION');
+
 -- Rol base ---------------------------------------------------------------------
 merge into adm_seg_rol t
 using (select a.aplicacion_id, 'ERP_USUARIO' codigo, 'Usuario ERP' nombre,
