@@ -42,5 +42,31 @@ Diseño de cada módulo: `docs/arquitectura-erp.md`.
 | Tabla | Abrev. |
 |---|---|
 | erp_stk_deposito | dpo |
+| erp_stk_unidad | uni |
+| erp_stk_categoria | ctg |
+| erp_stk_marca | mar |
+| erp_stk_producto | pro |
+| erp_stk_deposito_ubicacion | dpub |
+| erp_stk_producto_codigo | prcd |
+| erp_stk_producto_unidad | prun |
+| erp_stk_producto_equiv | preq |
+| erp_stk_producto_deposito | prdp |
+| erp_stk_producto_proveedor | prpv |
+| erp_stk_kit | kit |
+| erp_stk_lote | lot |
+| erp_stk_vehiculo | veh |
+| erp_stk_usuario_deposito | usdp |
+| erp_stk_tipo_movimiento | timo |
+| erp_stk_movimiento | mov |
+| erp_stk_movimiento_item | moit |
+| erp_stk_saldo | sal |
+| erp_stk_numerador | stnu |
+| erp_stk_motivo_traslado | motr |
+| erp_stk_ruta_traslado | rutr |
+| erp_stk_traslado | tra |
+| erp_stk_traslado_item | trit |
+| erp_stk_traslado_recep | trre |
+| erp_stk_traslado_recep_det | trrd |
+| erp_stk_traslado_evento | trev |
 
 Referencias a ADM: `adm_gen_empresa` → `emp`, `adm_seg_usuario` → `usu` (ej. `fk_erp_suc_emp`).

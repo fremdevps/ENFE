@@ -13,6 +13,39 @@ declare
             if sqlcode not in (-942, -4043, -4080) then raise; end if;
     end ejecutar;
 begin
+    -- Inventario (stk): primero, porque depende del módulo general
+    for r in (select column_value nombre
+                from table(sys.odcivarchar2list(
+                         'erp_stk_traslado_api', 'erp_stk_lote_api', 'erp_stk_categoria_api',
+                         'erp_stk_producto_api', 'erp_stk_movimiento_api', 'erp_stk_traslado_reg',
+                         'erp_stk_producto_reg', 'erp_stk_movimiento_reg', 'erp_stk_traslado_evento_ctr',
+                         'erp_stk_traslado_recep_det_ctr', 'erp_stk_traslado_recep_ctr', 'erp_stk_traslado_item_ctr',
+                         'erp_stk_traslado_ctr', 'erp_stk_numerador_ctr', 'erp_stk_deposito_ubicacion_ctr',
+                         'erp_stk_lote_ctr', 'erp_stk_producto_ctr', 'erp_stk_categoria_ctr',
+                         'erp_stk_movimiento_item_ctr', 'erp_stk_movimiento_ctr', 'erp_stk_saldo_ctr',
+                         'erp_stk_comun_utl'))) loop
+        ejecutar('drop package ' || r.nombre);
+    end loop;
+    ejecutar('drop view erp_stk_traslado_transito_v');
+    ejecutar('drop view erp_stk_saldo_producto_v');
+    ejecutar('drop type erp_stk_tras_item_tab');
+    ejecutar('drop type erp_stk_tras_item_typ');
+    ejecutar('drop type erp_stk_mov_item_tab');
+    ejecutar('drop type erp_stk_mov_item_typ');
+    for r in (select column_value nombre
+                from table(sys.odcivarchar2list(
+                         'erp_stk_traslado_evento', 'erp_stk_traslado_recep_det', 'erp_stk_traslado_recep',
+                         'erp_stk_traslado_item', 'erp_stk_traslado', 'erp_stk_ruta_traslado',
+                         'erp_stk_motivo_traslado', 'erp_stk_numerador', 'erp_stk_saldo',
+                         'erp_stk_movimiento_item', 'erp_stk_movimiento', 'erp_stk_tipo_movimiento',
+                         'erp_stk_usuario_deposito', 'erp_stk_vehiculo', 'erp_stk_lote',
+                         'erp_stk_kit', 'erp_stk_producto_proveedor', 'erp_stk_producto_deposito',
+                         'erp_stk_producto_equiv', 'erp_stk_producto_unidad', 'erp_stk_producto_codigo',
+                         'erp_stk_deposito_ubicacion', 'erp_stk_producto', 'erp_stk_marca',
+                         'erp_stk_categoria', 'erp_stk_unidad'))) loop
+        ejecutar('drop table ' || r.nombre || ' cascade constraints purge');
+    end loop;
+
     for r in (select column_value nombre
                 from table(sys.odcivarchar2list(
                          'erp_gen_funcionalidad_api', 'erp_gen_persona_api', 'erp_gen_periodo_api', 'erp_gen_impuesto_api',
