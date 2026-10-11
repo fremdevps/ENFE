@@ -13,6 +13,11 @@ select c.cambio_id,
        c.usuario,
        c.app_codigo,
        c.tabla,
+       coalesce((select regexp_replace(tc.comments, '\.?\s*Abrev:.*$', null, 1, 1, 'i')
+                   from all_tab_comments tc
+                  where tc.owner = sys_context('userenv', 'current_schema')
+                    and tc.table_name = c.tabla),
+                lower(c.tabla)) entidad,
        c.registro_id,
        c.registro_padre_id,
        c.empresa_id,

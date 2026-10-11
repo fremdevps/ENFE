@@ -6,6 +6,19 @@ Patrón (recomendado por APEX para usuarios no técnicos):
   - Alta/edición: formulario en panel lateral (drawer modal) con ayuda por campo.
   - Al cerrar el panel, el listado se refresca solo.
 
+Historial de cambios (adm_aud_cambio), reutilizable por los generadores de otras apps:
+  - HISTORIAL = dict(auth=<authorization scheme>): con esto, cada pagina_formulario agrega la
+    región "Historial" (Campo / Antes / Después) del registro abierto, dentro del mismo
+    formulario (no abre otro modal). Por formulario: historial=dict(hijas=['tabla_hija', ...])
+    suma los cambios de tablas hijas (las que registran registro_padre_id) e historial=False
+    la quita.
+  - region_historial(num, pk, tabla, cfg): la misma región, para páginas armadas a mano.
+  - pagina_historial_cambios / pagina_historial_registro: listado general con filtros y su
+    modal de detalle (el modal se abre solo desde el listado, que es una página normal).
+  Desde otro generador (ej. erp_paginas.py, que importa este módulo como base) alcanza con:
+      base.HISTORIAL = dict(auth='erp-gen-historial-ver')
+  Sin asignar HISTORIAL (valor None) las páginas se generan igual que antes.
+
 Uso:  python tools/apexlang/adm_paginas.py
 Luego: apex validate -input apps/adm/apexlang
 """
@@ -13,6 +26,9 @@ import os
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PAGINAS = os.path.join(RAIZ, 'apps', 'adm', 'apexlang', 'pages')
+
+# Región "Historial" en los formularios: None = no se genera. Ver el encabezado del módulo.
+HISTORIAL = None
 
 
 # ----------------------------------------------------------------------------- utilidades
@@ -69,9 +85,15 @@ def comentario_columna(etiqueta, resumen=None):
 
 # ----------------------------------------------------------------------------- listado
 def pagina_listado(archivo, num, alias, titulo, auth, region, sql, pk, pagina_form, columnas, ayuda,
-                   comentario_region, texto_crear=None, auth_crear=None):
-    """columnas: (NOMBRE, encabezado, tipo NUMBER|STRING|DATE, resumen|None)"""
+                   comentario_region, texto_crear=None, auth_crear=None, filtros=None, enlace=None):
+    """columnas: (NOMBRE, encabezado, tipo NUMBER|STRING|DATE, resumen|None)
+       filtros: ítems sobre el reporte + botones Buscar/Limpiar; la consulta los usa como binds.
+                dict(n, tipo, etiqueta, lov, nulo, ayuda)
+       enlace:  link por fila a una página que no es el formulario de alta (listados de solo
+                lectura): dict(pagina, item, icono, titulo). No agrega el botón Crear."""
     o = cabecera(num, titulo, alias, auth, ayuda)
+    if filtros:
+        o += region_filtros(num, filtros)
     o += ["", f"    region {region} (", f"        name: {titulo}", "        type: interactiveReport",
           "        source {", "            location: localDatabase", "            type: sqlQuery",
           "            sqlQuery:" + code('sql', sql, 16), "        }",
@@ -84,6 +106,13 @@ def pagina_listado(archivo, num, alias, titulo, auth, region, sql, pk, pagina_fo
               f"                    P{pagina_form}_{pk}: #{pk}#", "                }",
               f"                clearCache: {pagina_form}", "            }",
               '            linkIcon: <span role="img" aria-label="Editar" class="fa fa-edit" title="Editar"></span>',
+              "        }"]
+    elif enlace:
+        o += ["        link {", "            linkColumn: customTarget", "            target: {",
+              f"                page: {enlace['pagina']}", "                items: {",
+              f"                    {enlace['item']}: #{pk}#", "                }",
+              f"                clearCache: {enlace['pagina']}", "            }",
+              f'            linkIcon: <span role="img" aria-label="{enlace["titulo"]}" class="fa {enlace["icono"]}" title="{enlace["titulo"]}"></span>',
               "        }"]
     o += ["        componentAppearance {", "            showNullValuesAs: -", "        }",
           "        pagination {", "            type: rowRangesXToY", "        }",
@@ -125,10 +154,12 @@ def pagina_listado(archivo, num, alias, titulo, auth, region, sql, pk, pagina_fo
 
 # ----------------------------------------------------------------------------- formulario (drawer)
 def pagina_formulario(archivo, num, alias, titulo, auth, tabla, pk, items, ayuda, permite_eliminar=True,
-                      procesamiento=None, extras=None):
+                      procesamiento=None, extras=None, historial=None):
     """items: dict(n=COLUMNA, tipo, etiqueta, req, lov, inline, ayuda, solo_alta, sin_fuente, ancho)
        procesamiento: None = guardado automático de APEX (catálogo simple);
-                      dict(CREAR=plsql, GUARDAR=plsql, ELIMINAR=plsql) = vía paquetes api."""
+                      dict(CREAR=plsql, GUARDAR=plsql, ELIMINAR=plsql) = vía paquetes api.
+       historial: None = según HISTORIAL (global); False = sin región; dict(hijas=[tablas]) = además
+                  muestra los cambios de esas tablas hijas."""
     o = cabecera(num, titulo, alias, auth, ayuda, modal=True)
     o += ["", "    region botones (", "        name: Botones", "        type: staticContent",
           "        layout {", "            sequence: 20", "            slot: REGION_POSITION_03", "        }",
@@ -208,6 +239,8 @@ def pagina_formulario(archivo, num, alias, titulo, auth, tabla, pk, items, ayuda
         o += boton('eliminar', 'ELIMINAR', 'Eliminar', 20, 'DELETE', 'delete', 'itemIsNotNull', confirmar=True)
     o += boton('guardar', 'GUARDAR', 'Guardar cambios', 30, 'NEXT', 'update', 'itemIsNotNull', hot=True)
     o += boton('crear', 'CREAR', 'Crear', 40, 'NEXT', 'insert', 'itemIsNull', hot=True)
+    if HISTORIAL and historial is not False:
+        o += region_historial(num, pk, tabla, dict(HISTORIAL, **(historial or {})))
     o += ["", "    dynamicAction cerrar-panel (", "        name: Cancelar", "        execution {", "            sequence: 10",
           "        }", "        when {", "            event: click", "            selectionType: button", "            button: @cancelar",
           "        }", "", "        action cancelar-dialogo (", "            action: cancelDialog", "            execution {",
@@ -302,6 +335,154 @@ def pagina_accion(archivo, num, alias, titulo, auth, ayuda, items, botones, proc
     guardar(archivo, o)
 
 
+# ----------------------------------------------------------------------------- historial de cambios
+def region_filtros(num, filtros):
+    """Región de filtros de un listado: los ítems guardan su valor al presionar Buscar."""
+    o = ["", "    region filtros (", "        name: Filtros", "        type: staticContent", "        layout {", "            sequence: 15",
+         "            slot: BODY", "        }", "        appearance {", "            template: @/standard",
+         "            templateOptions: #DEFAULT#", "        }", "    )"]
+    for i, f in enumerate(filtros):
+        o += ["", f"    pageItem P{num}_{f['n']} (", f"        type: {f['tipo']}", "        label {", f"            label: {f['etiqueta']}", "        }",
+              "        layout {", f"            sequence: {(i + 1) * 10}", "            region: @filtros", "            slot: regionBody"]
+        if i % 3:
+            o.append("            startNewRow: false")
+        o += ["        }", "        appearance {", "            template: @/optional-floating", "            templateOptions: #DEFAULT#", "        }"]
+        if f.get('lov'):
+            o += ["        lov {", "            type: sharedComponent", f"            lov: @{f['lov']}", "            displayNullValue: true",
+                  f"            nullDisplayValue: {f.get('nulo', '- Todos -')}", "        }"]
+        o += ["        help {", f"            helpText: {f['ayuda']}", "        }", "    )"]
+    o += ["", "    button buscar (", "        buttonName: BUSCAR", "        label: Buscar", "        layout {", "            sequence: 20",
+          "            region: @filtros", "            slot: NEXT", "        }", "        appearance {",
+          "            buttonTemplate: @/text-with-icon", "            hot: true", "            templateOptions: #DEFAULT#",
+          "            icon: fa-search", "        }", "    )",
+          "", "    button limpiar (", "        buttonName: LIMPIAR", "        label: Limpiar filtros", "        layout {", "            sequence: 10",
+          "            region: @filtros", "            slot: NEXT", "        }", "        appearance {", "            buttonTemplate: @/text",
+          "            templateOptions: #DEFAULT#", "        }", "        behavior {", "            action: redirectThisApp",
+          "            target: {", f"                page: {num}", f"                clearCache: {num}", "            }", "        }", "    )"]
+    return o
+
+
+def region_historial(num, pk, tabla, cfg, seq=90, slot='contentBody'):
+    """Región "Historial" de un formulario: cambios del registro abierto (y de sus tablas hijas,
+    cfg['hijas']) con Campo / Antes / Después. Va dentro de la misma página (nunca abre un modal
+    sobre el formulario), plegada; solo en edición y con el permiso cfg['auth']."""
+    sql = (f"select to_char(h.fecha, 'DD/MM/YYYY HH24:MI') fecha,\n"
+           "       h.usuario,\n"
+           "       h.operacion_desc || ' - ' || h.entidad cambio,\n"
+           "       h.campo,\n"
+           "       h.antes,\n"
+           "       h.despues\n"
+           "  from (select d.*\n"
+           "          from adm_aud_cambio_det_v d\n"
+           f"         where d.tabla = '{tabla.upper()}'\n"
+           f"           and d.registro_id = :P{num}_{pk}")
+    if cfg.get('hijas'):
+        hijas = ", ".join("'" + h.upper() + "'" for h in cfg['hijas'])
+        sql += ("\n        union all\n"
+                "        select d.*\n"
+                "          from adm_aud_cambio_det_v d\n"
+                f"         where d.tabla in ({hijas})\n"
+                f"           and d.registro_padre_id = :P{num}_{pk}")
+    sql += ") h\n order by h.fecha desc, h.cambio_id desc, h.orden"
+    o = ["", "    region historial (", "        name: Historial", "        type: classicReport",
+         "        source {", "            location: localDatabase", "            type: sqlQuery",
+         "            sqlQuery:" + code('sql', sql, 16), "        }",
+         "        layout {", f"            sequence: {seq}", f"            slot: {slot}", "        }",
+         "        appearance {", "            template: @/collapsible", "            templateOptions: [", "                #DEFAULT#",
+         "                is-collapsed", "            ]", "        }",
+         "        advanced {", "            htmlDomId: historial", "        }",
+         "        componentAppearance {", "            template: @/standard", "            templateOptions: #DEFAULT#", "        }",
+         "        messages {", "            whenNoDataFound: Este registro todavía no tiene cambios registrados.", "        }",
+         "        serverSideCondition {", "            type: itemIsNotNull", f"            item: P{num}_{pk}", "        }"]
+    if cfg.get('auth'):
+        o += ["        security {", f"            authorizationScheme: @{cfg['auth']}", "        }"]
+    o += ["        comments {", "            comments: Historial de cambios del registro (vista adm_aud_cambio_det_v), solo lectura.", "        }"]
+    for i, (c, h) in enumerate([('FECHA', 'Fecha'), ('USUARIO', 'Usuario'), ('CAMBIO', 'Cambio'), ('CAMPO', 'Campo'),
+                                ('ANTES', 'Antes'), ('DESPUES', 'Después')]):
+        o += ["", f"        column {c} (", f"            reportColumnQueryId: {i + 1}", "            derivedColumn: N",
+              "            heading {", f"                heading: {h}", "                alignment: start", "            }",
+              "            layout {", f"                sequence: {(i + 1) * 10}", "                columnAlignment: start", "            }", "        )"]
+    o.append("    )")
+    return o
+
+
+def pagina_historial_registro(archivo, num, auth, alias='DETALLE-CAMBIO', titulo='Detalle del cambio'):
+    """Modal (drawer) de solo lectura con el detalle de UN cambio: Campo / Antes / Después.
+    Se abre desde el listado general (página normal) con P<num>_CAMBIO_ID (con checksum)."""
+    sql = f"""select to_char(d.fecha, 'DD/MM/YYYY HH24:MI:SS') fecha,
+       d.usuario,
+       d.operacion_desc || ' - ' || d.entidad cambio,
+       d.campo,
+       d.antes,
+       d.despues
+  from adm_aud_cambio_det_v d
+ where d.cambio_id = :P{num}_CAMBIO_ID
+ order by d.orden"""
+    o = cabecera(num, titulo, alias, auth,
+                 "Valor anterior y nuevo de cada campo que cambió.\n"
+                 "Las contraseñas y otros datos reservados solo indican que cambiaron, nunca su valor.", modal=True)
+    o += ["", "    region botones (", "        name: Botones", "        type: staticContent",
+          "        layout {", "            sequence: 20", "            slot: REGION_POSITION_03", "        }",
+          "        appearance {", "            template: @/buttons-container", "            templateOptions: #DEFAULT#", "        }", "    )",
+          "", "    region detalle (", f"        name: {titulo}", "        type: classicReport",
+          "        source {", "            location: localDatabase", "            type: sqlQuery",
+          "            sqlQuery:" + code('sql', sql, 16), "        }",
+          "        layout {", "            sequence: 10", "            slot: contentBody", "        }",
+          "        appearance {", "            template: @/blank-with-attributes", "            templateOptions: #DEFAULT#", "        }",
+          "        advanced {", "            htmlDomId: detalle-cambio", "        }",
+          "        componentAppearance {", "            template: @/standard", "            templateOptions: #DEFAULT#", "        }",
+          "        messages {", "            whenNoDataFound: No hay detalle para este cambio.", "        }",
+          "        comments {", "            comments: Detalle de adm_aud_cambio (vista adm_aud_cambio_det_v), solo lectura.", "        }"]
+    for i, (c, h) in enumerate([('FECHA', 'Fecha'), ('USUARIO', 'Usuario'), ('CAMBIO', 'Cambio'), ('CAMPO', 'Campo'),
+                                ('ANTES', 'Antes'), ('DESPUES', 'Después')]):
+        o += ["", f"        column {c} (", f"            reportColumnQueryId: {i + 1}", "            derivedColumn: N",
+              "            heading {", f"                heading: {h}", "                alignment: start", "            }",
+              "            layout {", f"                sequence: {(i + 1) * 10}", "                columnAlignment: start", "            }", "        )"]
+    o.append("    )")
+    o += ["", f"    pageItem P{num}_CAMBIO_ID (", "        type: hidden", "        layout {", "            sequence: 10",
+          "            region: @detalle", "            slot: regionBody", "        }", "        security {",
+          "            sessionStateProtection: checksumRequiredSessionLevel", "        }", "    )"]
+    o += ["", "    button cerrar (", "        buttonName: CERRAR", "        label: Cerrar", "        layout {",
+          "            sequence: 10", "            region: @botones", "            slot: CLOSE", "        }",
+          "        appearance {", "            buttonTemplate: @/text", "            templateOptions: #DEFAULT#", "        }",
+          "        behavior {", "            action: definedByDynamicAction", "        }", "    )",
+          "", "    dynamicAction cerrar-panel (", "        name: Cerrar", "        execution {", "            sequence: 10",
+          "        }", "        when {", "            event: click", "            selectionType: button", "            button: @cerrar",
+          "        }", "", "        action cancelar-dialogo (", "            action: cancelDialog", "            execution {",
+          "                sequence: 10", "                fireOnInit: false", "            }", "        )", "    )", ")"]
+    guardar(archivo, o)
+
+
+def pagina_historial_cambios(archivo, num, auth, pagina_detalle, alias='HISTORIAL-CAMBIOS', titulo='Historial de cambios'):
+    """Listado general del historial con filtros; el link de cada fila abre el modal de detalle."""
+    p = f"P{num}"
+    sql = f"""select h.cambio_id, h.fecha, h.usuario, h.app_codigo aplicacion, h.entidad, h.registro_id,
+       h.operacion_desc operacion, h.campos, h.empresa, h.apex_pagina_id pagina, h.tabla
+  from adm_aud_cambio_v h
+ where (:{p}_TABLA is null or h.tabla = :{p}_TABLA)
+   and (:{p}_USUARIO is null or h.usuario = upper(:{p}_USUARIO))
+   and (:{p}_OPERACION is null or h.operacion = :{p}_OPERACION)
+   and (:{p}_EMPRESA_ID is null or h.empresa_id = to_number(:{p}_EMPRESA_ID))
+   and (:{p}_DESDE is null or h.fecha >= to_date(:{p}_DESDE))
+   and (:{p}_HASTA is null or h.fecha < to_date(:{p}_HASTA) + 1)"""
+    pagina_listado(archivo, num, alias, titulo, auth, 'historial-cambios', sql, 'CAMBIO_ID', None,
+        [('FECHA', 'Fecha', 'DATE', None), ('USUARIO', 'Usuario', 'STRING', None), ('APLICACION', 'Aplicación', 'STRING', None),
+         ('ENTIDAD', 'Dato', 'STRING', 'Tabla modificada (su descripción).'), ('REGISTRO_ID', 'ID del registro', 'NUMBER', None),
+         ('OPERACION', 'Operación', 'STRING', 'Alta, Modificación o Eliminación.'),
+         ('CAMPOS', 'Campos', 'NUMBER', 'Cantidad de campos que cambiaron.'), ('EMPRESA', 'Empresa', 'STRING', None),
+         ('PAGINA', 'Página', 'NUMBER', 'Página APEX desde la que se hizo el cambio.'), ('TABLA', 'Tabla', 'STRING', None)],
+        "Quién cambió qué dato y cuándo, en todas las aplicaciones.\n"
+        "Filtre por dato, usuario, operación, empresa o fechas y use la lupa de cada fila para ver el valor anterior y el nuevo de cada campo.",
+        "Consulta de adm_aud_cambio (vista adm_aud_cambio_v), solo lectura. Detalle en el modal Detalle del cambio.",
+        filtros=[dict(n='TABLA', tipo='selectList', etiqueta='Dato', lov='tablas-auditadas', nulo='- Todos -', ayuda='Tabla cuyo historial quiere ver.'),
+                 dict(n='USUARIO', tipo='textField', etiqueta='Usuario', ayuda='Nombre de usuario exacto de quien hizo el cambio.'),
+                 dict(n='OPERACION', tipo='selectList', etiqueta='Operación', lov='operacion-cambio', nulo='- Todas -', ayuda='Alta, modificación o eliminación.'),
+                 dict(n='EMPRESA_ID', tipo='selectList', etiqueta='Empresa', lov='empresas', nulo='- Todas -', ayuda='Empresa del registro modificado.'),
+                 dict(n='DESDE', tipo='datePicker', etiqueta='Desde', ayuda='Fecha inicial (inclusive).'),
+                 dict(n='HASTA', tipo='datePicker', etiqueta='Hasta', ayuda='Fecha final (inclusive).')],
+        enlace=dict(pagina=pagina_detalle, item=f'P{pagina_detalle}_CAMBIO_ID', icono='fa-search', titulo='Ver detalle'))
+
+
 def region_roles_usuario(num):
     """Roles asignados dentro del formulario de usuario + botones que abren modales de acción."""
     sql = ("select r.codigo || ' - ' || r.nombre rol,\n"
@@ -352,6 +533,7 @@ ACCESOS = [
     ('mensajes-error', 'Mensajes de error', 'fa-comment-o', 52, 'Textos claros para los errores de datos.', 'adm-gen-mensaje-gestionar'),
     ('bitacora-login', 'Bitácora de accesos', 'fa-history', 60, 'Quién ingresó, cuándo y con qué resultado.', 'adm-aud-login-ver'),
     ('bitacora-errores', 'Bitácora de errores', 'fa-bug', 61, 'Incidentes inesperados para soporte.', 'adm-aud-error-ver'),
+    ('historial-cambios', 'Historial de cambios', 'fa-history', 62, 'Qué dato cambió, quién lo cambió y cuándo.', 'adm-aud-cambio-ver'),
 ]
 
 
@@ -384,7 +566,7 @@ def escribir_listas():
     o += entrada('inicio', 'Inicio', 'fa-home', 10, 1)
     grupos = [('seguridad', 'Seguridad', 'fa-shield', ['usuarios', 'roles']),
               ('catalogo', 'Catálogo', 'fa-sitemap', ['aplicaciones', 'modulos', 'permisos', 'empresas', 'mensajes-error']),
-              ('auditoria', 'Auditoría', 'fa-search', ['bitacora-login', 'bitacora-errores'])]
+              ('auditoria', 'Auditoría', 'fa-search', ['bitacora-login', 'bitacora-errores', 'historial-cambios'])]
     seq = 20
     por_id = {a[0]: a for a in ACCESOS}
     for gid, gnombre, gicono, hijos in grupos:
@@ -602,6 +784,12 @@ if __name__ == '__main__':
 
     EST = "decode(estado, 'A', 'Activo', 'I', 'Inactivo', 'B', 'Bloqueado', estado) estado"
 
+    # Región Historial en todos los formularios de ADM (permiso ADM_AUD_CAMBIO_VER)
+    HISTORIAL = dict(auth='adm-aud-cambio-ver')
+    # Tablas hijas cuyo historial se muestra junto al del padre
+    HIJAS = {'adm_seg_usuario': ['adm_seg_usuario_rol'], 'adm_seg_rol': ['adm_seg_rol_permiso'],
+             'adm_seg_aplicacion': ['adm_seg_modulo'], 'adm_seg_modulo': ['adm_seg_permiso']}
+
     # ------------------------------------------------------------------ USUARIOS (vía api)
     pagina_listado('p00030-usuarios.apx', 30, 'USUARIOS', 'Usuarios', 'adm-seg-usuario-ver', 'usuarios',
         "select u.usuario_id, u.username, u.nombres || ' ' || u.apellidos nombre, u.email,\n"
@@ -646,7 +834,7 @@ if __name__ == '__main__':
     i_apellidos          => :P31_APELLIDOS,
     i_empresa_id_defecto => :P31_EMPRESA_ID_DEFECTO,
     i_estado             => :P31_ESTADO);"""},
-        extras=region_roles_usuario(31))
+        extras=region_roles_usuario(31), historial=dict(hijas=HIJAS['adm_seg_usuario']))
 
     pagina_accion('p00032-reset-password.apx', 32, 'RESET-PASSWORD', 'Resetear contraseña', 'adm-seg-usuario-reset-password',
         "Asigne una contraseña temporal al usuario.\nQueda desbloqueado y deberá cambiarla en su próximo ingreso.",
@@ -715,7 +903,8 @@ adm_seg_rol_api.asignar_permisos(i_rol_id => :P21_ROL_ID, i_permisos => :P21_PER
         extras=["", "    process cargar-permisos (", "        name: Cargar permisos del rol", "        type: executeCode",
                 "        source {", "            plsqlCode:" + code('plsql', ":P21_PERMISOS := adm_seg_rol_api.obtener_permisos(i_rol_id => :P21_ROL_ID);", 16), "        }",
                 "        execution {", "            sequence: 20", "            point: beforeHeader", "        }",
-                "        serverSideCondition {", "            type: itemIsNotNull", "            item: P21_ROL_ID", "        }", "    )"])
+                "        serverSideCondition {", "            type: itemIsNotNull", "            item: P21_ROL_ID", "        }", "    )"],
+        historial=dict(hijas=HIJAS['adm_seg_rol']))
 
     # ------------------------------------------------------------------ CATÁLOGOS (guardado automático de APEX)
     cat = [
@@ -776,7 +965,8 @@ adm_seg_rol_api.asignar_permisos(i_rol_id => :P21_ROL_ID, i_permisos => :P21_PER
                        ayuda + "\nUse " + crear + " para agregar o el lápiz de cada fila para editar.",
                        f"Listado de {tabla}. Alta/edición en la página {nf} (guardado automático: catálogo simple).", crear)
         pagina_formulario(f'p000{nf}-{alias_f.lower()}.apx', int(nf), alias_f, titulo_f, auth, tabla, pk, items,
-                          f"Alta y edición: {titulo_f.lower()}.\nLos campos marcados son obligatorios.")
+                          f"Alta y edición: {titulo_f.lower()}.\nLos campos marcados son obligatorios.",
+                          historial=dict(hijas=HIJAS.get(tabla, [])))
 
     # ------------------------------------------------------------------ BITÁCORAS (solo lectura)
     pagina_listado('p00060-bitacora-login.apx', 60, 'BITACORA-LOGIN', 'Bitácora de accesos', 'adm-aud-login-ver', 'bitacora-login',
@@ -798,6 +988,8 @@ adm_seg_rol_api.asignar_permisos(i_rol_id => :P21_ROL_ID, i_permisos => :P21_PER
          ('COMPONENTE', 'Componente', 'STRING', None), ('MENSAJE', 'Mensaje', 'STRING', None), ('ORA_SQLERRM', 'Detalle técnico', 'STRING', None)],
         "Incidentes inesperados registrados por el manejador de errores.\nBusque por el número de incidente que le informó el usuario.",
         "Consulta de adm_aud_error (solo lectura). Incidente = error_id.")
+    pagina_historial_cambios('p00062-historial-cambios.apx', 62, 'adm-aud-cambio-ver', 63)
+    pagina_historial_registro('p00063-detalle-cambio.apx', 63, 'adm-aud-cambio-ver')
     pagina_inicio()
     pagina_cambiar_password()
     pagina_cambio_obligatorio()

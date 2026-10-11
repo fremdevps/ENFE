@@ -129,3 +129,14 @@ authorization adm-aud-error-ver (
         errorMessage: No tiene permiso para realizar esta acción.
     }
 )
+
+authorization adm-aud-cambio-ver (
+    name: ADM_AUD_CAMBIO_VER
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return adm_seg_seguridad_reg.tiene_permiso(:APP_USER, 'ADM_AUD_CAMBIO_VER');
+    }
+    error {
+        errorMessage: No tiene permiso para realizar esta acción.
+    }
+)

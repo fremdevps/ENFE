@@ -332,6 +332,138 @@ page 51 (
         }
     )
 
+    region historial (
+        name: Historial
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select to_char(h.fecha, 'DD/MM/YYYY HH24:MI') fecha,
+                       h.usuario,
+                       h.operacion_desc || ' - ' || h.entidad cambio,
+                       h.campo,
+                       h.antes,
+                       h.despues
+                  from (select d.*
+                          from adm_aud_cambio_det_v d
+                         where d.tabla = 'ADM_GEN_EMPRESA'
+                           and d.registro_id = :P51_EMPRESA_ID) h
+                 order by h.fecha desc, h.cambio_id desc, h.orden
+                ```
+        }
+        layout {
+            sequence: 90
+            slot: contentBody
+        }
+        appearance {
+            template: @/collapsible
+            templateOptions: [
+                #DEFAULT#
+                is-collapsed
+            ]
+        }
+        advanced {
+            htmlDomId: historial
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        messages {
+            whenNoDataFound: Este registro todavía no tiene cambios registrados.
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P51_EMPRESA_ID
+        }
+        security {
+            authorizationScheme: @adm-aud-cambio-ver
+        }
+        comments {
+            comments: Historial de cambios del registro (vista adm_aud_cambio_det_v), solo lectura.
+        }
+
+        column FECHA (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Fecha
+                alignment: start
+            }
+            layout {
+                sequence: 10
+                columnAlignment: start
+            }
+        )
+
+        column USUARIO (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Usuario
+                alignment: start
+            }
+            layout {
+                sequence: 20
+                columnAlignment: start
+            }
+        )
+
+        column CAMBIO (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Cambio
+                alignment: start
+            }
+            layout {
+                sequence: 30
+                columnAlignment: start
+            }
+        )
+
+        column CAMPO (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Campo
+                alignment: start
+            }
+            layout {
+                sequence: 40
+                columnAlignment: start
+            }
+        )
+
+        column ANTES (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Antes
+                alignment: start
+            }
+            layout {
+                sequence: 50
+                columnAlignment: start
+            }
+        )
+
+        column DESPUES (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: Después
+                alignment: start
+            }
+            layout {
+                sequence: 60
+                columnAlignment: start
+            }
+        )
+    )
+
     dynamicAction cerrar-panel (
         name: Cancelar
         execution {

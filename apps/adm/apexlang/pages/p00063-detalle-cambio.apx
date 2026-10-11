@@ -1,0 +1,210 @@
+page 63 (
+    name: Detalle del cambio
+    alias: DETALLE-CAMBIO
+    title: Detalle del cambio
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/drawer
+        templateOptions: [
+            #DEFAULT#
+            js-dialog-class-t-Drawer--pullOutEnd
+        ]
+    }
+    dialog {
+        chained: false
+    }
+    security {
+        authorizationScheme: @adm-aud-cambio-ver
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+    help {
+        helpText:
+            ```
+            Valor anterior y nuevo de cada campo que cambió.
+            Las contraseñas y otros datos reservados solo indican que cambiaron, nunca su valor.
+            ```
+    }
+
+    region botones (
+        name: Botones
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: REGION_POSITION_03
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region detalle (
+        name: Detalle del cambio
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select to_char(d.fecha, 'DD/MM/YYYY HH24:MI:SS') fecha,
+                       d.usuario,
+                       d.operacion_desc || ' - ' || d.entidad cambio,
+                       d.campo,
+                       d.antes,
+                       d.despues
+                  from adm_aud_cambio_det_v d
+                 where d.cambio_id = :P63_CAMBIO_ID
+                 order by d.orden
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: detalle-cambio
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        messages {
+            whenNoDataFound: No hay detalle para este cambio.
+        }
+        comments {
+            comments: Detalle de adm_aud_cambio (vista adm_aud_cambio_det_v), solo lectura.
+        }
+
+        column FECHA (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Fecha
+                alignment: start
+            }
+            layout {
+                sequence: 10
+                columnAlignment: start
+            }
+        )
+
+        column USUARIO (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Usuario
+                alignment: start
+            }
+            layout {
+                sequence: 20
+                columnAlignment: start
+            }
+        )
+
+        column CAMBIO (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Cambio
+                alignment: start
+            }
+            layout {
+                sequence: 30
+                columnAlignment: start
+            }
+        )
+
+        column CAMPO (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Campo
+                alignment: start
+            }
+            layout {
+                sequence: 40
+                columnAlignment: start
+            }
+        )
+
+        column ANTES (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Antes
+                alignment: start
+            }
+            layout {
+                sequence: 50
+                columnAlignment: start
+            }
+        )
+
+        column DESPUES (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: Después
+                alignment: start
+            }
+            layout {
+                sequence: 60
+                columnAlignment: start
+            }
+        )
+    )
+
+    pageItem P63_CAMBIO_ID (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @detalle
+            slot: regionBody
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    button cerrar (
+        buttonName: CERRAR
+        label: Cerrar
+        layout {
+            sequence: 10
+            region: @botones
+            slot: CLOSE
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+    )
+
+    dynamicAction cerrar-panel (
+        name: Cerrar
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cerrar
+        }
+
+        action cancelar-dialogo (
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+    )
+)

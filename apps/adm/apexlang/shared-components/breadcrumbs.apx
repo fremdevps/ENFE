@@ -158,6 +158,22 @@ breadcrumb breadcrumb (
         }
     )
 
+    entry historial-cambios (
+        name: Historial de cambios
+        pageNumber: 62
+        appearance {
+            parentEntry: @home
+        }
+        execution {
+            sequence: 110
+        }
+        link {
+            target: {
+                page: 62
+            }
+        }
+    )
+
     entry cambiar-password (
         name: Cambiar mi contraseña
         pageNumber: 90
@@ -165,7 +181,7 @@ breadcrumb breadcrumb (
             parentEntry: @home
         }
         execution {
-            sequence: 110
+            sequence: 120
         }
         link {
             target: {

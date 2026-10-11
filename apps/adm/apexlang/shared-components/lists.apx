@@ -306,6 +306,25 @@ list navigation-menu (
         }
     )
 
+    entry historial-cambios (
+        label: Historial de cambios
+        icon {
+            imageIconCssClasses: fa-history
+        }
+        layout {
+            sequence: 50
+            parentEntry: @auditoria
+        }
+        link {
+            target: {
+                page: 62
+            }
+        }
+        security {
+            authorizationScheme: @adm-aud-cambio-ver
+        }
+    )
+
 )
 
 list accesos (
@@ -497,6 +516,27 @@ list accesos (
         }
         security {
             authorizationScheme: @adm-aud-error-ver
+        }
+    )
+
+    entry acc-historial-cambios (
+        label: Historial de cambios
+        icon {
+            imageIconCssClasses: fa-history
+        }
+        layout {
+            sequence: 100
+        }
+        link {
+            target: {
+                page: 62
+            }
+        }
+        userDefinedAttributes {
+            1: Qué dato cambió, quién lo cambió y cuándo.
+        }
+        security {
+            authorizationScheme: @adm-aud-cambio-ver
         }
     )
 

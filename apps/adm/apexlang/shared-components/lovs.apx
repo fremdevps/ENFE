@@ -212,3 +212,49 @@ lov empresas (
         display: D
     }
 )
+
+lov tablas-auditadas (
+    name: TABLAS_AUDITADAS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select coalesce(regexp_replace(c.comments, '\.?\s*Abrev:.*$', null, 1, 1, 'i'), lower(t.table_name)) d,
+                   t.table_name r
+              from user_triggers t
+              left join user_tab_comments c on c.table_name = t.table_name
+             where t.trigger_name like 'TRG\_%\_AIUD' escape '\'
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov operacion-cambio (
+    name: OPERACION_CAMBIO
+    source {
+        location: staticValues
+    }
+
+    entry alta (
+        sequence: 10
+        display: Alta
+        return: I
+    )
+
+    entry modificacion (
+        sequence: 20
+        display: Modificación
+        return: U
+    )
+
+    entry eliminacion (
+        sequence: 30
+        display: Eliminación
+        return: D
+    )
+
+)
