@@ -429,135 +429,142 @@ as
         r_motivo    erp_stk_motivo_traslado%rowtype;
         v_item_id   number;
     begin
-        -- RN-01
-        if i_deposito_id_origen = i_deposito_id_destino then
-            lanzar(i_codigo => c_err_depositos, i_mensaje => 'El depósito de origen y el de destino deben ser distintos.');
-        end if;
-        r_origen  := obtener_deposito(i_deposito_id => i_deposito_id_origen);
-        r_destino := obtener_deposito(i_deposito_id => i_deposito_id_destino);
-        if r_origen.empresa_id <> i_empresa_id or r_destino.empresa_id <> i_empresa_id then
-            lanzar(i_codigo => c_err_depositos, i_mensaje => 'Los depósitos de origen y destino deben ser de la empresa.');
-        end if;
-        if r_origen.estado <> c_activo or r_destino.estado <> c_activo then
-            lanzar(i_codigo => c_err_depositos, i_mensaje => 'Los depósitos de origen y destino deben estar activos.');
-        end if;
-        if r_origen.tipo = c_dep_transito or r_destino.tipo = c_dep_transito then
-            lanzar(i_codigo => c_err_depositos, i_mensaje => 'Un depósito de tránsito no puede ser origen ni destino de un traslado.');
-        end if;
-        if not tiene_acceso(i_deposito => r_origen, i_accion => c_accion_despachar)
-           and not tiene_acceso(i_deposito => r_destino, i_accion => c_accion_recibir) then
-            lanzar(i_codigo => c_err_acceso, i_mensaje => 'No tiene acceso al depósito de origen ni al de destino.');
-        end if;
-
-        -- RN-02: tipo de traslado
-        r_traslado.tipo := upper(i_tipo);
-        if r_traslado.tipo is null then
-            r_traslado.tipo := case
-                                   when i_persona_id_destino is not null then c_tipo_tercero
-                                   when r_origen.sucursal_id = r_destino.sucursal_id
-                                        and coalesce(r_origen.direccion, '-') = coalesce(r_destino.direccion, '-') then c_tipo_interno
-                                   else c_tipo_remision
-                               end;
-        end if;
-        if r_traslado.tipo not in (c_tipo_interno, c_tipo_remision, c_tipo_tercero) then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'El tipo de traslado debe ser I, R o T.');
-        end if;
-        if r_traslado.tipo = c_tipo_interno and r_origen.sucursal_id <> r_destino.sucursal_id then
-            lanzar(i_codigo => c_err_depositos, i_mensaje => 'Un traslado interno es entre depósitos de la misma sucursal; entre sucursales lleva remisión.');
-        end if;
-        if r_traslado.tipo = c_tipo_tercero and i_persona_id_destino is null then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Un traslado a terceros necesita la persona que recibe.');
-        end if;
-
-        -- Motivo
+        savepoint sp_erp_stk_traslado;
         begin
-            select *
-              into r_motivo
-              from erp_stk_motivo_traslado
-             where codigo = upper(coalesce(i_motivo, case r_traslado.tipo
-                                                         when c_tipo_interno  then 'INTERNO'
-                                                         when c_tipo_remision then 'ENTRE_LOCALES'
-                                                     end))
-               and estado = c_activo;
-        exception
-            when no_data_found then
-                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Indique un motivo de traslado válido.');
-        end;
-        if (r_traslado.tipo = c_tipo_interno and r_motivo.es_tipo_interno = c_no)
-           or (r_traslado.tipo = c_tipo_remision and r_motivo.es_tipo_remision = c_no)
-           or (r_traslado.tipo = c_tipo_tercero and r_motivo.es_tipo_tercero = c_no) then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido,
-                   i_mensaje => 'El motivo "' || r_motivo.nombre || '" no corresponde a este tipo de traslado.');
-        end if;
-
-        -- Un paso (solo internos y si el parámetro lo permite)
-        r_traslado.es_un_paso := coalesce(upper(i_es_un_paso), c_no);
-        if r_traslado.es_un_paso = c_si then
-            if r_traslado.tipo <> c_tipo_interno then
-                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Solo los traslados internos pueden ser de un paso.');
+            -- RN-01
+            if i_deposito_id_origen = i_deposito_id_destino then
+                lanzar(i_codigo => c_err_depositos, i_mensaje => 'El depósito de origen y el de destino deben ser distintos.');
             end if;
-            if obtener_parametro_sn(i_codigo => 'ERP_STK_TRASLADO_UN_PASO', i_empresa_id => i_empresa_id, i_defecto => c_si) = c_no then
-                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La empresa no permite traslados internos de un paso.');
+            r_origen  := obtener_deposito(i_deposito_id => i_deposito_id_origen);
+            r_destino := obtener_deposito(i_deposito_id => i_deposito_id_destino);
+            if r_origen.empresa_id <> i_empresa_id or r_destino.empresa_id <> i_empresa_id then
+                lanzar(i_codigo => c_err_depositos, i_mensaje => 'Los depósitos de origen y destino deben ser de la empresa.');
             end if;
-        else
-            r_traslado.deposito_id_transito := obtener_deposito_transito(i_sucursal_id => r_origen.sucursal_id);
-        end if;
+            if r_origen.estado <> c_activo or r_destino.estado <> c_activo then
+                lanzar(i_codigo => c_err_depositos, i_mensaje => 'Los depósitos de origen y destino deben estar activos.');
+            end if;
+            if r_origen.tipo = c_dep_transito or r_destino.tipo = c_dep_transito then
+                lanzar(i_codigo => c_err_depositos, i_mensaje => 'Un depósito de tránsito no puede ser origen ni destino de un traslado.');
+            end if;
+            if not tiene_acceso(i_deposito => r_origen, i_accion => c_accion_despachar)
+               and not tiene_acceso(i_deposito => r_destino, i_accion => c_accion_recibir) then
+                lanzar(i_codigo => c_err_acceso, i_mensaje => 'No tiene acceso al depósito de origen ni al de destino.');
+            end if;
 
-        -- Flete (funcionalidad FLETE)
-        if coalesce(i_monto_flete, 0) < 0 then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'El flete no puede ser negativo.');
-        end if;
-        if coalesce(i_monto_flete, 0) > 0
-           and erp_gen_funcionalidad_api.es_activa_sn(i_codigo => 'FLETE', i_empresa_id => i_empresa_id) = c_no then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La empresa no tiene activa la funcionalidad de fletes.');
-        end if;
+            -- RN-02: tipo de traslado
+            r_traslado.tipo := upper(i_tipo);
+            if r_traslado.tipo is null then
+                r_traslado.tipo := case
+                                       when i_persona_id_destino is not null then c_tipo_tercero
+                                       when r_origen.sucursal_id = r_destino.sucursal_id
+                                            and coalesce(r_origen.direccion, '-') = coalesce(r_destino.direccion, '-') then c_tipo_interno
+                                       else c_tipo_remision
+                                   end;
+            end if;
+            if r_traslado.tipo not in (c_tipo_interno, c_tipo_remision, c_tipo_tercero) then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'El tipo de traslado debe ser I, R o T.');
+            end if;
+            if r_traslado.tipo = c_tipo_interno and r_origen.sucursal_id <> r_destino.sucursal_id then
+                lanzar(i_codigo => c_err_depositos, i_mensaje => 'Un traslado interno es entre depósitos de la misma sucursal; entre sucursales lleva remisión.');
+            end if;
+            if r_traslado.tipo = c_tipo_tercero and i_persona_id_destino is null then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Un traslado a terceros necesita la persona que recibe.');
+            end if;
 
-        -- Fechas (RN-10) y ruta sugerida
-        r_traslado.fecha_emision         := trunc(coalesce(i_fecha_emision, current_date));
-        r_traslado.fecha_requerida       := trunc(i_fecha_requerida);
-        r_traslado.fecha_salida_estimada := i_fecha_salida_estimada;
-        if r_traslado.fecha_salida_estimada < r_traslado.fecha_emision then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La salida estimada no puede ser anterior a la fecha del traslado.');
-        end if;
-        if r_origen.sucursal_id <> r_destino.sucursal_id then
+            -- Motivo
             begin
-                select kilometros, horas_estimadas
-                  into r_traslado.kilometros, r_traslado.horas_estimadas
-                  from erp_stk_ruta_traslado
-                 where empresa_id          = i_empresa_id
-                   and sucursal_id_origen  = r_origen.sucursal_id
-                   and sucursal_id_destino = r_destino.sucursal_id
-                   and estado              = c_activo;
+                select *
+                  into r_motivo
+                  from erp_stk_motivo_traslado
+                 where codigo = upper(coalesce(i_motivo, case r_traslado.tipo
+                                                             when c_tipo_interno  then 'INTERNO'
+                                                             when c_tipo_remision then 'ENTRE_LOCALES'
+                                                         end))
+                   and estado = c_activo;
             exception
                 when no_data_found then
-                    null;
+                    lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Indique un motivo de traslado válido.');
             end;
-        end if;
-        if r_traslado.fecha_salida_estimada is not null then
-            r_traslado.fecha_llegada_estimada := r_traslado.fecha_salida_estimada
-                                                 + numtodsinterval(coalesce(r_traslado.horas_estimadas, 0), 'HOUR');
-        end if;
+            if (r_traslado.tipo = c_tipo_interno and r_motivo.es_tipo_interno = c_no)
+               or (r_traslado.tipo = c_tipo_remision and r_motivo.es_tipo_remision = c_no)
+               or (r_traslado.tipo = c_tipo_tercero and r_motivo.es_tipo_tercero = c_no) then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido,
+                       i_mensaje => 'El motivo "' || r_motivo.nombre || '" no corresponde a este tipo de traslado.');
+            end if;
 
-        r_traslado.empresa_id             := i_empresa_id;
-        r_traslado.sucursal_id            := r_origen.sucursal_id;
-        r_traslado.motivo_traslado_id     := r_motivo.motivo_traslado_id;
-        r_traslado.deposito_id_origen     := i_deposito_id_origen;
-        r_traslado.deposito_id_destino    := i_deposito_id_destino;
-        r_traslado.persona_id_destino     := i_persona_id_destino;
-        r_traslado.monto_flete            := coalesce(i_monto_flete, 0);
-        r_traslado.es_flete_capitalizable := coalesce(upper(i_es_flete_capitalizable), c_no);
-        r_traslado.remision_estado        := c_rem_no_aplica;
-        r_traslado.observacion            := i_observacion;
-        r_traslado.estado                 := c_est_borrador;
-        r_traslado.creado_por             := erp_stk_comun_utl.obtener_usuario_auditoria;
-        insertar_cabecera(io_traslado => r_traslado);
-        o_traslado_id := r_traslado.traslado_id;
+            -- Un paso (solo internos y si el parámetro lo permite)
+            r_traslado.es_un_paso := coalesce(upper(i_es_un_paso), c_no);
+            if r_traslado.es_un_paso = c_si then
+                if r_traslado.tipo <> c_tipo_interno then
+                    lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Solo los traslados internos pueden ser de un paso.');
+                end if;
+                if obtener_parametro_sn(i_codigo => 'ERP_STK_TRASLADO_UN_PASO', i_empresa_id => i_empresa_id, i_defecto => c_si) = c_no then
+                    lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La empresa no permite traslados internos de un paso.');
+                end if;
+            else
+                r_traslado.deposito_id_transito := obtener_deposito_transito(i_sucursal_id => r_origen.sucursal_id);
+            end if;
 
-        if i_items is not null then
-            for i in 1 .. i_items.count loop
-                insertar_item(i_traslado => r_traslado, i_item => i_items(i), o_traslado_item_id => v_item_id);
-            end loop;
-        end if;
+            -- Flete (funcionalidad FLETE)
+            if coalesce(i_monto_flete, 0) < 0 then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'El flete no puede ser negativo.');
+            end if;
+            if coalesce(i_monto_flete, 0) > 0
+               and erp_gen_funcionalidad_api.es_activa_sn(i_codigo => 'FLETE', i_empresa_id => i_empresa_id) = c_no then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La empresa no tiene activa la funcionalidad de fletes.');
+            end if;
+
+            -- Fechas (RN-10) y ruta sugerida
+            r_traslado.fecha_emision         := trunc(coalesce(i_fecha_emision, current_date));
+            r_traslado.fecha_requerida       := trunc(i_fecha_requerida);
+            r_traslado.fecha_salida_estimada := i_fecha_salida_estimada;
+            if r_traslado.fecha_salida_estimada < r_traslado.fecha_emision then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La salida estimada no puede ser anterior a la fecha del traslado.');
+            end if;
+            if r_origen.sucursal_id <> r_destino.sucursal_id then
+                begin
+                    select kilometros, horas_estimadas
+                      into r_traslado.kilometros, r_traslado.horas_estimadas
+                      from erp_stk_ruta_traslado
+                     where empresa_id          = i_empresa_id
+                       and sucursal_id_origen  = r_origen.sucursal_id
+                       and sucursal_id_destino = r_destino.sucursal_id
+                       and estado              = c_activo;
+                exception
+                    when no_data_found then
+                        null;
+                end;
+            end if;
+            if r_traslado.fecha_salida_estimada is not null then
+                r_traslado.fecha_llegada_estimada := r_traslado.fecha_salida_estimada
+                                                     + numtodsinterval(coalesce(r_traslado.horas_estimadas, 0), 'HOUR');
+            end if;
+
+            r_traslado.empresa_id             := i_empresa_id;
+            r_traslado.sucursal_id            := r_origen.sucursal_id;
+            r_traslado.motivo_traslado_id     := r_motivo.motivo_traslado_id;
+            r_traslado.deposito_id_origen     := i_deposito_id_origen;
+            r_traslado.deposito_id_destino    := i_deposito_id_destino;
+            r_traslado.persona_id_destino     := i_persona_id_destino;
+            r_traslado.monto_flete            := coalesce(i_monto_flete, 0);
+            r_traslado.es_flete_capitalizable := coalesce(upper(i_es_flete_capitalizable), c_no);
+            r_traslado.remision_estado        := c_rem_no_aplica;
+            r_traslado.observacion            := i_observacion;
+            r_traslado.estado                 := c_est_borrador;
+            r_traslado.creado_por             := erp_stk_comun_utl.obtener_usuario_auditoria;
+            insertar_cabecera(io_traslado => r_traslado);
+            o_traslado_id := r_traslado.traslado_id;
+
+            if i_items is not null then
+                for i in 1 .. i_items.count loop
+                    insertar_item(i_traslado => r_traslado, i_item => i_items(i), o_traslado_item_id => v_item_id);
+                end loop;
+            end if;
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end generar;
 
     procedure aplicar_modificacion (
@@ -570,21 +577,28 @@ as
     ) is
         r_traslado  erp_stk_traslado%rowtype := bloquear_traslado(i_traslado_id => i_traslado_id);
     begin
-        validar_editable(i_traslado => r_traslado);
-        if i_fecha_salida_estimada < r_traslado.fecha_emision then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La salida estimada no puede ser anterior a la fecha del traslado.');
-        end if;
-        if coalesce(i_monto_flete, 0) > 0
-           and erp_gen_funcionalidad_api.es_activa_sn(i_codigo => 'FLETE', i_empresa_id => r_traslado.empresa_id) = c_no then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La empresa no tiene activa la funcionalidad de fletes.');
-        end if;
-        r_traslado.fecha_requerida        := trunc(i_fecha_requerida);
-        r_traslado.fecha_salida_estimada  := i_fecha_salida_estimada;
-        r_traslado.fecha_llegada_estimada := i_fecha_salida_estimada + numtodsinterval(coalesce(r_traslado.horas_estimadas, 0), 'HOUR');
-        r_traslado.monto_flete            := coalesce(i_monto_flete, 0);
-        r_traslado.es_flete_capitalizable := coalesce(upper(i_es_flete_capitalizable), c_no);
-        r_traslado.observacion            := i_observacion;
-        erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+        savepoint sp_erp_stk_traslado;
+        begin
+            validar_editable(i_traslado => r_traslado);
+            if i_fecha_salida_estimada < r_traslado.fecha_emision then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La salida estimada no puede ser anterior a la fecha del traslado.');
+            end if;
+            if coalesce(i_monto_flete, 0) > 0
+               and erp_gen_funcionalidad_api.es_activa_sn(i_codigo => 'FLETE', i_empresa_id => r_traslado.empresa_id) = c_no then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La empresa no tiene activa la funcionalidad de fletes.');
+            end if;
+            r_traslado.fecha_requerida        := trunc(i_fecha_requerida);
+            r_traslado.fecha_salida_estimada  := i_fecha_salida_estimada;
+            r_traslado.fecha_llegada_estimada := i_fecha_salida_estimada + numtodsinterval(coalesce(r_traslado.horas_estimadas, 0), 'HOUR');
+            r_traslado.monto_flete            := coalesce(i_monto_flete, 0);
+            r_traslado.es_flete_capitalizable := coalesce(upper(i_es_flete_capitalizable), c_no);
+            r_traslado.observacion            := i_observacion;
+            erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_modificacion;
 
     procedure aplicar_item (
@@ -594,8 +608,15 @@ as
     ) is
         r_traslado  erp_stk_traslado%rowtype := bloquear_traslado(i_traslado_id => i_traslado_id);
     begin
-        validar_editable(i_traslado => r_traslado);
-        insertar_item(i_traslado => r_traslado, i_item => i_item, o_traslado_item_id => o_traslado_item_id);
+        savepoint sp_erp_stk_traslado;
+        begin
+            validar_editable(i_traslado => r_traslado);
+            insertar_item(i_traslado => r_traslado, i_item => i_item, o_traslado_item_id => o_traslado_item_id);
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_item;
 
     procedure aplicar_quita_item (
@@ -604,8 +625,15 @@ as
         r_item      erp_stk_traslado_item%rowtype := obtener_item(i_traslado_item_id => i_traslado_item_id);
         r_traslado  erp_stk_traslado%rowtype := bloquear_traslado(i_traslado_id => r_item.traslado_id);
     begin
-        validar_editable(i_traslado => r_traslado);
-        erp_stk_traslado_item_ctr.eliminar(i_traslado_item_id => i_traslado_item_id);
+        savepoint sp_erp_stk_traslado;
+        begin
+            validar_editable(i_traslado => r_traslado);
+            erp_stk_traslado_item_ctr.eliminar(i_traslado_item_id => i_traslado_item_id);
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_quita_item;
 
     procedure aplicar_transporte (
@@ -623,33 +651,40 @@ as
         r_traslado  erp_stk_traslado%rowtype := bloquear_traslado(i_traslado_id => i_traslado_id);
         r_vehiculo  erp_stk_vehiculo%rowtype;
     begin
-        if r_traslado.estado not in (c_est_borrador, c_est_solicitado, c_est_aprobado) then
-            validar_editable(i_traslado => r_traslado);
-        end if;
-        if i_vehiculo_id is not null then
-            begin
-                select * into r_vehiculo from erp_stk_vehiculo where vehiculo_id = i_vehiculo_id;
-            exception
-                when no_data_found then
-                    lanzar(i_codigo => c_err_transporte, i_mensaje => 'El vehículo indicado no existe.');
-            end;
-            if r_vehiculo.empresa_id <> r_traslado.empresa_id or r_vehiculo.estado <> c_activo then
-                lanzar(i_codigo => c_err_transporte, i_mensaje => 'El vehículo ' || r_vehiculo.chapa || ' está inactivo o es de otra empresa.');
+        savepoint sp_erp_stk_traslado;
+        begin
+            if r_traslado.estado not in (c_est_borrador, c_est_solicitado, c_est_aprobado) then
+                validar_editable(i_traslado => r_traslado);
             end if;
-        end if;
-        r_traslado.vehiculo_id              := i_vehiculo_id;
-        r_traslado.persona_id_conductor     := coalesce(i_persona_id_conductor, r_vehiculo.persona_id_conductor);
-        r_traslado.persona_id_transportista := coalesce(i_persona_id_transportista, r_vehiculo.persona_id_transportista);
-        -- El vehículo genérico no tiene chapa propia: se carga la real en cada traslado.
-        r_traslado.vehiculo_chapa           := upper(trim(case when r_vehiculo.es_generico = c_no then r_vehiculo.chapa else i_vehiculo_chapa end));
-        r_traslado.vehiculo_marca           := r_vehiculo.marca;
-        r_traslado.vehiculo_tipo            := r_vehiculo.tipo;
-        r_traslado.tipo_transporte          := upper(i_tipo_transporte);
-        r_traslado.modalidad_transporte     := coalesce(upper(i_modalidad_transporte), r_traslado.modalidad_transporte);
-        r_traslado.responsable_emision      := i_responsable_emision;
-        r_traslado.punto_expedicion_id      := i_punto_expedicion_id;
-        r_traslado.kilometros               := coalesce(i_kilometros, r_traslado.kilometros);
-        erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+            if i_vehiculo_id is not null then
+                begin
+                    select * into r_vehiculo from erp_stk_vehiculo where vehiculo_id = i_vehiculo_id;
+                exception
+                    when no_data_found then
+                        lanzar(i_codigo => c_err_transporte, i_mensaje => 'El vehículo indicado no existe.');
+                end;
+                if r_vehiculo.empresa_id <> r_traslado.empresa_id or r_vehiculo.estado <> c_activo then
+                    lanzar(i_codigo => c_err_transporte, i_mensaje => 'El vehículo ' || r_vehiculo.chapa || ' está inactivo o es de otra empresa.');
+                end if;
+            end if;
+            r_traslado.vehiculo_id              := i_vehiculo_id;
+            r_traslado.persona_id_conductor     := coalesce(i_persona_id_conductor, r_vehiculo.persona_id_conductor);
+            r_traslado.persona_id_transportista := coalesce(i_persona_id_transportista, r_vehiculo.persona_id_transportista);
+            -- El vehículo genérico no tiene chapa propia: se carga la real en cada traslado.
+            r_traslado.vehiculo_chapa           := upper(trim(case when r_vehiculo.es_generico = c_no then r_vehiculo.chapa else i_vehiculo_chapa end));
+            r_traslado.vehiculo_marca           := r_vehiculo.marca;
+            r_traslado.vehiculo_tipo            := r_vehiculo.tipo;
+            r_traslado.tipo_transporte          := upper(i_tipo_transporte);
+            r_traslado.modalidad_transporte     := coalesce(upper(i_modalidad_transporte), r_traslado.modalidad_transporte);
+            r_traslado.responsable_emision      := i_responsable_emision;
+            r_traslado.punto_expedicion_id      := i_punto_expedicion_id;
+            r_traslado.kilometros               := coalesce(i_kilometros, r_traslado.kilometros);
+            erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_transporte;
 
     -- ------------------------------------------------------------------ solicitud y aprobación
@@ -709,30 +744,37 @@ as
         v_cantidad  pls_integer;
         v_codigo    erp_stk_producto.codigo%type;
     begin
-        validar_estado(i_traslado => r_traslado, i_permitidos => c_est_borrador, i_accion => 'solicitar');
-        select count(*), min(case when (p.tiene_lote = c_si or p.tiene_serie = c_si) and i.lote_id is null then p.codigo end)
-          into v_cantidad, v_codigo
-          from erp_stk_traslado_item i
-          join erp_stk_producto p on p.producto_id = i.producto_id
-         where i.traslado_id = i_traslado_id;
-        if v_cantidad = 0 then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'El traslado no tiene ítems.');
-        end if;
-        if v_codigo is not null then
-            lanzar(i_codigo => erp_stk_movimiento_reg.c_err_lote_invalido,
-                   i_mensaje => 'El producto ' || v_codigo || ' exige indicar el lote o la serie a trasladar.');
-        end if;
+        savepoint sp_erp_stk_traslado;
+        begin
+            validar_estado(i_traslado => r_traslado, i_permitidos => c_est_borrador, i_accion => 'solicitar');
+            select count(*), min(case when (p.tiene_lote = c_si or p.tiene_serie = c_si) and i.lote_id is null then p.codigo end)
+              into v_cantidad, v_codigo
+              from erp_stk_traslado_item i
+              join erp_stk_producto p on p.producto_id = i.producto_id
+             where i.traslado_id = i_traslado_id;
+            if v_cantidad = 0 then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'El traslado no tiene ítems.');
+            end if;
+            if v_codigo is not null then
+                lanzar(i_codigo => erp_stk_movimiento_reg.c_err_lote_invalido,
+                       i_mensaje => 'El producto ' || v_codigo || ' exige indicar el lote o la serie a trasladar.');
+            end if;
 
-        r_traslado.estado           := c_est_solicitado;
-        r_traslado.usuario_solicita := erp_stk_comun_utl.obtener_usuario_auditoria;
-        r_traslado.fecha_solicitud  := systimestamp;
-        erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
-        registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_solicitar,
-                         i_estado_anterior => c_est_borrador, i_estado_nuevo => c_est_solicitado);
+            r_traslado.estado           := c_est_solicitado;
+            r_traslado.usuario_solicita := erp_stk_comun_utl.obtener_usuario_auditoria;
+            r_traslado.fecha_solicitud  := systimestamp;
+            erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+            registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_solicitar,
+                             i_estado_anterior => c_est_borrador, i_estado_nuevo => c_est_solicitado);
 
-        if obtener_parametro_sn(i_codigo => 'ERP_STK_TRASLADO_APROBACION', i_empresa_id => r_traslado.empresa_id, i_defecto => c_si) = c_no then
-            aprobar_interno(io_traslado => r_traslado, i_items => null, i_automatica => true);
-        end if;
+            if obtener_parametro_sn(i_codigo => 'ERP_STK_TRASLADO_APROBACION', i_empresa_id => r_traslado.empresa_id, i_defecto => c_si) = c_no then
+                aprobar_interno(io_traslado => r_traslado, i_items => null, i_automatica => true);
+            end if;
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_solicitud;
 
     procedure aplicar_aprobacion (
@@ -741,8 +783,15 @@ as
     ) is
         r_traslado  erp_stk_traslado%rowtype := bloquear_traslado(i_traslado_id => i_traslado_id);
     begin
-        validar_estado(i_traslado => r_traslado, i_permitidos => c_est_solicitado, i_accion => 'aprobar');
-        aprobar_interno(io_traslado => r_traslado, i_items => i_items, i_automatica => false);
+        savepoint sp_erp_stk_traslado;
+        begin
+            validar_estado(i_traslado => r_traslado, i_permitidos => c_est_solicitado, i_accion => 'aprobar');
+            aprobar_interno(io_traslado => r_traslado, i_items => i_items, i_automatica => false);
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_aprobacion;
 
     procedure aplicar_rechazo (
@@ -752,21 +801,28 @@ as
         r_traslado  erp_stk_traslado%rowtype := bloquear_traslado(i_traslado_id => i_traslado_id);
         v_anterior  varchar2(1) := r_traslado.estado;
     begin
-        validar_estado(i_traslado => r_traslado, i_permitidos => c_est_solicitado || c_est_aprobado, i_accion => 'rechazar');
-        if trim(i_motivo) is null then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Indique el motivo del rechazo.');
-        end if;
-        if r_traslado.estado = c_est_aprobado then
-            liberar_reservas(i_traslado => r_traslado);
-        end if;
-        r_traslado.estado           := c_est_rechazado;
-        r_traslado.motivo_rechazo   := trim(i_motivo);
-        r_traslado.usuario_aprueba  := erp_stk_comun_utl.obtener_usuario_auditoria;
-        r_traslado.fecha_aprobacion := systimestamp;
-        erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
-        registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_rechazar,
-                         i_estado_anterior => v_anterior, i_estado_nuevo => c_est_rechazado,
-                         i_detalle => armar_detalle(i_clave => 'motivo', i_valor => trim(i_motivo)));
+        savepoint sp_erp_stk_traslado;
+        begin
+            validar_estado(i_traslado => r_traslado, i_permitidos => c_est_solicitado || c_est_aprobado, i_accion => 'rechazar');
+            if trim(i_motivo) is null then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Indique el motivo del rechazo.');
+            end if;
+            if r_traslado.estado = c_est_aprobado then
+                liberar_reservas(i_traslado => r_traslado);
+            end if;
+            r_traslado.estado           := c_est_rechazado;
+            r_traslado.motivo_rechazo   := trim(i_motivo);
+            r_traslado.usuario_aprueba  := erp_stk_comun_utl.obtener_usuario_auditoria;
+            r_traslado.fecha_aprobacion := systimestamp;
+            erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+            registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_rechazar,
+                             i_estado_anterior => v_anterior, i_estado_nuevo => c_est_rechazado,
+                             i_detalle => armar_detalle(i_clave => 'motivo', i_valor => trim(i_motivo)));
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_rechazo;
 
     -- ------------------------------------------------------------------ despacho
@@ -793,170 +849,177 @@ as
         v_destino_dep  number := case when r_traslado.es_un_paso = c_si then r_traslado.deposito_id_destino
                                       else r_traslado.deposito_id_transito end;
     begin
-        validar_estado(i_traslado => r_traslado, i_permitidos => c_est_aprobado, i_accion => 'despachar');
-        validar_acceso(i_deposito_id => r_traslado.deposito_id_origen, i_accion => c_accion_despachar);
-        validar_items_del_traslado(i_traslado_id => i_traslado_id, i_items => i_items);
+        savepoint sp_erp_stk_traslado;
+        begin
+            validar_estado(i_traslado => r_traslado, i_permitidos => c_est_aprobado, i_accion => 'despachar');
+            validar_acceso(i_deposito_id => r_traslado.deposito_id_origen, i_accion => c_accion_despachar);
+            validar_items_del_traslado(i_traslado_id => i_traslado_id, i_items => i_items);
 
-        -- RN-09: datos mínimos de transporte cuando lleva remisión
-        if r_traslado.tipo in (c_tipo_remision, c_tipo_tercero) then
-            if r_traslado.vehiculo_id is not null and r_traslado.vehiculo_chapa is null then
-                select max(case when es_generico = c_no then chapa end), max(marca), max(tipo)
-                  into r_traslado.vehiculo_chapa, r_traslado.vehiculo_marca, r_traslado.vehiculo_tipo
-                  from erp_stk_vehiculo
-                 where vehiculo_id = r_traslado.vehiculo_id;
+            -- RN-09: datos mínimos de transporte cuando lleva remisión
+            if r_traslado.tipo in (c_tipo_remision, c_tipo_tercero) then
+                if r_traslado.vehiculo_id is not null and r_traslado.vehiculo_chapa is null then
+                    select max(case when es_generico = c_no then chapa end), max(marca), max(tipo)
+                      into r_traslado.vehiculo_chapa, r_traslado.vehiculo_marca, r_traslado.vehiculo_tipo
+                      from erp_stk_vehiculo
+                     where vehiculo_id = r_traslado.vehiculo_id;
+                end if;
+                if r_traslado.persona_id_conductor is null or r_traslado.vehiculo_chapa is null then
+                    lanzar(i_codigo => c_err_transporte,
+                           i_mensaje => 'Para despachar con nota de remisión indique el conductor y la chapa del vehículo.');
+                end if;
+                select max(razon_social), max(nro_documento)
+                  into r_traslado.conductor_nombre, r_traslado.conductor_documento
+                  from erp_gen_persona
+                 where persona_id = r_traslado.persona_id_conductor;
             end if;
-            if r_traslado.persona_id_conductor is null or r_traslado.vehiculo_chapa is null then
-                lanzar(i_codigo => c_err_transporte,
-                       i_mensaje => 'Para despachar con nota de remisión indique el conductor y la chapa del vehículo.');
-            end if;
-            select max(razon_social), max(nro_documento)
-              into r_traslado.conductor_nombre, r_traslado.conductor_documento
-              from erp_gen_persona
-             where persona_id = r_traslado.persona_id_conductor;
-        end if;
 
-        -- Líneas del movimiento: sale del origen (libera la reserva) y entra al tránsito al mismo costo
-        for r in (select traslado_item_id from erp_stk_traslado_item where traslado_id = i_traslado_id order by linea) loop
-            r_item     := obtener_item(i_traslado_item_id => r.traslado_item_id);
-            r_indicado := buscar_item(i_items => i_items, i_traslado_item_id => r.traslado_item_id);
-            v_cantidad := case when r_indicado is null then r_item.cantidad_aprobada else coalesce(r_indicado.cantidad, 0) end;
-            if v_cantidad < 0 or v_cantidad > r_item.cantidad_aprobada then
-                lanzar(i_codigo => c_err_cantidad,
-                       i_mensaje => 'La cantidad despachada de la línea ' || r_item.linea || ' no puede superar lo aprobado.');
-            end if;
-            v_total := v_total + v_cantidad;
-            if v_cantidad > 0 or r_item.cantidad_aprobada > 0 then
-                t_lineas.extend;
-                t_lineas(t_lineas.count) := erp_stk_mov_item_typ(
-                                                deposito_id           => r_traslado.deposito_id_origen,
-                                                producto_id           => r_item.producto_id,
-                                                cantidad              => -v_cantidad,
-                                                lote_id               => r_item.lote_id,
-                                                deposito_ubicacion_id => r_item.deposito_ubicacion_id_origen,
-                                                reserva               => -r_item.cantidad_aprobada,
-                                                origen_linea_id       => r_item.traslado_item_id);
-            end if;
-            if v_cantidad > 0 then
-                t_lineas.extend;
-                t_lineas(t_lineas.count) := erp_stk_mov_item_typ(
-                                                deposito_id           => v_destino_dep,
-                                                producto_id           => r_item.producto_id,
-                                                cantidad              => v_cantidad,
-                                                lote_id               => r_item.lote_id,
-                                                deposito_ubicacion_id => case when r_traslado.es_un_paso = c_si
-                                                                              then r_item.deposito_ubicacion_id_destino end,
-                                                linea_costo           => t_lineas.count - 1,
-                                                origen_linea_id       => r_item.traslado_item_id);
-            end if;
-            r_item.cantidad_despachada := v_cantidad;
-            if r_traslado.es_un_paso = c_si then
-                r_item.cantidad_recibida := v_cantidad;
-            end if;
-            erp_stk_traslado_item_ctr.actualizar(i_item => r_item);
-        end loop;
-        if v_total = 0 then
-            lanzar(i_codigo => c_err_cantidad, i_mensaje => 'No hay cantidades para despachar.');
-        end if;
-
-        erp_stk_movimiento_reg.generar(
-            i_empresa_id      => r_traslado.empresa_id,
-            i_tipo_movimiento => case when r_traslado.es_un_paso = c_si then c_mov_interno
-                                      when v_es_dev then c_mov_despacho_dev
-                                      else c_mov_despacho end,
-            i_fecha           => cast(v_fecha as date),
-            i_items           => t_lineas,
-            i_origen_modulo   => c_modulo,
-            i_origen_tabla    => c_tabla_origen,
-            i_origen_id       => i_traslado_id,
-            o_movimiento_id   => v_movimiento);
-
-        -- Costo con que salió cada ítem (RN-07) y prorrateo del flete capitalizable (RN-08)
-        for r in (select origen_linea_id, costo_unitario, costo_unitario_reporte, -cantidad cantidad
-                    from erp_stk_movimiento_item
-                   where movimiento_id = v_movimiento
-                     and cantidad < 0) loop
-            r_item := obtener_item(i_traslado_item_id => r.origen_linea_id);
-            r_item.costo_unitario         := r.costo_unitario;
-            r_item.costo_unitario_reporte := r.costo_unitario_reporte;
-            erp_stk_traslado_item_ctr.actualizar(i_item => r_item);
-            v_valor_total := v_valor_total + r.cantidad * r.costo_unitario;
-        end loop;
-        if r_traslado.es_flete_capitalizable = c_si and r_traslado.monto_flete > 0 and r_traslado.es_un_paso = c_no then
-            for r in (select traslado_item_id from erp_stk_traslado_item
-                       where traslado_id = i_traslado_id and cantidad_despachada > 0) loop
-                r_item := obtener_item(i_traslado_item_id => r.traslado_item_id);
-                -- Por valor; si la mercadería no tiene costo, por cantidad
-                r_item.flete_unitario := round(case when v_valor_total > 0
-                                                    then r_traslado.monto_flete * r_item.costo_unitario / v_valor_total
-                                                    else r_traslado.monto_flete / v_total end, 6);
-                r_item.flete_unitario_reporte := round(case when r_item.costo_unitario > 0
-                                                            then r_item.flete_unitario * r_item.costo_unitario_reporte / r_item.costo_unitario
-                                                            else 0 end, 6);
+            -- Líneas del movimiento: sale del origen (libera la reserva) y entra al tránsito al mismo costo
+            for r in (select traslado_item_id from erp_stk_traslado_item where traslado_id = i_traslado_id order by linea) loop
+                r_item     := obtener_item(i_traslado_item_id => r.traslado_item_id);
+                r_indicado := buscar_item(i_items => i_items, i_traslado_item_id => r.traslado_item_id);
+                v_cantidad := case when r_indicado is null then r_item.cantidad_aprobada else coalesce(r_indicado.cantidad, 0) end;
+                if v_cantidad < 0 or v_cantidad > r_item.cantidad_aprobada then
+                    lanzar(i_codigo => c_err_cantidad,
+                           i_mensaje => 'La cantidad despachada de la línea ' || r_item.linea || ' no puede superar lo aprobado.');
+                end if;
+                v_total := v_total + v_cantidad;
+                if v_cantidad > 0 or r_item.cantidad_aprobada > 0 then
+                    t_lineas.extend;
+                    t_lineas(t_lineas.count) := erp_stk_mov_item_typ(
+                                                    deposito_id           => r_traslado.deposito_id_origen,
+                                                    producto_id           => r_item.producto_id,
+                                                    cantidad              => -v_cantidad,
+                                                    lote_id               => r_item.lote_id,
+                                                    deposito_ubicacion_id => r_item.deposito_ubicacion_id_origen,
+                                                    reserva               => -r_item.cantidad_aprobada,
+                                                    origen_linea_id       => r_item.traslado_item_id);
+                end if;
+                if v_cantidad > 0 then
+                    t_lineas.extend;
+                    t_lineas(t_lineas.count) := erp_stk_mov_item_typ(
+                                                    deposito_id           => v_destino_dep,
+                                                    producto_id           => r_item.producto_id,
+                                                    cantidad              => v_cantidad,
+                                                    lote_id               => r_item.lote_id,
+                                                    deposito_ubicacion_id => case when r_traslado.es_un_paso = c_si
+                                                                                  then r_item.deposito_ubicacion_id_destino end,
+                                                    linea_costo           => t_lineas.count - 1,
+                                                    origen_linea_id       => r_item.traslado_item_id);
+                end if;
+                r_item.cantidad_despachada := v_cantidad;
+                if r_traslado.es_un_paso = c_si then
+                    r_item.cantidad_recibida := v_cantidad;
+                end if;
                 erp_stk_traslado_item_ctr.actualizar(i_item => r_item);
             end loop;
-        end if;
+            if v_total = 0 then
+                lanzar(i_codigo => c_err_cantidad, i_mensaje => 'No hay cantidades para despachar.');
+            end if;
 
-        r_traslado.movimiento_id_despacho := v_movimiento;
-        r_traslado.usuario_despacha       := erp_stk_comun_utl.obtener_usuario_auditoria;
-        r_traslado.fecha_salida_real      := v_fecha;
-        r_traslado.fecha_llegada_estimada := greatest(coalesce(r_traslado.fecha_llegada_estimada, v_fecha),
-                                                      v_fecha + numtodsinterval(coalesce(r_traslado.horas_estimadas, 0), 'HOUR'));
-        if r_traslado.es_un_paso = c_si then
-            r_traslado.estado             := c_est_completado;
-            r_traslado.fecha_llegada_real := v_fecha;
-        else
-            r_traslado.estado := c_est_transito;
-        end if;
-        -- Punto de integración: el módulo de documentos emite la nota de remisión de los
-        -- traslados con remision_estado = P y la informa con erp_stk_traslado_api.asignar_remision.
-        if r_traslado.tipo in (c_tipo_remision, c_tipo_tercero) then
-            r_traslado.remision_estado := c_rem_pendiente;
-        end if;
-        erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
-        registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_despachar,
-                         i_estado_anterior => c_est_aprobado, i_estado_nuevo => r_traslado.estado,
-                         i_movimiento_id => v_movimiento);
+            erp_stk_movimiento_reg.generar(
+                i_empresa_id      => r_traslado.empresa_id,
+                i_tipo_movimiento => case when r_traslado.es_un_paso = c_si then c_mov_interno
+                                          when v_es_dev then c_mov_despacho_dev
+                                          else c_mov_despacho end,
+                i_fecha           => cast(v_fecha as date),
+                i_items           => t_lineas,
+                i_origen_modulo   => c_modulo,
+                i_origen_tabla    => c_tabla_origen,
+                i_origen_id       => i_traslado_id,
+                o_movimiento_id   => v_movimiento);
 
-        -- RF-04: lo no despachado pasa a un traslado complementario en borrador
-        if upper(i_debe_crear_complemento) = c_si then
-            for r in (select producto_id, lote_id, deposito_ubicacion_id_origen, cantidad_aprobada - cantidad_despachada cantidad
-                        from erp_stk_traslado_item
-                       where traslado_id = i_traslado_id
-                         and cantidad_aprobada > cantidad_despachada
-                       order by linea) loop
-                if r_hijo.traslado_id is null then
-                    r_hijo                        := r_traslado;
-                    r_hijo.traslado_id            := null;
-                    r_hijo.traslado_id_origen     := i_traslado_id;
-                    r_hijo.relacion               := c_rel_complemento;
-                    r_hijo.estado                 := c_est_borrador;
-                    r_hijo.fecha_emision          := trunc(cast(v_fecha as date));
-                    r_hijo.movimiento_id_despacho := null;
-                    r_hijo.usuario_solicita       := null;
-                    r_hijo.fecha_solicitud        := null;
-                    r_hijo.usuario_aprueba        := null;
-                    r_hijo.fecha_aprobacion       := null;
-                    r_hijo.usuario_despacha       := null;
-                    r_hijo.fecha_salida_estimada  := null;
-                    r_hijo.fecha_llegada_estimada := null;
-                    r_hijo.fecha_salida_real      := null;
-                    r_hijo.fecha_llegada_real     := null;
-                    r_hijo.remision_estado        := c_rem_no_aplica;
-                    r_hijo.monto_flete            := 0;
-                    r_hijo.creado_por             := erp_stk_comun_utl.obtener_usuario_auditoria;
-                    r_hijo.fecha_creacion         := null;
-                    r_hijo.modificado_por         := null;
-                    r_hijo.fecha_modificacion     := null;
-                    insertar_cabecera(io_traslado => r_hijo);
-                end if;
-                insertar_item(i_traslado => r_hijo,
-                              i_item     => erp_stk_tras_item_typ(cantidad => r.cantidad, producto_id => r.producto_id,
-                                                                  lote_id => r.lote_id,
-                                                                  deposito_ubicacion_id => r.deposito_ubicacion_id_origen),
-                              o_traslado_item_id => v_item_id);
+            -- Costo con que salió cada ítem (RN-07) y prorrateo del flete capitalizable (RN-08)
+            for r in (select origen_linea_id, costo_unitario, costo_unitario_reporte, -cantidad cantidad
+                        from erp_stk_movimiento_item
+                       where movimiento_id = v_movimiento
+                         and cantidad < 0) loop
+                r_item := obtener_item(i_traslado_item_id => r.origen_linea_id);
+                r_item.costo_unitario         := r.costo_unitario;
+                r_item.costo_unitario_reporte := r.costo_unitario_reporte;
+                erp_stk_traslado_item_ctr.actualizar(i_item => r_item);
+                v_valor_total := v_valor_total + r.cantidad * r.costo_unitario;
             end loop;
-            o_traslado_id_complemento := r_hijo.traslado_id;
-        end if;
+            if r_traslado.es_flete_capitalizable = c_si and r_traslado.monto_flete > 0 and r_traslado.es_un_paso = c_no then
+                for r in (select traslado_item_id from erp_stk_traslado_item
+                           where traslado_id = i_traslado_id and cantidad_despachada > 0) loop
+                    r_item := obtener_item(i_traslado_item_id => r.traslado_item_id);
+                    -- Por valor; si la mercadería no tiene costo, por cantidad
+                    r_item.flete_unitario := round(case when v_valor_total > 0
+                                                        then r_traslado.monto_flete * r_item.costo_unitario / v_valor_total
+                                                        else r_traslado.monto_flete / v_total end, 6);
+                    r_item.flete_unitario_reporte := round(case when r_item.costo_unitario > 0
+                                                                then r_item.flete_unitario * r_item.costo_unitario_reporte / r_item.costo_unitario
+                                                                else 0 end, 6);
+                    erp_stk_traslado_item_ctr.actualizar(i_item => r_item);
+                end loop;
+            end if;
+
+            r_traslado.movimiento_id_despacho := v_movimiento;
+            r_traslado.usuario_despacha       := erp_stk_comun_utl.obtener_usuario_auditoria;
+            r_traslado.fecha_salida_real      := v_fecha;
+            r_traslado.fecha_llegada_estimada := greatest(coalesce(r_traslado.fecha_llegada_estimada, v_fecha),
+                                                          v_fecha + numtodsinterval(coalesce(r_traslado.horas_estimadas, 0), 'HOUR'));
+            if r_traslado.es_un_paso = c_si then
+                r_traslado.estado             := c_est_completado;
+                r_traslado.fecha_llegada_real := v_fecha;
+            else
+                r_traslado.estado := c_est_transito;
+            end if;
+            -- Punto de integración: el módulo de documentos emite la nota de remisión de los
+            -- traslados con remision_estado = P y la informa con erp_stk_traslado_api.asignar_remision.
+            if r_traslado.tipo in (c_tipo_remision, c_tipo_tercero) then
+                r_traslado.remision_estado := c_rem_pendiente;
+            end if;
+            erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+            registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_despachar,
+                             i_estado_anterior => c_est_aprobado, i_estado_nuevo => r_traslado.estado,
+                             i_movimiento_id => v_movimiento);
+
+            -- RF-04: lo no despachado pasa a un traslado complementario en borrador
+            if upper(i_debe_crear_complemento) = c_si then
+                for r in (select producto_id, lote_id, deposito_ubicacion_id_origen, cantidad_aprobada - cantidad_despachada cantidad
+                            from erp_stk_traslado_item
+                           where traslado_id = i_traslado_id
+                             and cantidad_aprobada > cantidad_despachada
+                           order by linea) loop
+                    if r_hijo.traslado_id is null then
+                        r_hijo                        := r_traslado;
+                        r_hijo.traslado_id            := null;
+                        r_hijo.traslado_id_origen     := i_traslado_id;
+                        r_hijo.relacion               := c_rel_complemento;
+                        r_hijo.estado                 := c_est_borrador;
+                        r_hijo.fecha_emision          := trunc(cast(v_fecha as date));
+                        r_hijo.movimiento_id_despacho := null;
+                        r_hijo.usuario_solicita       := null;
+                        r_hijo.fecha_solicitud        := null;
+                        r_hijo.usuario_aprueba        := null;
+                        r_hijo.fecha_aprobacion       := null;
+                        r_hijo.usuario_despacha       := null;
+                        r_hijo.fecha_salida_estimada  := null;
+                        r_hijo.fecha_llegada_estimada := null;
+                        r_hijo.fecha_salida_real      := null;
+                        r_hijo.fecha_llegada_real     := null;
+                        r_hijo.remision_estado        := c_rem_no_aplica;
+                        r_hijo.monto_flete            := 0;
+                        r_hijo.creado_por             := erp_stk_comun_utl.obtener_usuario_auditoria;
+                        r_hijo.fecha_creacion         := null;
+                        r_hijo.modificado_por         := null;
+                        r_hijo.fecha_modificacion     := null;
+                        insertar_cabecera(io_traslado => r_hijo);
+                    end if;
+                    insertar_item(i_traslado => r_hijo,
+                                  i_item     => erp_stk_tras_item_typ(cantidad => r.cantidad, producto_id => r.producto_id,
+                                                                      lote_id => r.lote_id,
+                                                                      deposito_ubicacion_id => r.deposito_ubicacion_id_origen),
+                                  o_traslado_item_id => v_item_id);
+                end loop;
+                o_traslado_id_complemento := r_hijo.traslado_id;
+            end if;
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_despacho;
 
     -- ------------------------------------------------------------------ recepción y diferencias
@@ -1103,160 +1166,167 @@ as
         v_detalle_id  number;
         v_mov_merma   number;
     begin
-        validar_estado(i_traslado => r_traslado, i_permitidos => c_est_transito || c_est_parcial || c_est_diferencias, i_accion => 'recibir');
-        validar_acceso(i_deposito_id => r_traslado.deposito_id_destino, i_accion => c_accion_recibir);
-        if upper(v_usuario) = upper(r_traslado.usuario_despacha)
-           and obtener_parametro_sn(i_codigo => 'ERP_STK_TRASLADO_SEGREGAR', i_empresa_id => r_traslado.empresa_id, i_defecto => c_no) = c_si then
-            lanzar(i_codigo => c_err_acceso, i_mensaje => 'El usuario que despachó el traslado no puede recibirlo.');
-        end if;
-        if v_fecha < r_traslado.fecha_salida_real then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La recepción no puede ser anterior al despacho.');
-        end if;
-        erp_gen_periodo_api.validar_abierto(i_empresa_id => r_traslado.empresa_id, i_modulo => c_modulo, i_fecha => cast(v_fecha as date));
-        validar_items_del_traslado(i_traslado_id => i_traslado_id, i_items => i_items);
-        v_tolerancia := coalesce(erp_gen_parametro_api.obtener_numero(i_codigo => 'ERP_STK_TRASLADO_TOLERANCIA',
-                                                                      i_empresa_id => r_traslado.empresa_id, i_defecto => 0), 0);
+        savepoint sp_erp_stk_traslado;
+        begin
+            validar_estado(i_traslado => r_traslado, i_permitidos => c_est_transito || c_est_parcial || c_est_diferencias, i_accion => 'recibir');
+            validar_acceso(i_deposito_id => r_traslado.deposito_id_destino, i_accion => c_accion_recibir);
+            if upper(v_usuario) = upper(r_traslado.usuario_despacha)
+               and obtener_parametro_sn(i_codigo => 'ERP_STK_TRASLADO_SEGREGAR', i_empresa_id => r_traslado.empresa_id, i_defecto => c_no) = c_si then
+                lanzar(i_codigo => c_err_acceso, i_mensaje => 'El usuario que despachó el traslado no puede recibirlo.');
+            end if;
+            if v_fecha < r_traslado.fecha_salida_real then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La recepción no puede ser anterior al despacho.');
+            end if;
+            erp_gen_periodo_api.validar_abierto(i_empresa_id => r_traslado.empresa_id, i_modulo => c_modulo, i_fecha => cast(v_fecha as date));
+            validar_items_del_traslado(i_traslado_id => i_traslado_id, i_items => i_items);
+            v_tolerancia := coalesce(erp_gen_parametro_api.obtener_numero(i_codigo => 'ERP_STK_TRASLADO_TOLERANCIA',
+                                                                          i_empresa_id => r_traslado.empresa_id, i_defecto => 0), 0);
 
-        select coalesce(max(numero), 0) + 1 into r_recepcion.numero
-          from erp_stk_traslado_recep
-         where traslado_id = i_traslado_id;
-        r_recepcion.traslado_id     := i_traslado_id;
-        r_recepcion.fecha_recepcion := v_fecha;
-        r_recepcion.usuario_recibe  := v_usuario;
-        r_recepcion.observacion     := i_observacion;
+            select coalesce(max(numero), 0) + 1 into r_recepcion.numero
+              from erp_stk_traslado_recep
+             where traslado_id = i_traslado_id;
+            r_recepcion.traslado_id     := i_traslado_id;
+            r_recepcion.fecha_recepcion := v_fecha;
+            r_recepcion.usuario_recibe  := v_usuario;
+            r_recepcion.observacion     := i_observacion;
 
-        for r in (select traslado_item_id from erp_stk_traslado_item where traslado_id = i_traslado_id order by linea) loop
-            r_item     := obtener_item(i_traslado_item_id => r.traslado_item_id);
-            r_indicado := buscar_item(i_items => i_items, i_traslado_item_id => r.traslado_item_id);
-            -- Lo que sigue en tránsito sin declarar
-            v_libre := r_item.cantidad_despachada - r_item.cantidad_recibida - r_item.cantidad_averiada
-                       - r_item.cantidad_perdida - r_item.cantidad_devuelta - r_item.cantidad_faltante;
-            if i_items is null then
-                v_recibida := v_libre;   -- sin detalle: se recibe conforme todo lo pendiente
-                v_averiada := 0;
-                v_faltante := 0;
-                v_sobrante := 0;
-            elsif r_indicado is null then
-                continue;
-            else
-                v_recibida := coalesce(r_indicado.cantidad, 0);
-                v_averiada := coalesce(r_indicado.cantidad_averiada, 0);
-                v_faltante := coalesce(r_indicado.cantidad_faltante, 0);
-                v_sobrante := coalesce(r_indicado.cantidad_sobrante, 0);
-            end if;
-            if v_recibida < 0 or v_averiada < 0 or v_faltante < 0 or v_sobrante < 0 then
-                lanzar(i_codigo => c_err_cantidad, i_mensaje => 'Las cantidades de la recepción no pueden ser negativas.');
-            end if;
-            -- RN-06
-            if v_recibida + v_averiada + v_faltante > v_libre then
-                lanzar(i_codigo => c_err_cantidad,
-                       i_mensaje => 'La línea ' || r_item.linea || ' recibe más de lo que queda en tránsito ('
-                                    || rtrim(to_char(v_libre, 'fm999999999999990.9999'), '.') || ').');
-            end if;
-            if v_recibida + v_averiada + v_faltante + v_sobrante = 0 then
-                continue;
-            end if;
-            v_declarado := v_declarado + v_recibida + v_averiada + v_faltante + v_sobrante;
-
-            if v_recibida + v_averiada > 0 then
-                -- Sale del tránsito al costo de salida; entra al destino al mismo costo más el flete capitalizable
-                t_lineas.extend;
-                t_lineas(t_lineas.count) := erp_stk_mov_item_typ(
-                                                deposito_id            => r_traslado.deposito_id_transito,
-                                                producto_id            => r_item.producto_id,
-                                                cantidad               => -(v_recibida + v_averiada),
-                                                lote_id                => r_item.lote_id,
-                                                costo_unitario         => r_item.costo_unitario,
-                                                costo_unitario_reporte => r_item.costo_unitario_reporte,
-                                                origen_linea_id        => r_item.traslado_item_id);
-            end if;
-            if v_recibida > 0 then
-                t_lineas.extend;
-                t_lineas(t_lineas.count) := erp_stk_mov_item_typ(
-                                                deposito_id            => r_traslado.deposito_id_destino,
-                                                producto_id            => r_item.producto_id,
-                                                cantidad               => v_recibida,
-                                                lote_id                => r_item.lote_id,
-                                                deposito_ubicacion_id  => coalesce(r_indicado.deposito_ubicacion_id, r_item.deposito_ubicacion_id_destino),
-                                                costo_unitario         => r_item.costo_unitario + r_item.flete_unitario,
-                                                costo_unitario_reporte => r_item.costo_unitario_reporte + r_item.flete_unitario_reporte,
-                                                origen_linea_id        => r_item.traslado_item_id);
-            end if;
-            if v_averiada > 0 then
-                -- RN-14: lo dañado entra a cuarentena, no disponible
-                if v_cuarentena is null then
-                    v_cuarentena := obtener_cuarentena(i_deposito_id => r_traslado.deposito_id_destino);
+            for r in (select traslado_item_id from erp_stk_traslado_item where traslado_id = i_traslado_id order by linea) loop
+                r_item     := obtener_item(i_traslado_item_id => r.traslado_item_id);
+                r_indicado := buscar_item(i_items => i_items, i_traslado_item_id => r.traslado_item_id);
+                -- Lo que sigue en tránsito sin declarar
+                v_libre := r_item.cantidad_despachada - r_item.cantidad_recibida - r_item.cantidad_averiada
+                           - r_item.cantidad_perdida - r_item.cantidad_devuelta - r_item.cantidad_faltante;
+                if i_items is null then
+                    v_recibida := v_libre;   -- sin detalle: se recibe conforme todo lo pendiente
+                    v_averiada := 0;
+                    v_faltante := 0;
+                    v_sobrante := 0;
+                elsif r_indicado is null then
+                    continue;
+                else
+                    v_recibida := coalesce(r_indicado.cantidad, 0);
+                    v_averiada := coalesce(r_indicado.cantidad_averiada, 0);
+                    v_faltante := coalesce(r_indicado.cantidad_faltante, 0);
+                    v_sobrante := coalesce(r_indicado.cantidad_sobrante, 0);
                 end if;
-                t_lineas.extend;
-                t_lineas(t_lineas.count) := erp_stk_mov_item_typ(
-                                                deposito_id            => r_traslado.deposito_id_destino,
-                                                producto_id            => r_item.producto_id,
-                                                cantidad               => v_averiada,
-                                                lote_id                => r_item.lote_id,
-                                                deposito_ubicacion_id  => v_cuarentena,
-                                                costo_unitario         => r_item.costo_unitario + r_item.flete_unitario,
-                                                costo_unitario_reporte => r_item.costo_unitario_reporte + r_item.flete_unitario_reporte,
-                                                origen_linea_id        => r_item.traslado_item_id);
+                if v_recibida < 0 or v_averiada < 0 or v_faltante < 0 or v_sobrante < 0 then
+                    lanzar(i_codigo => c_err_cantidad, i_mensaje => 'Las cantidades de la recepción no pueden ser negativas.');
+                end if;
+                -- RN-06
+                if v_recibida + v_averiada + v_faltante > v_libre then
+                    lanzar(i_codigo => c_err_cantidad,
+                           i_mensaje => 'La línea ' || r_item.linea || ' recibe más de lo que queda en tránsito ('
+                                        || rtrim(to_char(v_libre, 'fm999999999999990.9999'), '.') || ').');
+                end if;
+                if v_recibida + v_averiada + v_faltante + v_sobrante = 0 then
+                    continue;
+                end if;
+                v_declarado := v_declarado + v_recibida + v_averiada + v_faltante + v_sobrante;
+
+                if v_recibida + v_averiada > 0 then
+                    -- Sale del tránsito al costo de salida; entra al destino al mismo costo más el flete capitalizable
+                    t_lineas.extend;
+                    t_lineas(t_lineas.count) := erp_stk_mov_item_typ(
+                                                    deposito_id            => r_traslado.deposito_id_transito,
+                                                    producto_id            => r_item.producto_id,
+                                                    cantidad               => -(v_recibida + v_averiada),
+                                                    lote_id                => r_item.lote_id,
+                                                    costo_unitario         => r_item.costo_unitario,
+                                                    costo_unitario_reporte => r_item.costo_unitario_reporte,
+                                                    origen_linea_id        => r_item.traslado_item_id);
+                end if;
+                if v_recibida > 0 then
+                    t_lineas.extend;
+                    t_lineas(t_lineas.count) := erp_stk_mov_item_typ(
+                                                    deposito_id            => r_traslado.deposito_id_destino,
+                                                    producto_id            => r_item.producto_id,
+                                                    cantidad               => v_recibida,
+                                                    lote_id                => r_item.lote_id,
+                                                    deposito_ubicacion_id  => coalesce(r_indicado.deposito_ubicacion_id, r_item.deposito_ubicacion_id_destino),
+                                                    costo_unitario         => r_item.costo_unitario + r_item.flete_unitario,
+                                                    costo_unitario_reporte => r_item.costo_unitario_reporte + r_item.flete_unitario_reporte,
+                                                    origen_linea_id        => r_item.traslado_item_id);
+                end if;
+                if v_averiada > 0 then
+                    -- RN-14: lo dañado entra a cuarentena, no disponible
+                    if v_cuarentena is null then
+                        v_cuarentena := obtener_cuarentena(i_deposito_id => r_traslado.deposito_id_destino);
+                    end if;
+                    t_lineas.extend;
+                    t_lineas(t_lineas.count) := erp_stk_mov_item_typ(
+                                                    deposito_id            => r_traslado.deposito_id_destino,
+                                                    producto_id            => r_item.producto_id,
+                                                    cantidad               => v_averiada,
+                                                    lote_id                => r_item.lote_id,
+                                                    deposito_ubicacion_id  => v_cuarentena,
+                                                    costo_unitario         => r_item.costo_unitario + r_item.flete_unitario,
+                                                    costo_unitario_reporte => r_item.costo_unitario_reporte + r_item.flete_unitario_reporte,
+                                                    origen_linea_id        => r_item.traslado_item_id);
+                end if;
+
+                r_item.cantidad_recibida := r_item.cantidad_recibida + v_recibida;
+                r_item.cantidad_averiada := r_item.cantidad_averiada + v_averiada;
+                r_item.cantidad_faltante := r_item.cantidad_faltante + v_faltante;
+                erp_stk_traslado_item_ctr.actualizar(i_item => r_item);
+
+                r_detalle := null;
+                r_detalle.traslado_item_id  := r_item.traslado_item_id;
+                r_detalle.cantidad_recibida := v_recibida;
+                r_detalle.cantidad_averiada := v_averiada;
+                r_detalle.cantidad_faltante := v_faltante;
+                r_detalle.cantidad_sobrante := v_sobrante;
+                r_detalle.observacion       := r_indicado.observacion;
+                t_detalles(t_detalles.count + 1) := r_detalle;
+                -- Faltante dentro de la tolerancia de la empresa: se da de baja solo, como merma
+                t_es_merma(t_detalles.count) := v_faltante > 0 and v_tolerancia > 0
+                                                and r_item.cantidad_perdida + v_faltante <= r_item.cantidad_despachada * v_tolerancia / 100;
+            end loop;
+            if v_declarado = 0 then
+                lanzar(i_codigo => c_err_cantidad, i_mensaje => 'La recepción no tiene cantidades.');
             end if;
 
-            r_item.cantidad_recibida := r_item.cantidad_recibida + v_recibida;
-            r_item.cantidad_averiada := r_item.cantidad_averiada + v_averiada;
-            r_item.cantidad_faltante := r_item.cantidad_faltante + v_faltante;
-            erp_stk_traslado_item_ctr.actualizar(i_item => r_item);
-
-            r_detalle := null;
-            r_detalle.traslado_item_id  := r_item.traslado_item_id;
-            r_detalle.cantidad_recibida := v_recibida;
-            r_detalle.cantidad_averiada := v_averiada;
-            r_detalle.cantidad_faltante := v_faltante;
-            r_detalle.cantidad_sobrante := v_sobrante;
-            r_detalle.observacion       := r_indicado.observacion;
-            t_detalles(t_detalles.count + 1) := r_detalle;
-            -- Faltante dentro de la tolerancia de la empresa: se da de baja solo, como merma
-            t_es_merma(t_detalles.count) := v_faltante > 0 and v_tolerancia > 0
-                                            and r_item.cantidad_perdida + v_faltante <= r_item.cantidad_despachada * v_tolerancia / 100;
-        end loop;
-        if v_declarado = 0 then
-            lanzar(i_codigo => c_err_cantidad, i_mensaje => 'La recepción no tiene cantidades.');
-        end if;
-
-        if t_lineas.count > 0 then
-            erp_stk_movimiento_reg.generar(
-                i_empresa_id      => r_traslado.empresa_id,
-                i_tipo_movimiento => c_mov_recepcion,
-                i_fecha           => cast(v_fecha as date),
-                i_items           => t_lineas,
-                i_origen_modulo   => c_modulo,
-                i_origen_tabla    => c_tabla_origen,
-                i_origen_id       => i_traslado_id,
-                o_movimiento_id   => r_recepcion.movimiento_id);
-        end if;
-        erp_stk_traslado_recep_ctr.insertar(i_recepcion => r_recepcion, o_traslado_recep_id => o_traslado_recep_id);
-        for i in 1 .. t_detalles.count loop
-            t_detalles(i).traslado_recep_id := o_traslado_recep_id;
-            erp_stk_traslado_recep_det_ctr.insertar(i_detalle => t_detalles(i), o_traslado_recep_det_id => v_detalle_id);
-            if t_es_merma(i) then
-                t_mermas(t_mermas.count + 1) := v_detalle_id;
+            if t_lineas.count > 0 then
+                erp_stk_movimiento_reg.generar(
+                    i_empresa_id      => r_traslado.empresa_id,
+                    i_tipo_movimiento => c_mov_recepcion,
+                    i_fecha           => cast(v_fecha as date),
+                    i_items           => t_lineas,
+                    i_origen_modulo   => c_modulo,
+                    i_origen_tabla    => c_tabla_origen,
+                    i_origen_id       => i_traslado_id,
+                    o_movimiento_id   => r_recepcion.movimiento_id);
             end if;
-        end loop;
-        for i in 1 .. t_mermas.count loop
-            resolver_interno(
-                i_traslado               => r_traslado,
-                i_traslado_recep_det_id  => t_mermas(i),
-                i_resolucion             => c_res_merma,
-                i_persona_id_responsable => null,
-                i_observacion            => 'Merma dentro de la tolerancia',
-                i_fecha                  => v_fecha,
-                o_movimiento_id          => v_mov_merma);
-        end loop;
+            erp_stk_traslado_recep_ctr.insertar(i_recepcion => r_recepcion, o_traslado_recep_id => o_traslado_recep_id);
+            for i in 1 .. t_detalles.count loop
+                t_detalles(i).traslado_recep_id := o_traslado_recep_id;
+                erp_stk_traslado_recep_det_ctr.insertar(i_detalle => t_detalles(i), o_traslado_recep_det_id => v_detalle_id);
+                if t_es_merma(i) then
+                    t_mermas(t_mermas.count + 1) := v_detalle_id;
+                end if;
+            end loop;
+            for i in 1 .. t_mermas.count loop
+                resolver_interno(
+                    i_traslado               => r_traslado,
+                    i_traslado_recep_det_id  => t_mermas(i),
+                    i_resolucion             => c_res_merma,
+                    i_persona_id_responsable => null,
+                    i_observacion            => 'Merma dentro de la tolerancia',
+                    i_fecha                  => v_fecha,
+                    o_movimiento_id          => v_mov_merma);
+            end loop;
 
-        r_traslado.estado             := calcular_estado(i_traslado_id => i_traslado_id);
-        r_traslado.fecha_llegada_real := v_fecha;
-        erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
-        registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_recibir,
-                         i_estado_anterior => v_anterior, i_estado_nuevo => r_traslado.estado,
-                         i_movimiento_id => r_recepcion.movimiento_id,
-                         i_detalle => armar_detalle(i_clave => 'recepcion', i_valor => to_char(r_recepcion.numero)));
+            r_traslado.estado             := calcular_estado(i_traslado_id => i_traslado_id);
+            r_traslado.fecha_llegada_real := v_fecha;
+            erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+            registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_recibir,
+                             i_estado_anterior => v_anterior, i_estado_nuevo => r_traslado.estado,
+                             i_movimiento_id => r_recepcion.movimiento_id,
+                             i_detalle => armar_detalle(i_clave => 'recepcion', i_valor => to_char(r_recepcion.numero)));
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_recepcion;
 
     procedure aplicar_resolucion (
@@ -1271,36 +1341,43 @@ as
         v_anterior    varchar2(1);
         v_movimiento  number;
     begin
+        savepoint sp_erp_stk_traslado;
         begin
-            select i.traslado_id
-              into v_traslado
-              from erp_stk_traslado_recep_det d
-              join erp_stk_traslado_item i on i.traslado_item_id = d.traslado_item_id
-             where d.traslado_recep_det_id = i_traslado_recep_det_id;
+            begin
+                select i.traslado_id
+                  into v_traslado
+                  from erp_stk_traslado_recep_det d
+                  join erp_stk_traslado_item i on i.traslado_item_id = d.traslado_item_id
+                 where d.traslado_recep_det_id = i_traslado_recep_det_id;
+            exception
+                when no_data_found then
+                    lanzar(i_codigo => erp_stk_comun_utl.c_err_no_existe, i_mensaje => 'La línea de recepción indicada no existe.');
+            end;
+            r_traslado := bloquear_traslado(i_traslado_id => v_traslado);
+            v_anterior := r_traslado.estado;
+            validar_estado(i_traslado => r_traslado, i_permitidos => c_est_parcial || c_est_diferencias, i_accion => 'resolver diferencias de');
+            if upper(i_resolucion) = c_res_merma then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La merma solo la aplica el sistema según la tolerancia.');
+            end if;
+            resolver_interno(
+                i_traslado               => r_traslado,
+                i_traslado_recep_det_id  => i_traslado_recep_det_id,
+                i_resolucion             => upper(i_resolucion),
+                i_persona_id_responsable => i_persona_id_responsable,
+                i_observacion            => i_observacion,
+                i_fecha                  => coalesce(i_fecha, systimestamp),
+                o_movimiento_id          => v_movimiento);
+            r_traslado.estado := calcular_estado(i_traslado_id => v_traslado);
+            erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+            registrar_evento(i_traslado_id => v_traslado, i_evento => c_evt_resolver,
+                             i_estado_anterior => v_anterior, i_estado_nuevo => r_traslado.estado,
+                             i_movimiento_id => v_movimiento,
+                             i_detalle => armar_detalle(i_clave => 'resolucion', i_valor => upper(i_resolucion)));
         exception
-            when no_data_found then
-                lanzar(i_codigo => erp_stk_comun_utl.c_err_no_existe, i_mensaje => 'La línea de recepción indicada no existe.');
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
         end;
-        r_traslado := bloquear_traslado(i_traslado_id => v_traslado);
-        v_anterior := r_traslado.estado;
-        validar_estado(i_traslado => r_traslado, i_permitidos => c_est_parcial || c_est_diferencias, i_accion => 'resolver diferencias de');
-        if upper(i_resolucion) = c_res_merma then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'La merma solo la aplica el sistema según la tolerancia.');
-        end if;
-        resolver_interno(
-            i_traslado               => r_traslado,
-            i_traslado_recep_det_id  => i_traslado_recep_det_id,
-            i_resolucion             => upper(i_resolucion),
-            i_persona_id_responsable => i_persona_id_responsable,
-            i_observacion            => i_observacion,
-            i_fecha                  => coalesce(i_fecha, systimestamp),
-            o_movimiento_id          => v_movimiento);
-        r_traslado.estado := calcular_estado(i_traslado_id => v_traslado);
-        erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
-        registrar_evento(i_traslado_id => v_traslado, i_evento => c_evt_resolver,
-                         i_estado_anterior => v_anterior, i_estado_nuevo => r_traslado.estado,
-                         i_movimiento_id => v_movimiento,
-                         i_detalle => armar_detalle(i_clave => 'resolucion', i_valor => upper(i_resolucion)));
     end aplicar_resolucion;
 
     -- ------------------------------------------------------------------ anulación y devolución
@@ -1314,42 +1391,49 @@ as
         v_anterior    varchar2(1) := r_traslado.estado;
         v_movimiento  number;
     begin
-        if trim(i_motivo) is null then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Indique el motivo de la anulación.');
-        end if;
-        if r_traslado.estado in (c_est_parcial, c_est_diferencias, c_est_completado) then
-            lanzar(i_codigo => c_err_no_anulable,
-                   i_mensaje => 'El traslado ya tiene mercadería recibida: no se anula, se devuelve con un traslado de devolución.');
-        end if;
-        validar_estado(i_traslado => r_traslado,
-                       i_permitidos => c_est_borrador || c_est_solicitado || c_est_aprobado || c_est_transito,
-                       i_accion => 'anular');
-        if r_traslado.estado = c_est_aprobado then
-            liberar_reservas(i_traslado => r_traslado);
-        elsif r_traslado.estado = c_est_transito then
-            if r_traslado.movimiento_id_despacho is null then
+        savepoint sp_erp_stk_traslado;
+        begin
+            if trim(i_motivo) is null then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Indique el motivo de la anulación.');
+            end if;
+            if r_traslado.estado in (c_est_parcial, c_est_diferencias, c_est_completado) then
                 lanzar(i_codigo => c_err_no_anulable,
-                       i_mensaje => 'Una devolución en tránsito no se anula: se recibe en el depósito de origen.');
+                       i_mensaje => 'El traslado ya tiene mercadería recibida: no se anula, se devuelve con un traslado de devolución.');
             end if;
-            validar_acceso(i_deposito_id => r_traslado.deposito_id_origen, i_accion => c_accion_despachar);
-            erp_stk_movimiento_reg.generar_reverso(
-                i_movimiento_id => r_traslado.movimiento_id_despacho,
-                i_fecha         => cast(coalesce(i_fecha, systimestamp) as date),
-                i_motivo        => trim(i_motivo),
-                o_movimiento_id => v_movimiento);
-            -- Punto de integración: si la remisión ya fue emitida, el módulo de documentos
-            -- debe enviar su evento de cancelación (los traslados con remision_estado = C).
-            if r_traslado.remision_estado in (c_rem_generada, c_rem_pendiente) then
-                r_traslado.remision_estado := case r_traslado.remision_estado when c_rem_generada then c_rem_cancelada else c_rem_no_aplica end;
+            validar_estado(i_traslado => r_traslado,
+                           i_permitidos => c_est_borrador || c_est_solicitado || c_est_aprobado || c_est_transito,
+                           i_accion => 'anular');
+            if r_traslado.estado = c_est_aprobado then
+                liberar_reservas(i_traslado => r_traslado);
+            elsif r_traslado.estado = c_est_transito then
+                if r_traslado.movimiento_id_despacho is null then
+                    lanzar(i_codigo => c_err_no_anulable,
+                           i_mensaje => 'Una devolución en tránsito no se anula: se recibe en el depósito de origen.');
+                end if;
+                validar_acceso(i_deposito_id => r_traslado.deposito_id_origen, i_accion => c_accion_despachar);
+                erp_stk_movimiento_reg.generar_reverso(
+                    i_movimiento_id => r_traslado.movimiento_id_despacho,
+                    i_fecha         => cast(coalesce(i_fecha, systimestamp) as date),
+                    i_motivo        => trim(i_motivo),
+                    o_movimiento_id => v_movimiento);
+                -- Punto de integración: si la remisión ya fue emitida, el módulo de documentos
+                -- debe enviar su evento de cancelación (los traslados con remision_estado = C).
+                if r_traslado.remision_estado in (c_rem_generada, c_rem_pendiente) then
+                    r_traslado.remision_estado := case r_traslado.remision_estado when c_rem_generada then c_rem_cancelada else c_rem_no_aplica end;
+                end if;
             end if;
-        end if;
-        r_traslado.estado           := c_est_anulado;
-        r_traslado.motivo_anulacion := trim(i_motivo);
-        erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
-        registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_anular,
-                         i_estado_anterior => v_anterior, i_estado_nuevo => c_est_anulado,
-                         i_movimiento_id => v_movimiento,
-                         i_detalle => armar_detalle(i_clave => 'motivo', i_valor => trim(i_motivo)));
+            r_traslado.estado           := c_est_anulado;
+            r_traslado.motivo_anulacion := trim(i_motivo);
+            erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+            registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_anular,
+                             i_estado_anterior => v_anterior, i_estado_nuevo => c_est_anulado,
+                             i_movimiento_id => v_movimiento,
+                             i_detalle => armar_detalle(i_clave => 'motivo', i_valor => trim(i_motivo)));
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_anulacion;
 
     procedure generar_devolucion (
@@ -1373,122 +1457,129 @@ as
         v_linea      pls_integer := 0;
         v_item_id    number;
     begin
-        validar_estado(i_traslado => r_original,
-                       i_permitidos => c_est_transito || c_est_parcial || c_est_diferencias || c_est_completado,
-                       i_accion => 'devolver');
-        validar_acceso(i_deposito_id => r_original.deposito_id_destino, i_accion => c_accion_recibir);
-        validar_items_del_traslado(i_traslado_id => i_traslado_id, i_items => i_items);
-        if v_modo is null then
-            v_modo := case when r_original.estado = c_est_completado then c_dev_recibido else c_dev_transito end;
-        end if;
-        if v_modo not in (c_dev_transito, c_dev_recibido) then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'El modo de devolución debe ser T (en tránsito) o R (recibido).');
-        end if;
-        if v_modo = c_dev_transito and r_original.estado = c_est_completado then
-            lanzar(i_codigo => c_err_estado, i_mensaje => 'El traslado no tiene mercadería en tránsito para rechazar.');
-        end if;
-
-        -- Cabecera: mismo tipo, sentido inverso, motivo de devolución
-        r_destino := obtener_deposito(i_deposito_id => r_original.deposito_id_destino);
-        r_nuevo.empresa_id          := r_original.empresa_id;
-        r_nuevo.sucursal_id         := r_destino.sucursal_id;
-        r_nuevo.tipo                := r_original.tipo;
-        r_nuevo.deposito_id_origen  := r_original.deposito_id_destino;
-        r_nuevo.deposito_id_destino := r_original.deposito_id_origen;
-        r_nuevo.persona_id_destino  := r_original.persona_id_destino;
-        r_nuevo.traslado_id_origen  := i_traslado_id;
-        r_nuevo.relacion            := c_rel_devolucion;
-        r_nuevo.fecha_emision       := trunc(current_date);
-        r_nuevo.kilometros          := r_original.kilometros;
-        r_nuevo.horas_estimadas     := r_original.horas_estimadas;
-        r_nuevo.monto_flete         := 0;
-        r_nuevo.es_flete_capitalizable := c_no;
-        r_nuevo.remision_estado     := c_rem_no_aplica;
-        r_nuevo.creado_por          := erp_stk_comun_utl.obtener_usuario_auditoria;
-        select min(motivo_traslado_id)
-          into r_nuevo.motivo_traslado_id
-          from erp_stk_motivo_traslado
-         where es_devolucion = c_si
-           and estado        = c_activo;
-        if r_nuevo.motivo_traslado_id is null then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_no_existe, i_mensaje => 'No hay un motivo de traslado marcado como devolución.');
-        end if;
-
-        if v_modo = c_dev_transito then
-            -- La mercadería sigue en el mismo depósito de tránsito: solo cambia de traslado.
-            r_nuevo.es_un_paso             := c_no;
-            r_nuevo.deposito_id_transito   := r_original.deposito_id_transito;
-            r_nuevo.estado                 := c_est_transito;
-            r_nuevo.usuario_solicita       := r_nuevo.creado_por;
-            r_nuevo.fecha_solicitud        := v_ahora;
-            r_nuevo.usuario_despacha       := r_nuevo.creado_por;
-            r_nuevo.fecha_salida_real      := v_ahora;
-            r_nuevo.fecha_llegada_estimada := v_ahora + numtodsinterval(coalesce(r_nuevo.horas_estimadas, 0), 'HOUR');
-            if r_nuevo.tipo in (c_tipo_remision, c_tipo_tercero) then
-                r_nuevo.remision_estado := c_rem_pendiente;
+        savepoint sp_erp_stk_traslado;
+        begin
+            validar_estado(i_traslado => r_original,
+                           i_permitidos => c_est_transito || c_est_parcial || c_est_diferencias || c_est_completado,
+                           i_accion => 'devolver');
+            validar_acceso(i_deposito_id => r_original.deposito_id_destino, i_accion => c_accion_recibir);
+            validar_items_del_traslado(i_traslado_id => i_traslado_id, i_items => i_items);
+            if v_modo is null then
+                v_modo := case when r_original.estado = c_est_completado then c_dev_recibido else c_dev_transito end;
             end if;
-        else
-            r_nuevo.es_un_paso := r_original.es_un_paso;
-            r_nuevo.estado     := c_est_borrador;
-            if r_nuevo.es_un_paso = c_no then
-                r_nuevo.deposito_id_transito := obtener_deposito_transito(i_sucursal_id => r_destino.sucursal_id);
+            if v_modo not in (c_dev_transito, c_dev_recibido) then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'El modo de devolución debe ser T (en tránsito) o R (recibido).');
             end if;
-        end if;
-        insertar_cabecera(io_traslado => r_nuevo);
-        o_traslado_id := r_nuevo.traslado_id;
+            if v_modo = c_dev_transito and r_original.estado = c_est_completado then
+                lanzar(i_codigo => c_err_estado, i_mensaje => 'El traslado no tiene mercadería en tránsito para rechazar.');
+            end if;
 
-        for r in (select traslado_item_id from erp_stk_traslado_item where traslado_id = i_traslado_id order by linea) loop
-            r_item     := obtener_item(i_traslado_item_id => r.traslado_item_id);
-            r_indicado := buscar_item(i_items => i_items, i_traslado_item_id => r.traslado_item_id);
-            v_maximo   := case v_modo
-                              when c_dev_transito then r_item.cantidad_despachada - r_item.cantidad_recibida - r_item.cantidad_averiada
-                                                       - r_item.cantidad_perdida - r_item.cantidad_devuelta - r_item.cantidad_faltante
-                              else r_item.cantidad_recibida
-                          end;
-            v_cantidad := case when i_items is null then v_maximo
-                               when r_indicado is null then 0
-                               else coalesce(r_indicado.cantidad, 0) end;
-            if v_cantidad < 0 or v_cantidad > v_maximo then
-                lanzar(i_codigo => c_err_cantidad,
-                       i_mensaje => 'La cantidad a devolver de la línea ' || r_item.linea || ' supera lo '
-                                    || case v_modo when c_dev_transito then 'que queda en tránsito.' else 'recibido.' end);
+            -- Cabecera: mismo tipo, sentido inverso, motivo de devolución
+            r_destino := obtener_deposito(i_deposito_id => r_original.deposito_id_destino);
+            r_nuevo.empresa_id          := r_original.empresa_id;
+            r_nuevo.sucursal_id         := r_destino.sucursal_id;
+            r_nuevo.tipo                := r_original.tipo;
+            r_nuevo.deposito_id_origen  := r_original.deposito_id_destino;
+            r_nuevo.deposito_id_destino := r_original.deposito_id_origen;
+            r_nuevo.persona_id_destino  := r_original.persona_id_destino;
+            r_nuevo.traslado_id_origen  := i_traslado_id;
+            r_nuevo.relacion            := c_rel_devolucion;
+            r_nuevo.fecha_emision       := trunc(current_date);
+            r_nuevo.kilometros          := r_original.kilometros;
+            r_nuevo.horas_estimadas     := r_original.horas_estimadas;
+            r_nuevo.monto_flete         := 0;
+            r_nuevo.es_flete_capitalizable := c_no;
+            r_nuevo.remision_estado     := c_rem_no_aplica;
+            r_nuevo.creado_por          := erp_stk_comun_utl.obtener_usuario_auditoria;
+            select min(motivo_traslado_id)
+              into r_nuevo.motivo_traslado_id
+              from erp_stk_motivo_traslado
+             where es_devolucion = c_si
+               and estado        = c_activo;
+            if r_nuevo.motivo_traslado_id is null then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_no_existe, i_mensaje => 'No hay un motivo de traslado marcado como devolución.');
             end if;
-            if v_cantidad = 0 then
-                continue;
-            end if;
-            v_total := v_total + v_cantidad;
-            v_linea := v_linea + 1;
 
-            r_hijo := null;
-            r_hijo.traslado_id                   := r_nuevo.traslado_id;
-            r_hijo.linea                         := v_linea;
-            r_hijo.producto_id                   := r_item.producto_id;
-            r_hijo.lote_id                       := r_item.lote_id;
-            r_hijo.deposito_ubicacion_id_origen  := case when v_modo = c_dev_recibido then r_item.deposito_ubicacion_id_destino end;
-            r_hijo.deposito_ubicacion_id_destino := r_item.deposito_ubicacion_id_origen;
-            r_hijo.cantidad_solicitada           := v_cantidad;
             if v_modo = c_dev_transito then
-                r_hijo.cantidad_aprobada      := v_cantidad;
-                r_hijo.cantidad_despachada    := v_cantidad;
-                r_hijo.costo_unitario         := r_item.costo_unitario;
-                r_hijo.costo_unitario_reporte := r_item.costo_unitario_reporte;
-                -- En el original deja de estar pendiente: vuelve al origen por la devolución
-                r_item.cantidad_devuelta := r_item.cantidad_devuelta + v_cantidad;
-                erp_stk_traslado_item_ctr.actualizar(i_item => r_item);
+                -- La mercadería sigue en el mismo depósito de tránsito: solo cambia de traslado.
+                r_nuevo.es_un_paso             := c_no;
+                r_nuevo.deposito_id_transito   := r_original.deposito_id_transito;
+                r_nuevo.estado                 := c_est_transito;
+                r_nuevo.usuario_solicita       := r_nuevo.creado_por;
+                r_nuevo.fecha_solicitud        := v_ahora;
+                r_nuevo.usuario_despacha       := r_nuevo.creado_por;
+                r_nuevo.fecha_salida_real      := v_ahora;
+                r_nuevo.fecha_llegada_estimada := v_ahora + numtodsinterval(coalesce(r_nuevo.horas_estimadas, 0), 'HOUR');
+                if r_nuevo.tipo in (c_tipo_remision, c_tipo_tercero) then
+                    r_nuevo.remision_estado := c_rem_pendiente;
+                end if;
+            else
+                r_nuevo.es_un_paso := r_original.es_un_paso;
+                r_nuevo.estado     := c_est_borrador;
+                if r_nuevo.es_un_paso = c_no then
+                    r_nuevo.deposito_id_transito := obtener_deposito_transito(i_sucursal_id => r_destino.sucursal_id);
+                end if;
             end if;
-            erp_stk_traslado_item_ctr.insertar(i_item => r_hijo, o_traslado_item_id => v_item_id);
-        end loop;
-        if v_total = 0 then
-            lanzar(i_codigo => c_err_cantidad, i_mensaje => 'No hay cantidades para devolver.');
-        end if;
+            insertar_cabecera(io_traslado => r_nuevo);
+            o_traslado_id := r_nuevo.traslado_id;
 
-        if v_modo = c_dev_transito then
-            r_original.estado := calcular_estado(i_traslado_id => i_traslado_id);
-            erp_stk_traslado_ctr.actualizar(i_traslado => r_original);
-        end if;
-        registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_devolver,
-                         i_estado_anterior => v_anterior, i_estado_nuevo => r_original.estado,
-                         i_detalle => armar_detalle(i_clave => 'traslado_devolucion', i_valor => to_char(r_nuevo.traslado_id)));
+            for r in (select traslado_item_id from erp_stk_traslado_item where traslado_id = i_traslado_id order by linea) loop
+                r_item     := obtener_item(i_traslado_item_id => r.traslado_item_id);
+                r_indicado := buscar_item(i_items => i_items, i_traslado_item_id => r.traslado_item_id);
+                v_maximo   := case v_modo
+                                  when c_dev_transito then r_item.cantidad_despachada - r_item.cantidad_recibida - r_item.cantidad_averiada
+                                                           - r_item.cantidad_perdida - r_item.cantidad_devuelta - r_item.cantidad_faltante
+                                  else r_item.cantidad_recibida
+                              end;
+                v_cantidad := case when i_items is null then v_maximo
+                                   when r_indicado is null then 0
+                                   else coalesce(r_indicado.cantidad, 0) end;
+                if v_cantidad < 0 or v_cantidad > v_maximo then
+                    lanzar(i_codigo => c_err_cantidad,
+                           i_mensaje => 'La cantidad a devolver de la línea ' || r_item.linea || ' supera lo '
+                                        || case v_modo when c_dev_transito then 'que queda en tránsito.' else 'recibido.' end);
+                end if;
+                if v_cantidad = 0 then
+                    continue;
+                end if;
+                v_total := v_total + v_cantidad;
+                v_linea := v_linea + 1;
+
+                r_hijo := null;
+                r_hijo.traslado_id                   := r_nuevo.traslado_id;
+                r_hijo.linea                         := v_linea;
+                r_hijo.producto_id                   := r_item.producto_id;
+                r_hijo.lote_id                       := r_item.lote_id;
+                r_hijo.deposito_ubicacion_id_origen  := case when v_modo = c_dev_recibido then r_item.deposito_ubicacion_id_destino end;
+                r_hijo.deposito_ubicacion_id_destino := r_item.deposito_ubicacion_id_origen;
+                r_hijo.cantidad_solicitada           := v_cantidad;
+                if v_modo = c_dev_transito then
+                    r_hijo.cantidad_aprobada      := v_cantidad;
+                    r_hijo.cantidad_despachada    := v_cantidad;
+                    r_hijo.costo_unitario         := r_item.costo_unitario;
+                    r_hijo.costo_unitario_reporte := r_item.costo_unitario_reporte;
+                    -- En el original deja de estar pendiente: vuelve al origen por la devolución
+                    r_item.cantidad_devuelta := r_item.cantidad_devuelta + v_cantidad;
+                    erp_stk_traslado_item_ctr.actualizar(i_item => r_item);
+                end if;
+                erp_stk_traslado_item_ctr.insertar(i_item => r_hijo, o_traslado_item_id => v_item_id);
+            end loop;
+            if v_total = 0 then
+                lanzar(i_codigo => c_err_cantidad, i_mensaje => 'No hay cantidades para devolver.');
+            end if;
+
+            if v_modo = c_dev_transito then
+                r_original.estado := calcular_estado(i_traslado_id => i_traslado_id);
+                erp_stk_traslado_ctr.actualizar(i_traslado => r_original);
+            end if;
+            registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_devolver,
+                             i_estado_anterior => v_anterior, i_estado_nuevo => r_original.estado,
+                             i_detalle => armar_detalle(i_clave => 'traslado_devolucion', i_valor => to_char(r_nuevo.traslado_id)));
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end generar_devolucion;
 
     -- ------------------------------------------------------------------ nota de remisión
@@ -1501,28 +1592,35 @@ as
     ) is
         r_traslado  erp_stk_traslado%rowtype := bloquear_traslado(i_traslado_id => i_traslado_id);
     begin
-        if r_traslado.tipo = c_tipo_interno then
-            lanzar(i_codigo => c_err_transporte, i_mensaje => 'Los traslados internos no llevan nota de remisión.');
-        end if;
-        -- RN-15: como máximo una remisión vigente
-        if r_traslado.remision_estado = c_rem_generada then
-            lanzar(i_codigo => c_err_transporte, i_mensaje => 'El traslado ya tiene una nota de remisión vigente.');
-        end if;
-        if r_traslado.remision_estado = c_rem_no_aplica
-           or r_traslado.estado not in (c_est_transito, c_est_parcial, c_est_diferencias, c_est_completado) then
-            lanzar(i_codigo => c_err_estado, i_mensaje => 'La nota de remisión se emite al despachar el traslado.');
-        end if;
-        if trim(i_remision_numero) is null then
-            lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Indique el número de la nota de remisión.');
-        end if;
-        r_traslado.remision_estado       := c_rem_generada;
-        r_traslado.remision_documento_id := i_remision_documento_id;
-        r_traslado.remision_numero       := trim(i_remision_numero);
-        r_traslado.remision_cdc          := trim(i_remision_cdc);
-        erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
-        registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_remision,
-                         i_estado_anterior => r_traslado.estado, i_estado_nuevo => r_traslado.estado,
-                         i_detalle => armar_detalle(i_clave => 'remision', i_valor => trim(i_remision_numero)));
+        savepoint sp_erp_stk_traslado;
+        begin
+            if r_traslado.tipo = c_tipo_interno then
+                lanzar(i_codigo => c_err_transporte, i_mensaje => 'Los traslados internos no llevan nota de remisión.');
+            end if;
+            -- RN-15: como máximo una remisión vigente
+            if r_traslado.remision_estado = c_rem_generada then
+                lanzar(i_codigo => c_err_transporte, i_mensaje => 'El traslado ya tiene una nota de remisión vigente.');
+            end if;
+            if r_traslado.remision_estado = c_rem_no_aplica
+               or r_traslado.estado not in (c_est_transito, c_est_parcial, c_est_diferencias, c_est_completado) then
+                lanzar(i_codigo => c_err_estado, i_mensaje => 'La nota de remisión se emite al despachar el traslado.');
+            end if;
+            if trim(i_remision_numero) is null then
+                lanzar(i_codigo => erp_stk_comun_utl.c_err_dato_invalido, i_mensaje => 'Indique el número de la nota de remisión.');
+            end if;
+            r_traslado.remision_estado       := c_rem_generada;
+            r_traslado.remision_documento_id := i_remision_documento_id;
+            r_traslado.remision_numero       := trim(i_remision_numero);
+            r_traslado.remision_cdc          := trim(i_remision_cdc);
+            erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+            registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_remision,
+                             i_estado_anterior => r_traslado.estado, i_estado_nuevo => r_traslado.estado,
+                             i_detalle => armar_detalle(i_clave => 'remision', i_valor => trim(i_remision_numero)));
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_remision;
 
     procedure aplicar_cancelacion_remision (
@@ -1530,14 +1628,21 @@ as
     ) is
         r_traslado  erp_stk_traslado%rowtype := bloquear_traslado(i_traslado_id => i_traslado_id);
     begin
-        if r_traslado.remision_estado <> c_rem_generada then
-            lanzar(i_codigo => c_err_transporte, i_mensaje => 'El traslado no tiene una nota de remisión vigente.');
-        end if;
-        r_traslado.remision_estado := c_rem_cancelada;
-        erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
-        registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_remision,
-                         i_estado_anterior => r_traslado.estado, i_estado_nuevo => r_traslado.estado,
-                         i_detalle => armar_detalle(i_clave => 'cancelada', i_valor => r_traslado.remision_numero));
+        savepoint sp_erp_stk_traslado;
+        begin
+            if r_traslado.remision_estado <> c_rem_generada then
+                lanzar(i_codigo => c_err_transporte, i_mensaje => 'El traslado no tiene una nota de remisión vigente.');
+            end if;
+            r_traslado.remision_estado := c_rem_cancelada;
+            erp_stk_traslado_ctr.actualizar(i_traslado => r_traslado);
+            registrar_evento(i_traslado_id => i_traslado_id, i_evento => c_evt_remision,
+                             i_estado_anterior => r_traslado.estado, i_estado_nuevo => r_traslado.estado,
+                             i_detalle => armar_detalle(i_clave => 'cancelada', i_valor => r_traslado.remision_numero));
+        exception
+            when others then
+                rollback to sp_erp_stk_traslado;
+                raise;
+        end;
     end aplicar_cancelacion_remision;
 
     function calcular_empresa (

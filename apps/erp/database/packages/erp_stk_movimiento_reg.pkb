@@ -573,30 +573,37 @@ as
         o_movimiento_id    out erp_stk_movimiento.movimiento_id%type
     ) is
     begin
-        if i_empresa_id is null or i_fecha is null then
-            raise_application_error(erp_stk_comun_utl.c_err_dato_invalido, 'Indique la empresa y la fecha del movimiento.');
-        end if;
-        iniciar_contexto(i_empresa_id => i_empresa_id, i_fecha => i_fecha);
+        savepoint sp_erp_stk_movimiento;
         begin
-            select *
-              into g_ctx.tipo
-              from erp_stk_tipo_movimiento
-             where codigo = upper(i_tipo_movimiento)
-               and estado = 'A';
+            if i_empresa_id is null or i_fecha is null then
+                raise_application_error(erp_stk_comun_utl.c_err_dato_invalido, 'Indique la empresa y la fecha del movimiento.');
+            end if;
+            iniciar_contexto(i_empresa_id => i_empresa_id, i_fecha => i_fecha);
+            begin
+                select *
+                  into g_ctx.tipo
+                  from erp_stk_tipo_movimiento
+                 where codigo = upper(i_tipo_movimiento)
+                   and estado = 'A';
+            exception
+                when no_data_found then
+                    raise_application_error(erp_stk_comun_utl.c_err_no_existe,
+                        'No existe el tipo de movimiento ' || upper(i_tipo_movimiento) || ' o está inactivo.');
+            end;
+            generar_interno(
+                i_items                   => i_items,
+                i_origen_modulo           => i_origen_modulo,
+                i_origen_tabla            => i_origen_tabla,
+                i_origen_id               => i_origen_id,
+                i_motivo                  => i_motivo,
+                i_observacion             => i_observacion,
+                i_movimiento_id_reversado => null,
+                o_movimiento_id           => o_movimiento_id);
         exception
-            when no_data_found then
-                raise_application_error(erp_stk_comun_utl.c_err_no_existe,
-                    'No existe el tipo de movimiento ' || upper(i_tipo_movimiento) || ' o está inactivo.');
+            when others then
+                rollback to sp_erp_stk_movimiento;
+                raise;
         end;
-        generar_interno(
-            i_items                   => i_items,
-            i_origen_modulo           => i_origen_modulo,
-            i_origen_tabla            => i_origen_tabla,
-            i_origen_id               => i_origen_id,
-            i_motivo                  => i_motivo,
-            i_observacion             => i_observacion,
-            i_movimiento_id_reversado => null,
-            o_movimiento_id           => o_movimiento_id);
     end generar;
 
     procedure generar_reverso (
@@ -608,54 +615,61 @@ as
         r_original  erp_stk_movimiento%rowtype;
         t_items     erp_stk_mov_item_tab := erp_stk_mov_item_tab();
     begin
+        savepoint sp_erp_stk_movimiento;
         begin
-            r_original := erp_stk_movimiento_ctr.bloquear(i_movimiento_id => i_movimiento_id);
+            begin
+                r_original := erp_stk_movimiento_ctr.bloquear(i_movimiento_id => i_movimiento_id);
+            exception
+                when no_data_found then
+                    raise_application_error(erp_stk_comun_utl.c_err_no_existe, 'El movimiento indicado no existe.');
+            end;
+            if r_original.es_reverso = 'S' then
+                raise_application_error(c_err_no_reversable, 'Un movimiento de reverso no se puede anular.');
+            end if;
+            if r_original.estado <> 'C' then
+                raise_application_error(c_err_no_reversable, 'El movimiento ya fue anulado.');
+            end if;
+            if trim(i_motivo) is null then
+                raise_application_error(erp_stk_comun_utl.c_err_dato_invalido, 'Indique el motivo de la anulación.');
+            end if;
+
+            for r in (select deposito_id, producto_id, lote_id, deposito_ubicacion_id, cantidad,
+                             costo_unitario, costo_unitario_reporte, origen_linea_id
+                        from erp_stk_movimiento_item
+                       where movimiento_id = i_movimiento_id
+                       order by linea) loop
+                t_items.extend;
+                t_items(t_items.count) := erp_stk_mov_item_typ(
+                                              deposito_id            => r.deposito_id,
+                                              producto_id            => r.producto_id,
+                                              cantidad               => -r.cantidad,
+                                              lote_id                => r.lote_id,
+                                              deposito_ubicacion_id  => r.deposito_ubicacion_id,
+                                              costo_unitario         => r.costo_unitario,
+                                              costo_unitario_reporte => r.costo_unitario_reporte,
+                                              origen_linea_id        => r.origen_linea_id);
+            end loop;
+
+            iniciar_contexto(i_empresa_id => r_original.empresa_id, i_fecha => coalesce(i_fecha, current_date));
+            g_ctx.es_reverso := true;
+            select * into g_ctx.tipo from erp_stk_tipo_movimiento where tipo_movimiento_id = r_original.tipo_movimiento_id;
+            g_ctx.tipo.debe_exigir_motivo := 'N';
+
+            generar_interno(
+                i_items                   => t_items,
+                i_origen_modulo           => r_original.origen_modulo,
+                i_origen_tabla            => r_original.origen_tabla,
+                i_origen_id               => r_original.origen_id,
+                i_motivo                  => i_motivo,
+                i_observacion             => null,
+                i_movimiento_id_reversado => i_movimiento_id,
+                o_movimiento_id           => o_movimiento_id);
+            erp_stk_movimiento_ctr.actualizar_estado(i_movimiento_id => i_movimiento_id, i_estado => 'R');
         exception
-            when no_data_found then
-                raise_application_error(erp_stk_comun_utl.c_err_no_existe, 'El movimiento indicado no existe.');
+            when others then
+                rollback to sp_erp_stk_movimiento;
+                raise;
         end;
-        if r_original.es_reverso = 'S' then
-            raise_application_error(c_err_no_reversable, 'Un movimiento de reverso no se puede anular.');
-        end if;
-        if r_original.estado <> 'C' then
-            raise_application_error(c_err_no_reversable, 'El movimiento ya fue anulado.');
-        end if;
-        if trim(i_motivo) is null then
-            raise_application_error(erp_stk_comun_utl.c_err_dato_invalido, 'Indique el motivo de la anulación.');
-        end if;
-
-        for r in (select deposito_id, producto_id, lote_id, deposito_ubicacion_id, cantidad,
-                         costo_unitario, costo_unitario_reporte, origen_linea_id
-                    from erp_stk_movimiento_item
-                   where movimiento_id = i_movimiento_id
-                   order by linea) loop
-            t_items.extend;
-            t_items(t_items.count) := erp_stk_mov_item_typ(
-                                          deposito_id            => r.deposito_id,
-                                          producto_id            => r.producto_id,
-                                          cantidad               => -r.cantidad,
-                                          lote_id                => r.lote_id,
-                                          deposito_ubicacion_id  => r.deposito_ubicacion_id,
-                                          costo_unitario         => r.costo_unitario,
-                                          costo_unitario_reporte => r.costo_unitario_reporte,
-                                          origen_linea_id        => r.origen_linea_id);
-        end loop;
-
-        iniciar_contexto(i_empresa_id => r_original.empresa_id, i_fecha => coalesce(i_fecha, current_date));
-        g_ctx.es_reverso := true;
-        select * into g_ctx.tipo from erp_stk_tipo_movimiento where tipo_movimiento_id = r_original.tipo_movimiento_id;
-        g_ctx.tipo.debe_exigir_motivo := 'N';
-
-        generar_interno(
-            i_items                   => t_items,
-            i_origen_modulo           => r_original.origen_modulo,
-            i_origen_tabla            => r_original.origen_tabla,
-            i_origen_id               => r_original.origen_id,
-            i_motivo                  => i_motivo,
-            i_observacion             => null,
-            i_movimiento_id_reversado => i_movimiento_id,
-            o_movimiento_id           => o_movimiento_id);
-        erp_stk_movimiento_ctr.actualizar_estado(i_movimiento_id => i_movimiento_id, i_estado => 'R');
     end generar_reverso;
 
     procedure aplicar_reserva (
@@ -666,33 +680,40 @@ as
         r_item    erp_stk_mov_item_typ;
         v_clave   varchar2(80);
     begin
-        if i_items is null or i_items.count = 0 then
-            return;
-        end if;
-        iniciar_contexto(i_empresa_id => i_empresa_id, i_fecha => current_date);
-        for i in 1 .. i_items.count loop
-            r_item := i_items(i);
-            r_item.cantidad := 0;
-            if coalesce(r_item.reserva, 0) = 0 then
-                raise_application_error(erp_stk_comun_utl.c_err_dato_invalido, 'Indique la cantidad a reservar o liberar.');
+        savepoint sp_erp_stk_movimiento;
+        begin
+            if i_items is null or i_items.count = 0 then
+                return;
             end if;
-            validar_item(i_item => r_item, i_es_reserva => r_item.reserva > 0);
-            agregar_clave(i_item => r_item, io_saldos => t_saldos);
-        end loop;
+            iniciar_contexto(i_empresa_id => i_empresa_id, i_fecha => current_date);
+            for i in 1 .. i_items.count loop
+                r_item := i_items(i);
+                r_item.cantidad := 0;
+                if coalesce(r_item.reserva, 0) = 0 then
+                    raise_application_error(erp_stk_comun_utl.c_err_dato_invalido, 'Indique la cantidad a reservar o liberar.');
+                end if;
+                validar_item(i_item => r_item, i_es_reserva => r_item.reserva > 0);
+                agregar_clave(i_item => r_item, io_saldos => t_saldos);
+            end loop;
 
-        erp_stk_saldo_ctr.bloquear(io_saldos => t_saldos);
+            erp_stk_saldo_ctr.bloquear(io_saldos => t_saldos);
 
-        for i in 1 .. i_items.count loop
-            r_item := i_items(i);
-            r_item.cantidad := 0;
-            v_clave := erp_stk_saldo_ctr.obtener_clave(
-                           i_deposito_id           => r_item.deposito_id,
-                           i_producto_id           => r_item.producto_id,
-                           i_lote_id               => r_item.lote_id,
-                           i_deposito_ubicacion_id => r_item.deposito_ubicacion_id);
-            aplicar_linea_saldo(i_item => r_item, io_saldo => t_saldos(v_clave));
-        end loop;
-        erp_stk_saldo_ctr.actualizar(i_saldos => t_saldos);
+            for i in 1 .. i_items.count loop
+                r_item := i_items(i);
+                r_item.cantidad := 0;
+                v_clave := erp_stk_saldo_ctr.obtener_clave(
+                               i_deposito_id           => r_item.deposito_id,
+                               i_producto_id           => r_item.producto_id,
+                               i_lote_id               => r_item.lote_id,
+                               i_deposito_ubicacion_id => r_item.deposito_ubicacion_id);
+                aplicar_linea_saldo(i_item => r_item, io_saldo => t_saldos(v_clave));
+            end loop;
+            erp_stk_saldo_ctr.actualizar(i_saldos => t_saldos);
+        exception
+            when others then
+                rollback to sp_erp_stk_movimiento;
+                raise;
+        end;
     end aplicar_reserva;
 
     function calcular_disponible (
